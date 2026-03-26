@@ -45,10 +45,18 @@ async function initNotifications(userId) {
       _db.ref(`${FCM_TOKEN_PATH}/${userId}`).set(token);
       console.log('✅ 通知トークン登録完了');
     }
-    // フォアグラウンド通知
+    // フォアグラウンド通知（サービスワーカーと重複しないよう制御）
     _messaging.onMessage((payload) => {
+      // フォアグラウンド時はサービスワーカーが動かないのでここで表示
       const { title, body } = payload.notification;
-      new Notification(title, { body, icon: '/surechigailab/icon.png' });
+      if(document.visibilityState === 'visible'){
+        // アプリが開いているときはトーストで表示（システム通知は出さない）
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(40,30,28,.92);color:white;border-radius:16px;padding:10px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:9999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:90vw;text-align:center';
+        toast.textContent = `${title} - ${body}`;
+        document.body.appendChild(toast);
+        setTimeout(()=>toast.remove(), 3000);
+      }
     });
   } catch(e) { console.warn('通知初期化失敗:', e); }
 }
@@ -1443,7 +1451,17 @@ function fbSave(){
 function fbApplyData(raw){
   try{
     const d = JSON.parse(raw);
-    if(d.S){Object.assign(S, d.S);}
+    if(d.S){
+      // 配列は個別にマージ（Object.assignだと参照が変わらない場合がある）
+      const arrays = ['moodLog','qHist','records','recs','events','agenda','dramas','dramaAiring','dramaWatched','filmarks','shopList','posts'];
+      arrays.forEach(k=>{
+        if(Array.isArray(d.S[k])) S[k] = [...d.S[k]];
+      });
+      // その他のプロパティ
+      Object.keys(d.S).forEach(k=>{
+        if(!arrays.includes(k)) S[k] = d.S[k];
+      });
+    }
     if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));}
     if(d.gYear) gYear=d.gYear;
     if(d.gMonth) gMonth=d.gMonth;
@@ -1455,14 +1473,17 @@ function fbStartListening(){
   fbListening = true;
   window._fbListen((raw)=>{
     if(!raw) return;
-    if(saveTimer) return;
-    fbRemoteUpdate = true;
-    fbApplyData(raw);
-    fbRemoteUpdate = false;
-    try{
-      renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();updateHomeMood();renderPartnerMood();
-      if(document.getElementById('sc-film')?.classList.contains('on')){renderDramaAiring();renderFilmarks();}
-    }catch(e){}
+    // 自分が保存中の場合は少し待ってから適用
+    const apply = () => {
+      fbRemoteUpdate = true;
+      fbApplyData(raw);
+      fbRemoteUpdate = false;
+      try{
+        renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();updateHomeMood();renderPartnerMood();
+        if(document.getElementById('sc-film')?.classList.contains('on')){renderDramaAiring();renderFilmarks();}
+      }catch(e){}
+    };
+    if(saveTimer){ setTimeout(apply, 1200); } else { apply(); }
   });
 }
 
@@ -3028,7 +3049,7 @@ function sendMsg(){
   inp.value='';inp.style.height='auto';
   const btn=document.getElementById('sbtn');btn.classList.add('fly');setTimeout(()=>btn.classList.remove('fly'),400);
   renderMsgs(r);renderRooms();lsSave();
-  // 通知送信
+  // 通知送信（送信者のみ）
   const partner=me==='ig'?'tk':'ig';
   const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
   if(window._sendNotification) window._sendNotification(partner, `${myName}からメッセージ`, v.length>30?v.slice(0,30)+'…':v);
