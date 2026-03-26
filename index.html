@@ -30,23 +30,57 @@ const VAPID_KEY = 'BB8vDqE8ILZT7zze4yjO6k_iCNv-u7-scP9Zv-rSgk-5KL1mIEmFMGzHLSIOt
 const FCM_TOKEN_PATH = 'surechigai/fcmTokens';
 let _messaging = null;
 
+// SW登録を起動時に先行して行う（許可ダイアログとは分離）
+let _swReg = null;
+(async () => {
+  if(!('serviceWorker' in navigator)) return;
+  try {
+    _swReg = await navigator.serviceWorker.register(
+      '/surechigailab/firebase-messaging-sw.js',
+      { scope: '/surechigailab/' }
+    );
+    await navigator.serviceWorker.ready;
+    console.log('✅ SW登録完了');
+  } catch(e) {
+    console.warn('⚠️ SW登録失敗:', e);
+    _swReg = null;
+  }
+})();
+
+// 通知の初期化（必ずユーザー操作の後に呼ぶこと）
 async function initNotifications(userId) {
   try {
+    if(!userId) { console.warn('通知初期化スキップ: userId未設定'); return; }
     if(!('serviceWorker' in navigator) || !('Notification' in window)) return;
-    // サービスワーカー登録（GitHub Pagesのサブパスに対応）
-    const swPath = '/surechigailab/firebase-messaging-sw.js';
-    const sw = await navigator.serviceWorker.register(swPath, { scope: '/surechigailab/' });
-    await navigator.serviceWorker.ready;
+
+    // SWがまだ登録されていなければ待つ（最大3秒）
+    if(!_swReg) {
+      await new Promise(res => setTimeout(res, 3000));
+      if(!_swReg) { console.warn('⚠️ SW未登録のため通知初期化中断'); return; }
+    }
+
+    // 許可状態を確認（既に denied なら何もしない）
+    if(Notification.permission === 'denied') {
+      console.log('通知: ユーザーが拒否済み');
+      return;
+    }
+
+    // 未決定の場合のみリクエスト（granted なら即トークン取得へ）
+    let permission = Notification.permission;
+    if(permission !== 'granted') {
+      permission = await Notification.requestPermission();
+    }
+    if(permission !== 'granted') { console.log('通知許可なし'); return; }
+
     _messaging = firebase.messaging();
-    // 通知許可をリクエスト
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') { console.log('通知許可なし'); return; }
+
     // FCMトークン取得
-    const token = await _messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: sw });
-    if (token) {
+    const token = await _messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: _swReg });
+    if(token) {
       _db.ref(`${FCM_TOKEN_PATH}/${userId}`).set(token);
       console.log('✅ 通知トークン登録完了', userId);
     }
+
     // フォアグラウンド通知（アプリが開いているとき）
     _messaging.onMessage((payload) => {
       if(document.visibilityState === 'visible'){
@@ -64,14 +98,21 @@ async function initNotifications(userId) {
 // 通知を送る（相手のトークンに送信・自分には送らない）
 window._sendNotification = async function(toUserId, title, body) {
   try {
-    const [toSnap, mySnap] = await Promise.all([
-      _db.ref(`${FCM_TOKEN_PATH}/${toUserId}`).get(),
-      _db.ref(`${FCM_TOKEN_PATH}/${me}`).get()
-    ]);
+    if(!toUserId) return;
+    // meがまだ設定されていない場合はスキップ
+    const fromUserId = (typeof me !== 'undefined') ? me : null;
+    const toRef = _db.ref(`${FCM_TOKEN_PATH}/${toUserId}`);
+    const toSnap = await toRef.get();
     const toToken = toSnap.val();
-    const myToken = mySnap.val();
-    // 同じトークン（同じ端末）なら送らない
-    if (!toToken || toToken === myToken) return;
+    if(!toToken) return; // 相手のトークンがない
+
+    // 自分のトークンと同じなら送らない（同一端末対策）
+    if(fromUserId) {
+      const mySnap = await _db.ref(`${FCM_TOKEN_PATH}/${fromUserId}`).get();
+      const myToken = mySnap.val();
+      if(myToken && toToken === myToken) return;
+    }
+
     await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1454,8 +1495,9 @@ function fbSave(){
 }
 
 function fbApplyData(raw){
-  try{
-    const d = JSON.parse(raw);
+  try {
+    // Firebaseはstring/objectどちらで返ってくることもある
+    const d = (typeof raw === 'string') ? JSON.parse(raw) : raw;
     if(d.S){
       const arrays = ['moodLog','qHist','records','recs','events','agenda','dramas','dramaAiring','dramaWatched','filmarks','shopList','posts'];
       arrays.forEach(k=>{
@@ -1510,7 +1552,9 @@ function lsLoad(){
           const val = snap.val();
           if(val){
             fbApplyData(val);
-            localStorage.setItem(LS_KEY, val);
+            // localStorageには必ずstring形式で保存
+            const valStr = (typeof val === 'string') ? val : JSON.stringify(val);
+            localStorage.setItem(LS_KEY, valStr);
             // UI更新
             try{
               renderRooms();gRender();calRender();updateCnt();updateTop();
@@ -1559,10 +1603,17 @@ function boot(u){
   document.getElementById('sel').style.display='none';
   document.getElementById('main').style.cssText='display:flex;flex-direction:column;height:100%;overflow:hidden';
   applyTheme();renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();qInit();spiceLoad();checkinLoadQ();
-  // 通知初期化
-  if('Notification' in window && 'serviceWorker' in navigator){
-    setTimeout(()=>initNotifications(me), 2000);
-  }
+  // 通知初期化: 自動呼び出しをやめ、最初のユーザー操作後に一度だけ呼ぶ
+  let _notifInitDone = false;
+  const _tryInitNotif = () => {
+    if(_notifInitDone) return;
+    _notifInitDone = true;
+    initNotifications(me);
+  };
+  // タップ・クリック・キーボードのいずれかで初回操作を検知
+  ['touchend','mouseup','keydown'].forEach(ev =>
+    document.addEventListener(ev, _tryInitNotif, { once: true, passive: true })
+  );
 }
 function goSel(){
   document.getElementById('sel').style.display='flex';
@@ -3827,8 +3878,11 @@ function checkinRemoveImg(){
 
 function saveCheckin(){
   if(!S.posts)S.posts=[];
-  if(checkinEditId!=null){checkinEditId=null;checkinEditMoodE='';checkinEditMoodL='';}
-  const text=document.getElementById('checkin-ta')?.value.trim()||'';
+  // 編集モードだった場合は編集として処理（新規投稿しない）
+  if(checkinEditId!=null){
+    checkinSaveEdit(checkinEditId);
+    return;
+  }  const text=document.getElementById('checkin-ta')?.value.trim()||'';
   if(!text&&!checkinMoodE){
     // 何も入力されていない場合は入力欄をフォーカス
     document.getElementById('checkin-ta')?.focus();
