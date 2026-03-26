@@ -1844,7 +1844,7 @@ function renderDramaNow(){
           <div style="font-size:14px;font-weight:700;font-family:'Zen Maru Gothic',serif">${d.title}</div>
           <div style="font-size:10px;color:var(--wg);margin-top:2px">${progress}${d.memo?' · '+d.memo:''}</div>
         </div>
-        <button onclick="openAddEpisode(${d.id})" style="background:linear-gradient(135deg,var(--ig),var(--lav));color:white;border:none;border-radius:14px;padding:5px 11px;font-size:10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;flex-shrink:0;margin-left:8px">＋ 感想を追加</button>
+        <button onclick="openEpModal(${d.id},0)" style="background:linear-gradient(135deg,var(--ig),var(--lav));color:white;border:none;border-radius:14px;padding:5px 11px;font-size:10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;flex-shrink:0;margin-left:8px">＋ 感想を追加</button>
       </div>
       ${d.totalEps>0?`<div style="background:#ede8e3;border-radius:20px;height:5px;overflow:hidden;margin-bottom:8px"><div style="height:100%;border-radius:20px;background:linear-gradient(90deg,var(--ig),var(--lav));width:${Math.min(epCount/d.totalEps*100,100)}%;transition:width .5s"></div></div>`:''}
       <div id="ep-list-${d.id}">${renderEpRows(d)}</div>
@@ -4153,33 +4153,52 @@ function switchDrama(pane){
 
 // ═══ window への公開（type="module" 対応） ═══
 // ═══ window への公開（type="module" 対応） ═══
-[boot,goSel,goTop,go,applyTheme,
+[
+ boot,goSel,goTop,go,applyTheme,
  openData,closeData,switchExport,downloadExport,copyExport,
- spiceLoad,spiceTab,spiceLike,
+ spiceLoad,spiceTab,spiceLike,updateSpiceLikeBtn,
  openMoodModal,closeMoodModal,modalSelMood,modalSendMood,
- openPartnerMoodDetail,
- togglePartnerMoodEdit,selPartnerMood,doSendPartnerMood,
- agendaAdd,agendaClear,
- qLoad,qInit,qSubmit,openQLog,closeQLog,qlogFilter,
- sendMsg,sendImage,closeChat,hideCtx,copyMsg,recallMsg,
+ openPartnerMoodDetail,togglePartnerMoodEdit,selPartnerMood,doSendPartnerMood,
+ doSendMood,selMood,resetMood,homeSelMood,homeSendMoodText,homeResetMood,homeUpdateMyMood,
+ handleKimochiBgTap,renderPartnerMood,updateHomeMood,
+ agendaAdd,agendaClear,agendaDone,agendaRender,
+ qLoad,qInit,qSubmit,openQLog,closeQLog,qlogFilter,qlogRender,
+ qCat,qBm,qBanner,qRH,qAnalysis,qGenQ,qPick,qShuffle,qRender,
+ sendMsg,sendImage,closeChat,hideCtx,showCtx,copyMsg,recallMsg,
  startRoomNameLong,clearRoomNameLong,doRoomExport,
+ startRoomLong,clearRoomLong,startLong,clearLong,
+ openRM,closeRM,saveRoom,deleteRoom,confirmDeleteRoom,
+ openRoom,openRoomRename,saveRoomName,setRoomsEditMode,confirmDeleteEv,
  insBold,insUnder,insCheck,ins,copyMemo,saveMemo,
- openAddRoom,closeAddRoom,saveRoom,deleteRoom,
- openEpModal,saveEpModal,closeEpModal,setEpStar,
- switchNote,calMove,calDayClick,switchFilm,
- openAddDrama,closeAddDrama,saveDrama,
- closeDramaDetail,revealSpoil,addEpisodeToAiring,
- moveDramaToWatched,deleteDrama,toggleDramaEdit,
- switchDrama,openAddWatched,closeWatchedAdd,wGenre,setWaStar,saveWatchedAdd,
- watchedFilter,toggleWatchedFav,
- openAddFilmark,closeAddFilmark,saveFilmark,fmChip,fmTitleInput,hideFmSuggest,setFmStar,toggleFilmarkDetail,
- filmarkFilter,filmarkStatusFilter,openFilmarkEdit,closeFilmarkEdit,saveFilmarkEdit,deleteFilmark,
- gOpen,gClose,gChip,gHint,saveRec,deleteRec,gMove,
- openShopList,closeShopList,openAddShop,closeAddShop,saveShop,
- slFilter,openEditShop,closeEditShop,shopEditChip,saveEditShop,deleteShop,
+ openEpModal,saveEp,closeEpModal,setEpStar,deleteEpReview,
+ rFmt,rIco,rCat,addItem,delItem,togItem,openItemMemo,saveItemMemo,clearDone,
+ switchNote,calMove,calRender,calSelectDate,calRenderEvs,renderCalDaylog,
+ openAddEv,closeAddEv,openEditEv,saveEv,deleteEv,evType,evRep,openAddEvWithDate,expandEvs,
+ saveDiaryFromCal,toggleDiaryEdit,
+ switchFilm,
+ openAddDrama,closeDramaAdd,saveDramaAdd,dramaTitleInput,fetchDramaSuggest,hideDramaSuggest,selectDramaSuggest,dramaAutoFill,dramaSub,
+ openDramaDetail,closeDramaDetail,revealSpoil,addEpisodeToAiring,
+ openDramaEdit,closeDramaEdit,saveDramaEdit,
+ promptCompleteDrama,completeDramaMove,deleteDramaAiring,
+ switchDrama,renderDramaAiring,renderDramaNow,renderDramaDetailEps,renderEpRows,showAllEpRows,renderEpStars,
+ openAddWatched,closeWatchedAdd,wGenre,setWaStar,saveWatchedAdd,
+ watchedFilter,toggleWatchedFav,renderDramaWatched,
+ openAddFilmark,closeAddFilmark,saveFilmark,fmChip,fmTitleInput,hideFmSuggest,setFmStar,toggleFilmarkDetail,fmAutoFill,selectFmSuggest,toggleFmInfoEdit,
+ filmarkFilter,filmarkStatusFilter,filmarkWhoFilter,openFilmarkEdit,closeFilmarkEdit,saveFilmarkEdit,deleteFilmark,renderFilmarks,
+ gOpen,gClose,gChip,gHint,gSave,gEdit,gMove,gRender,gSelectShop,addToShopList,
+ openShopList,closeShopList,slFilter,slRender,
+ openEditShop,closeEditShop,shopEditChip,saveEditShop,deleteShop,
  checkinLoadQ,saveCheckin,checkinCharCount,checkinLoadImg,checkinRemoveImg,
- feChip,saveEv,deleteEv,
- switchDrama,
+ checkinSelMood,checkinEditSelMood,checkinCancelEdit,checkinSaveEdit,
+ checkinDeletePost,checkinEditPost,checkinUpdateView,checkinUseQ,checkinRenderTimeline,resetCheckin,
+ openRecForm,closeRecForm,saveRec,recFilter,renderRecords,rCat,
+ openOmoideForm,closeOmoideForm,saveOmoide,deleteOmoide,omoideRender,omoideRenderList,omoideTypeFilter,omoideCalMove,omoideSelectDate,
+ openOmoideRecForm,closeOmoideRecForm,
+ feChip,setFeStar,renderFeStars,
+ renderFmStars,renderWaStars,renderList,renderMsgs,renderRooms,
+ updateCnt,updateTop,updateHomeEvs,
+ renderDataPage,buildExportData,
+ tbUrl,
 ].forEach(fn=>{ if(typeof fn==='function') window[fn.name]=fn; });
 </script>
 
@@ -4188,13 +4207,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebas
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCVhZ26QY99PrG1DZgEWjxGRuwaCSbSPfY",
-  authDomain: "surechigai-b5e47.firebaseapp.com",
-  databaseURL: "https://surechigai-b5e47-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "surechigai-b5e47",
-  storageBucket: "surechigai-b5e47.firebasestorage.app",
-  messagingSenderId: "876656035035",
-  appId: "1:876656035035:web:228849e25deb48015738fe"
+  apiKey: "AIzaSyCE7saZd1UgnaG4iYt-pJhdTNKymaKXl8A",
+  authDomain: "surechigailab.firebaseapp.com",
+  databaseURL: "https://surechigailab-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "surechigailab",
+  storageBucket: "surechigailab.firebasestorage.app",
+  messagingSenderId: "958640684148",
+  appId: "1:958640684148:web:7b0bc3d95d85846ed2a521"
 };
 const fbApp = initializeApp(firebaseConfig);
 const db = getDatabase(fbApp);
@@ -4218,7 +4237,7 @@ window._fbListen = function(callback){
   <div class="fl">タイトル</div><input class="fi" id="drama-title-inp" placeholder="例：アンメット、砂の器…"/>
   <div class="fl">全話数（わかる場合）</div><input class="fi" id="drama-ep-inp" type="number" placeholder="例：10"/>
   <div class="fl">メモ（放送局・曜日など）</div><input class="fi" id="drama-memo-inp" placeholder="例：フジ月9、毎週月曜…"/>
-  <div class="mbtns"><button class="mcx" onclick="closeAddDrama()">キャンセル</button><button class="msv" onclick="saveDrama()">追加する ✓</button></div>
+  <div class="mbtns"><button class="mcx" onclick="closeDramaAdd()">キャンセル</button><button class="msv" onclick="saveDramaAdd()">追加する ✓</button></div>
 </div></div>
 
 <!-- エピソード感想モーダル -->
@@ -4237,7 +4256,7 @@ window._fbListen = function(callback){
   </div>
   <div class="fl">感想</div>
   <textarea class="fi" id="ep-review-inp" style="min-height:75px;resize:none;line-height:1.7" placeholder="この話どうだった？ネタバレOKで！"></textarea>
-  <div class="mbtns"><button class="mcx" onclick="closeAddEp()">キャンセル</button><button class="msv" onclick="saveEpisode()">保存する ✓</button></div>
+  <div class="mbtns"><button class="mcx" onclick="closeEpModal()">キャンセル</button><button class="msv" onclick="saveEp()">保存する ✓</button></div>
 </div></div>
 
 <!-- 鑑賞記録追加モーダル -->
