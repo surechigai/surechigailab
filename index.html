@@ -32,25 +32,25 @@ let _messaging = null;
 
 async function initNotifications(userId) {
   try {
-    // サービスワーカー登録
-    const sw = await navigator.serviceWorker.register('/surechigailab/firebase-messaging-sw.js');
+    if(!('serviceWorker' in navigator) || !('Notification' in window)) return;
+    // サービスワーカー登録（GitHub Pagesのサブパスに対応）
+    const swPath = '/surechigailab/firebase-messaging-sw.js';
+    const sw = await navigator.serviceWorker.register(swPath, { scope: '/surechigailab/' });
+    await navigator.serviceWorker.ready;
     _messaging = firebase.messaging();
     // 通知許可をリクエスト
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return;
+    if (permission !== 'granted') { console.log('通知許可なし'); return; }
     // FCMトークン取得
     const token = await _messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: sw });
     if (token) {
-      // Firebaseにトークンを保存
       _db.ref(`${FCM_TOKEN_PATH}/${userId}`).set(token);
-      console.log('✅ 通知トークン登録完了');
+      console.log('✅ 通知トークン登録完了', userId);
     }
-    // フォアグラウンド通知（サービスワーカーと重複しないよう制御）
+    // フォアグラウンド通知（アプリが開いているとき）
     _messaging.onMessage((payload) => {
-      // フォアグラウンド時はサービスワーカーが動かないのでここで表示
-      const { title, body } = payload.notification;
       if(document.visibilityState === 'visible'){
-        // アプリが開いているときはトーストで表示（システム通知は出さない）
+        const { title, body } = payload.notification;
         const toast = document.createElement('div');
         toast.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(40,30,28,.92);color:white;border-radius:16px;padding:10px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:9999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:90vw;text-align:center';
         toast.textContent = `${title} - ${body}`;
@@ -61,16 +61,21 @@ async function initNotifications(userId) {
   } catch(e) { console.warn('通知初期化失敗:', e); }
 }
 
-// 通知を送る（相手のトークンに送信）
+// 通知を送る（相手のトークンに送信・自分には送らない）
 window._sendNotification = async function(toUserId, title, body) {
   try {
-    const snap = await _db.ref(`${FCM_TOKEN_PATH}/${toUserId}`).get();
-    const token = snap.val();
-    if (!token) return;
+    const [toSnap, mySnap] = await Promise.all([
+      _db.ref(`${FCM_TOKEN_PATH}/${toUserId}`).get(),
+      _db.ref(`${FCM_TOKEN_PATH}/${me}`).get()
+    ]);
+    const toToken = toSnap.val();
+    const myToken = mySnap.val();
+    // 同じトークン（同じ端末）なら送らない
+    if (!toToken || toToken === myToken) return;
     await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, title, body })
+      body: JSON.stringify({ token: toToken, title, body })
     });
   } catch(e) { console.warn('通知送信失敗:', e); }
 };
@@ -347,7 +352,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .pa{font-size:12px;font-weight:700}
 .pa.ig{color:var(--ig-d)}.pa.tk{color:var(--tk-d)}.pa.none{color:#ccc}
 .pn{font-size:9px;color:var(--wg)}
-.pay-sect{background:white;border-radius:12px;padding:11px;border:1.5px solid var(--bd);box-shadow:var(--shadow-sm)}
+.pay-sect{background:white;border-radius:12px;padding:11px;border:1.5px solid var(--bd);box-shadow:var(--shadow-sm);overflow:hidden}
 .pay-row{display:flex;align-items:center;gap:7px;margin-bottom:7px}.pay-row:last-child{margin-bottom:0}
 .pay-av{width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
 .pay-av.ig{background:var(--ig-bg)}.pay-av.tk{background:var(--tk-bg)}
@@ -1155,7 +1160,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 <div class="save-toast" id="save-toast">💾 保存しました</div>
 
 <!-- MODALS -->
-<div class="ov" id="g-ov"><div class="modal" style="overflow-y:auto;max-height:92vh">
+<div class="ov" id="g-ov"><div class="modal" style="overflow-y:auto;overflow-x:hidden;max-height:92vh;width:100%;box-sizing:border-box">
   <div class="mt">🍴 外食を記録する</div>
   <div class="fl">お店の名前</div>
   <input class="fi" id="gf-shop" placeholder="例：ぐるり、金魚…" oninput="gHint(this.value)"/>
@@ -1452,17 +1457,15 @@ function fbApplyData(raw){
   try{
     const d = JSON.parse(raw);
     if(d.S){
-      // 配列は個別にマージ（Object.assignだと参照が変わらない場合がある）
       const arrays = ['moodLog','qHist','records','recs','events','agenda','dramas','dramaAiring','dramaWatched','filmarks','shopList','posts'];
       arrays.forEach(k=>{
         if(Array.isArray(d.S[k])) S[k] = [...d.S[k]];
       });
-      // その他のプロパティ
       Object.keys(d.S).forEach(k=>{
         if(!arrays.includes(k)) S[k] = d.S[k];
       });
     }
-    if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));}
+    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));}
     if(d.gYear) gYear=d.gYear;
     if(d.gMonth) gMonth=d.gMonth;
   }catch(e){console.warn('データ適用失敗',e);}
