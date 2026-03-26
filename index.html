@@ -1416,7 +1416,17 @@ function lsLoad(){
       if(d.gMonth) gMonth=d.gMonth;
     }
     // Firebaseからも読み込んでリアルタイム同期開始（module script初期化待ち）
-    setTimeout(fbStartListening, 1000);
+    let fbRetry = 0;
+    const fbWait = setInterval(()=>{
+      fbRetry++;
+      if(window._fbListen){
+        clearInterval(fbWait);
+        fbStartListening();
+      } else if(fbRetry > 20){
+        clearInterval(fbWait);
+        console.warn('Firebase初期化タイムアウト');
+      }
+    }, 300);
     return true;
   }catch(e){return false;}
 }
@@ -4229,6 +4239,7 @@ window._fbListen = function(callback){
     if(val) callback(val);
   });
 };
+console.log('✅ Firebase初期化完了');
 </script>
 
 <!-- ドラマ追加モーダル -->
