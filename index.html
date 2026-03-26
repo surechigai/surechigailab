@@ -1466,8 +1466,7 @@ function fbApplyData(raw){
       });
     }
     if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));}
-    if(d.gYear) gYear=d.gYear;
-    if(d.gMonth) gMonth=d.gMonth;
+    // gYear/gMonthはFirebaseの値で上書きしない（各端末で独立して管理）
   }catch(e){console.warn('データ適用失敗',e);}
 }
 
@@ -1498,8 +1497,7 @@ function lsLoad(){
       const d = JSON.parse(raw);
       if(d.S){Object.assign(S, d.S);}
       if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));}
-      if(d.gYear) gYear=d.gYear;
-      if(d.gMonth) gMonth=d.gMonth;
+      // gYear/gMonthはlocalStorageから復元しない（常に現在月を使う）
     }
     // Firebaseからデータを読み込んでからUI更新
     let fbRetry = 0;
