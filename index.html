@@ -1620,7 +1620,7 @@ async function fmAutoFill(title){
     const prompt=`web_searchツールで「${title} 映画 OR ドラマ 出演 あらすじ」「${title} 配信 Netflix OR Disney OR Prime OR TVer」を検索し、以下のJSON形式のみで回答してください（前後に何も付けない）:
 {"ch":"放送局または公開年（例：2022年 / フジテレビ月曜21時）","stream":"配信サービス（例：Netflix / Prime Video / TVer）","cast":"主要キャスト3〜5名","memo":"ネタバレなしのあらすじ1〜2文","type":"movie か drama か anime のいずれか"}`;
     const res=await Promise.race([
-      fetch('https://api.anthropic.com/v1/messages',{
+      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           model:'claude-sonnet-4-20250514',max_tokens:800,
@@ -1717,7 +1717,7 @@ async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
 - 2025〜2026年の最新作も積極的に含める
 出力はJSONのみ（前後に何も付けない）: {"titles":["タイトル1","タイトル2",...]}`;
     const res=await Promise.race([
-      fetch('https://api.anthropic.com/v1/messages',{
+      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
@@ -1762,7 +1762,7 @@ async function dramaAutoFill(){
   try{
     const prompt=`web_searchツールで「${title} ドラマ 放送局 何話 2025」「${title} 配信 TVer FOD」「${title} キャスト 出演者」をそれぞれ検索してから、以下のJSON形式のみで回答してください（前後に何も付けない）:\n{"ch":"放送局と曜日時間（例：フジテレビ 月曜21時）","eps":全話数の数値（不明は0）,"stream":"配信サービスと条件（例：TVer最新話無料／FOD見逃し／Netflix全話）","cast":"主要キャスト3〜5名（例：竹野内豊、石原さとみ、松坂桃李）","memo":"ネタバレなしのあらすじ1〜2文"}`;
     const res=await Promise.race([
-      fetch('https://api.anthropic.com/v1/messages',{
+      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
@@ -2794,7 +2794,7 @@ async function spiceLoad(){
   // 1回目のAPI試行
   let success=false;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,messages:[{role:'user',content:prompt}]})
     });
@@ -2805,7 +2805,7 @@ async function spiceLoad(){
   }catch(e1){
     // API失敗時：別プロンプトで再試行
     try{
-      const res2=await fetch('https://api.anthropic.com/v1/messages',{
+      const res2=await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,messages:[{role:'user',content:SP_SYS[spiceType](ctx)}]})
       });
@@ -3136,7 +3136,7 @@ async function qGenQ(){
   const fbText=fallback[Math.floor(Math.random()*fallback.length)];
   try{
     const res=await Promise.race([
-      fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:SYS_Q.replace('{CAT}',CAT[tc]?.label||tc)}]})}),
+      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:SYS_Q.replace('{CAT}',CAT[tc]?.label||tc)}]})}),
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000))
     ]);
     const data=await res.json();
@@ -3264,7 +3264,7 @@ async function qAnalysis(){
 
 2人の回答から、共通点・ちがい・すれちがいポイントを温かくユーモアを交えて60〜100字で分析してください。断定せず「〜かも」「〜な気がする」などやわらかい表現で。出力はテキストのみ。`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     const txt=data.content?.map(c=>c.text||'').join('').trim();
     txEl.textContent=txt||'お互いの答え、面白い！似てるところもあって、ちがうところも。それがふたりの魅力かも 🔬';
