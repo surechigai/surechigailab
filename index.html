@@ -1492,7 +1492,7 @@ function fbStartListening(){
 
 function lsLoad(){
   try{
-    // まずlocalStorageから読み込み（即時表示用）
+    // localStorageにデータがあれば即時表示
     const raw = localStorage.getItem(LS_KEY);
     if(raw){
       const d = JSON.parse(raw);
@@ -1501,14 +1501,28 @@ function lsLoad(){
       if(d.gYear) gYear=d.gYear;
       if(d.gMonth) gMonth=d.gMonth;
     }
-    // Firebaseからも読み込んでリアルタイム同期開始（module script初期化待ち）
+    // Firebaseからデータを読み込んでからUI更新
     let fbRetry = 0;
     const fbWait = setInterval(()=>{
       fbRetry++;
-      if(window._fbListen){
+      if(window._fbSave && window._fbListen){
         clearInterval(fbWait);
+        // Firebaseから最新データを一度読み込む
+        _db.ref(_DB_PATH).once('value').then(snap=>{
+          const val = snap.val();
+          if(val){
+            fbApplyData(val);
+            localStorage.setItem(LS_KEY, val);
+            // UI更新
+            try{
+              renderRooms();gRender();calRender();updateCnt();updateTop();
+              agendaRender();updateHomeMood();renderPartnerMood();
+            }catch(e){}
+          }
+        }).catch(e=>console.warn('Firebase初回読み込み失敗',e));
+        // リアルタイム同期開始
         fbStartListening();
-      } else if(fbRetry > 20){
+      } else if(fbRetry > 30){
         clearInterval(fbWait);
         console.warn('Firebase初期化タイムアウト');
       }
