@@ -9,6 +9,7 @@
 <title>🤝 すれちがい研究所</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <script>
 firebase.initializeApp({
   apiKey: "AIzaSyCE7saZd1UgnaG4iYt-pJhdTNKymaKXl8A",
@@ -23,6 +24,49 @@ const _db = firebase.database();
 const _DB_PATH = 'surechigai/data';
 window._fbSave = function(data){ _db.ref(_DB_PATH).set(data); };
 window._fbListen = function(cb){ _db.ref(_DB_PATH).on('value', s=>{ const v=s.val(); if(v) cb(v); }); };
+
+// ═══ プッシュ通知 ═══
+const VAPID_KEY = 'BB8vDqE8ILZT7zze4yjO6k_iCNv-u7-scP9Zv-rSgk-5KL1mIEmFMGzHLSIOt5I7iMBFJRUGk7EZffrEN4XKipQ';
+const FCM_TOKEN_PATH = 'surechigai/fcmTokens';
+let _messaging = null;
+
+async function initNotifications(userId) {
+  try {
+    // サービスワーカー登録
+    const sw = await navigator.serviceWorker.register('/surechigailab/firebase-messaging-sw.js');
+    _messaging = firebase.messaging();
+    // 通知許可をリクエスト
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+    // FCMトークン取得
+    const token = await _messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: sw });
+    if (token) {
+      // Firebaseにトークンを保存
+      _db.ref(`${FCM_TOKEN_PATH}/${userId}`).set(token);
+      console.log('✅ 通知トークン登録完了');
+    }
+    // フォアグラウンド通知
+    _messaging.onMessage((payload) => {
+      const { title, body } = payload.notification;
+      new Notification(title, { body, icon: '/surechigailab/icon.png' });
+    });
+  } catch(e) { console.warn('通知初期化失敗:', e); }
+}
+
+// 通知を送る（相手のトークンに送信）
+window._sendNotification = async function(toUserId, title, body) {
+  try {
+    const snap = await _db.ref(`${FCM_TOKEN_PATH}/${toUserId}`).get();
+    const token = snap.val();
+    if (!token) return;
+    await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, title, body })
+    });
+  } catch(e) { console.warn('通知送信失敗:', e); }
+};
+
 console.log('✅ Firebase初期化完了');
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1479,6 +1523,10 @@ function boot(u){
   document.getElementById('sel').style.display='none';
   document.getElementById('main').style.cssText='display:flex;flex-direction:column;height:100%;overflow:hidden';
   applyTheme();renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();qInit();spiceLoad();checkinLoadQ();
+  // 通知初期化
+  if('Notification' in window && 'serviceWorker' in navigator){
+    setTimeout(()=>initNotifications(me), 2000);
+  }
 }
 function goSel(){
   document.getElementById('sel').style.display='flex';
@@ -2282,6 +2330,11 @@ function saveFilmark(){
     memo:document.getElementById('fm-memo-inp').value.trim(),
     date:document.getElementById('fm-date-inp').value,who:me,ch,stream,cast});
   closeAddFilmark();renderFilmarks();omoideRender();lsSave();
+  // 通知送信
+  const partner=me==='ig'?'tk':'ig';
+  const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
+  const typeLabel=filmarkTypeSel==='movie'?'🎬 映画':'📺 ドラマ';
+  if(window._sendNotification) window._sendNotification(partner, `${myName}が鑑賞記録を追加`, `${typeLabel}「${title}」`);
 }
 let filmarkStatusFilterVal='all';
 function filmarkWhoFilter(btn,who){
@@ -2501,6 +2554,10 @@ function modalSendMood(){
   document.getElementById('mood-sent').classList.add('on');
   omoideRender();
   lsSave();
+  // 通知送信
+  const partner=me==='ig'?'tk':'ig';
+  const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
+  if(window._sendNotification) window._sendNotification(partner, `${myName}の気持ち`, `${modalMoodE} ${modalMoodL}${txt?' 「'+txt+'」':''}`);
 }
 
 // ホーム画面インライン気持ち入力
@@ -2971,6 +3028,10 @@ function sendMsg(){
   inp.value='';inp.style.height='auto';
   const btn=document.getElementById('sbtn');btn.classList.add('fly');setTimeout(()=>btn.classList.remove('fly'),400);
   renderMsgs(r);renderRooms();lsSave();
+  // 通知送信
+  const partner=me==='ig'?'tk':'ig';
+  const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
+  if(window._sendNotification) window._sendNotification(partner, `${myName}からメッセージ`, v.length>30?v.slice(0,30)+'…':v);
 }
 function sendImage(input){
   const file=input.files[0];if(!file)return;
@@ -3592,6 +3653,10 @@ function gSave(){
     S.recs.unshift({id:S.nRecId++,...recData});
   }
   gClose();gRender();calRender();updateTop();lsSave();
+  // 通知送信
+  const partner=me==='ig'?'tk':'ig';
+  const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
+  if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${shop}`);
   // お店リスト登録確認（新規のみ）
   if(!editId){
   // お店リスト登録確認
