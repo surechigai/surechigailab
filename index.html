@@ -192,6 +192,20 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .nb.on svg{transform:scale(1.15)}.nb.on span{opacity:1;font-weight:700}
 .nb.on::after{content:'';position:absolute;bottom:-2px;width:18px;height:2.5px;border-radius:3px;background:currentColor;opacity:.8}
 
+/* ── バッジ・アクティビティ通知 ── */
+.nb-badge{position:absolute;top:2px;right:calc(50% - 18px);background:#e05050;color:white;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;pointer-events:none;border:1.5px solid white;transform:scale(0);transition:transform .22s cubic-bezier(.34,1.56,.64,1);z-index:10}
+.nb-badge.on{transform:scale(1)}
+@keyframes nbPulse{0%{box-shadow:0 0 0 0 rgba(224,80,80,.5)}70%{box-shadow:0 0 0 6px rgba(224,80,80,0)}100%{box-shadow:0 0 0 0 rgba(224,80,80,0)}}
+.nb-badge.pulse{animation:nbPulse .6s ease-out}
+@keyframes nbGlow{0%,100%{filter:brightness(1)}40%{filter:brightness(1.25)}}
+.nb.has-badge{animation:nbGlow .5s ease-out}
+/* アクティビティトースト */
+.act-toast{position:fixed;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-80px);background:rgba(30,22,20,.93);color:white;border-radius:18px;padding:10px 16px 10px 12px;font-size:12px;font-family:'Noto Sans JP',sans-serif;z-index:9999;display:flex;align-items:center;gap:9px;box-shadow:0 4px 20px rgba(0,0,0,.35);max-width:88vw;transition:transform .35s cubic-bezier(.34,1.2,.64,1),opacity .35s;opacity:0;pointer-events:none;white-space:nowrap}
+.act-toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+.act-toast-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.act-toast-body{display:flex;flex-direction:column;gap:1px;min-width:0}
+.act-toast-ttl{font-size:12px;font-weight:600;line-height:1.3}
+.act-toast-sub{font-size:10px;opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:56vw}
 /* MODAL */
 .ov{position:fixed;inset:0;background:rgba(20,10,10,.5);display:flex;align-items:flex-end;justify-content:center;z-index:300;opacity:0;pointer-events:none;transition:opacity .28s}
 .ov.on{opacity:1;pointer-events:all}
@@ -557,6 +571,13 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 #sel::after{content:'';position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(224,112,144,.1) 0%,transparent 70%);pointer-events:none}
 </style>
 <body>
+<div class="act-toast" id="act-toast">
+  <div class="act-toast-av" id="act-toast-av"></div>
+  <div class="act-toast-body">
+    <div class="act-toast-ttl" id="act-toast-ttl"></div>
+    <div class="act-toast-sub" id="act-toast-sub"></div>
+  </div>
+</div>
 <div class="app">
 <div id="sel" style="position:relative;overflow:hidden">
   <div class="logo-big">🤝 すれちがい研究所</div>
@@ -1096,12 +1117,15 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
     </button>
     <button class="nb" id="nb-t" onclick="go('t')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>トーク</span>
+      <span class="nb-badge" id="badge-t"></span>
     </button>
     <button class="nb" id="nb-q" onclick="go('q')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">?</text></svg><span>質問</span>
+      <span class="nb-badge" id="badge-q"></span>
     </button>
     <button class="nb" id="nb-g" onclick="go('g')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3C9 3 5 8 4 13c-.5 2.5-.2 5 1.5 6.5C6.8 20.8 8.5 21 12 21s5.2-.2 6.5-1.5C20.2 18 20.5 15.5 20 13 19 8 15 3 12 3z"/><rect x="8.5" y="11.5" width="7" height="7" rx="0.8" fill="currentColor" stroke="none"/></svg><span>ごはん</span>
+      <span class="nb-badge" id="badge-g"></span>
     </button>
     <button class="nb" id="nb-note" onclick="go('note')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span>ダイアリー</span>
@@ -1512,6 +1536,115 @@ function fbApplyData(raw){
   }catch(e){console.warn('データ適用失敗',e);}
 }
 
+// ═══ アクティビティ通知（バッジ・トースト・NEWドット）═══
+
+// バッジカウント管理
+const _badgeCounts = { t: 0, q: 0, g: 0, k: 0 };
+
+function _setBadge(tab, n) {
+  _badgeCounts[tab] = n;
+  const el = document.getElementById('badge-' + tab);
+  if (!el) return;
+  if (n > 0) {
+    el.textContent = n > 9 ? '9+' : String(n);
+    el.classList.add('on');
+    // タブボタンにふわっとアニメ
+    const nb = document.getElementById('nb-' + tab);
+    if (nb) {
+      nb.classList.add('has-badge');
+      setTimeout(() => nb.classList.remove('has-badge'), 600);
+    }
+    // バッジにpulseアニメ
+    el.classList.remove('pulse');
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('pulse')));
+    setTimeout(() => el.classList.remove('pulse'), 700);
+  } else {
+    el.classList.remove('on');
+    el.textContent = '';
+  }
+}
+
+function _clearBadge(tab) { _setBadge(tab, 0); }
+
+// トースト表示
+let _toastTimer = null;
+function _showActToast(emoji, title, sub, tabTo) {
+  const toast = document.getElementById('act-toast');
+  const av    = document.getElementById('act-toast-av');
+  const ttl   = document.getElementById('act-toast-ttl');
+  const sub_  = document.getElementById('act-toast-sub');
+  if (!toast) return;
+  av.textContent = emoji;
+  av.style.background = emoji === '💙' ? 'rgba(74,143,212,.18)' : 'rgba(224,112,144,.18)';
+  ttl.textContent = title;
+  sub_.textContent = sub;
+  toast.classList.add('on');
+  // タップでそのタブへ
+  toast.onclick = () => { toast.classList.remove('on'); if (tabTo) go(tabTo); };
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => toast.classList.remove('on'), 4000);
+}
+
+// 前回の状態スナップショット（差分検知用）
+let _prevSnap = null;
+function _makeSnap(data) {
+  return {
+    moodLast:    (data.moodLog    || []).length,
+    recsLast:    (data.recs       || []).length,
+    qHistLast:   (data.qHist      || []).length,
+    // トーク：各ルームの最後のメッセージIDで変化を検知
+    roomMsgIds:  (window.R || []).map(r => ({
+      id: r.id,
+      lastMid: r.msgs && r.msgs.length ? r.msgs[r.msgs.length - 1].id : null
+    }))
+  };
+}
+
+// Firebaseから相手の更新を受け取ったとき呼ぶ差分チェック
+function _checkActivityDiff(newData) {
+  if (!me || !newData) return;
+  const partner = me === 'ig' ? 'tk' : 'ig';
+  const partnerEmoji = partner === 'ig' ? '💙' : '🌸';
+  const partnerName  = partner === 'ig' ? '井口さん' : '瀧本さん';
+
+  if (!_prevSnap) { _prevSnap = _makeSnap(newData); return; }
+  const prev = _prevSnap;
+
+  // ① 気持ち更新チェック
+  const newMoodLen = (newData.moodLog || []).length;
+  if (newMoodLen > prev.moodLast) {
+    const newMoods = (newData.moodLog || []).slice(prev.moodLast);
+    const partnerMoods = newMoods.filter(m => m.who === partner);
+    if (partnerMoods.length > 0) {
+      const m = partnerMoods[partnerMoods.length - 1];
+      _showActToast(partnerEmoji, `${partnerName}が気持ちを更新`, `${m.emoji} ${m.label}${m.msg ? ' 「' + m.msg + '」' : ''}`, 'home');
+    }
+  }
+
+  // ② ごはん記録チェック
+  const newRecsLen = (newData.recs || []).length;
+  if (newRecsLen > prev.recsLast) {
+    const newRecs = (newData.recs || []).slice(0, newRecsLen - prev.recsLast);
+    _showActToast(partnerEmoji, `${partnerName}がごはんを記録`, `🍽 ${newRecs[0] ? newRecs[0].shop : ''}`, 'g');
+    _setBadge('g', (_badgeCounts.g || 0) + (newRecsLen - prev.recsLast));
+  }
+
+  // ③ 質問回答チェック
+  const newQLen = (newData.qHist || []).length;
+  if (newQLen > prev.qHistLast) {
+    _showActToast(partnerEmoji, `${partnerName}が質問に回答`, `${newData.qHist[0] ? newData.qHist[0].text : ''}`, 'q');
+    _setBadge('q', (_badgeCounts.q || 0) + (newQLen - prev.qHistLast));
+  }
+
+  // ④ トークのメッセージチェック（既存のroomのbagedgeはrenderRoomsで処理されているがここでもタブバッジを出す）
+  const totalUnread = (window.R || []).reduce((sum, r) => sum + (r.badge || 0), 0);
+  if (totalUnread > 0) _setBadge('t', totalUnread);
+  else _clearBadge('t');
+
+  // スナップ更新
+  _prevSnap = _makeSnap(newData);
+}
+
 function fbStartListening(){
   if(fbListening||!window._fbListen) return;
   fbListening = true;
@@ -1520,11 +1653,18 @@ function fbStartListening(){
     // 自分が保存中の場合は少し待ってから適用
     const apply = () => {
       fbRemoteUpdate = true;
+      // 差分チェック用に適用前のデータを渡す
+      const rawParsed = (typeof raw === 'string') ? (() => { try { return JSON.parse(raw); } catch(e) { return null; } })() : raw;
       fbApplyData(raw);
       fbRemoteUpdate = false;
+      // 相手の更新を検知してバッジ・トーストを出す
+      if (rawParsed && rawParsed.S) _checkActivityDiff(rawParsed.S);
       try{
         renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();updateHomeMood();renderPartnerMood();
         if(document.getElementById('sc-film')?.classList.contains('on')){renderDramaAiring();renderFilmarks();}
+        // トークタブバッジをルームのbadge合計で更新
+        const totalUnread = (window.R || []).reduce((s, r) => s + (r.badge || 0), 0);
+        if (totalUnread > 0) _setBadge('t', totalUnread); else _clearBadge('t');
       }catch(e){}
     };
     if(saveTimer){ setTimeout(apply, 1200); } else { apply(); }
@@ -1685,6 +1825,8 @@ function go(s){
   const nb=document.getElementById('nb-'+s);if(nb){nb.classList.add('on');nb.style.color=me==='ig'?'var(--ig)':'var(--tk)';}
   if(s==='q'){if(S.curQ)qRender();else qLoad();}
   if(s==='film'){renderDramaAiring();renderFilmarks();}
+  // タブを開いたらバッジをクリア
+  _clearBadge(s);
 }
 function switchFilm(pane){
   document.querySelectorAll('#sc-film .ntab').forEach(b=>b.classList.remove('on'));
@@ -4337,6 +4479,7 @@ function switchDrama(pane){
 // ═══ window への公開（type="module" 対応） ═══
 // ═══ window への公開（type="module" 対応） ═══
 [
+ _setBadge, _clearBadge, _showActToast,
  boot,goSel,goTop,go,applyTheme,
  openData,closeData,switchExport,downloadExport,copyExport,
  spiceLoad,spiceTab,spiceLike,updateSpiceLikeBtn,
