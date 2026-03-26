@@ -1416,7 +1416,7 @@ function fbStartListening(){
     fbApplyData(raw);
     fbRemoteUpdate = false;
     try{
-      renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();
+      renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();updateHomeMood();renderPartnerMood();
       if(document.getElementById('sc-film')?.classList.contains('on')){renderDramaAiring();renderFilmarks();}
     }catch(e){}
   });
