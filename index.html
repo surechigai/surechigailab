@@ -11,19 +11,29 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCE7saZd1UgnaG4iYt-pJhdTNKymaKXl8A",
-  authDomain: "surechigailab.firebaseapp.com",
-  databaseURL: "https://surechigailab-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "surechigailab",
-  storageBucket: "surechigailab.firebasestorage.app",
-  messagingSenderId: "958640684148",
-  appId: "1:958640684148:web:7b0bc3d95d85846ed2a521"
-});
-const _db = firebase.database();
+// Firebase初期化（CDN読み込み失敗時はオフラインモードで動作）
+// _db をブロック外で宣言してスコープを確保
+var _db = null;
 const _DB_PATH = 'surechigai/data';
-window._fbSave = function(data){ _db.ref(_DB_PATH).set(data); };
-window._fbListen = function(cb){ _db.ref(_DB_PATH).on('value', s=>{ const v=s.val(); if(v) cb(v); }); };
+try {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCE7saZd1UgnaG4iYt-pJhdTNKymaKXl8A",
+    authDomain: "surechigailab.firebaseapp.com",
+    databaseURL: "https://surechigailab-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "surechigailab",
+    storageBucket: "surechigailab.firebasestorage.app",
+    messagingSenderId: "958640684148",
+    appId: "1:958640684148:web:7b0bc3d95d85846ed2a521"
+  });
+  _db = firebase.database();
+  window._fbSave = function(data){ _db.ref(_DB_PATH).set(data); };
+  window._fbListen = function(cb){ _db.ref(_DB_PATH).on('value', s=>{ const v=s.val(); if(v) cb(v); }); };
+  console.log('✅ Firebase初期化完了');
+} catch(e) {
+  console.warn('⚠️ Firebase利用不可（オフラインモード）:', e.message);
+  window._fbSave = function(){};
+  window._fbListen = function(){};
+}
 
 // ═══ プッシュ通知 ═══
 const VAPID_KEY = 'BB8vDqE8ILZT7zze4yjO6k_iCNv-u7-scP9Zv-rSgk-5KL1mIEmFMGzHLSIOt5I7iMBFJRUGk7EZffrEN4XKipQ';
@@ -37,6 +47,7 @@ async function initNotifications(userId) {
     const swPath = '/surechigailab/firebase-messaging-sw.js';
     const sw = await navigator.serviceWorker.register(swPath, { scope: '/surechigailab/' });
     await navigator.serviceWorker.ready;
+    if(typeof firebase==='undefined'||!firebase.messaging) return;
     _messaging = firebase.messaging();
     // 通知許可をリクエスト
     const permission = await Notification.requestPermission();
@@ -63,6 +74,7 @@ async function initNotifications(userId) {
 
 // 通知を送る（相手のトークンに送信・自分には送らない）
 window._sendNotification = async function(toUserId, title, body) {
+  if(typeof _db === 'undefined') return; // Firebase未初期化時はスキップ
   try {
     const [toSnap, mySnap] = await Promise.all([
       _db.ref(`${FCM_TOKEN_PATH}/${toUserId}`).get(),
@@ -79,8 +91,6 @@ window._sendNotification = async function(toUserId, title, body) {
     });
   } catch(e) { console.warn('通知送信失敗:', e); }
 };
-
-console.log('✅ Firebase初期化完了');
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -99,6 +109,10 @@ button,a{-webkit-tap-highlight-color:transparent;outline:none}
   --shadow-lg:0 8px 32px rgba(0,0,0,0.13);
   --radius-sm:10px;--radius-md:16px;--radius-lg:22px;
 }
+
+/* ── ユーティリティクラス ── */
+.danger-btn{flex:1;padding:11px;border-radius:10px;border:none;background:#fff0f0;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:#cc3333;transition:all .15s}
+.danger-btn:active{background:#ffd5d5}
 html,body{height:100%;overflow:hidden}
 body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-gradient(145deg,#e8e0d8 0%,#ddd5cc 100%);display:flex;align-items:center;justify-content:center}
 .app{width:100%;max-width:430px;height:100vh;max-height:100vh;background:var(--cream);display:flex;flex-direction:column;overflow:hidden;position:relative}
@@ -1210,7 +1224,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
   </div>
   <div class="fl">メモ</div>
   <textarea class="fi" id="gf-memo" placeholder="感想・おすすめポイントなど（任意）" rows="2" style="resize:none;line-height:1.5"></textarea>
-  <div class="mbtns"><button class="mcx" onclick="gClose()">キャンセル</button><button class="msv" id="gf-save-btn" onclick="gSave()">記録する ✓</button></div>
+  <div class="mbtns"><button class="mcx" onclick="gClose()">キャンセル</button><button id="gf-del-btn" onclick="gDeleteFromModal()" style="display:none;flex:1;padding:12px;border-radius:12px;border:none;background:#fff0f0;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:#cc3333;transition:all .15s">🗑 削除</button><button class="msv" id="gf-save-btn" onclick="gSave()">記録する ✓</button></div>
   <input type="hidden" id="gf-edit-id" value=""/>
 </div></div>
 
@@ -1529,6 +1543,31 @@ function lsLoad(){
   }catch(e){return false;}
 }
 
+
+// ─── ユーティリティ ─────────────────────────────────
+/** 現在時刻 → "2025/6/15 14:30" */
+function fmtNow(){
+  const n=new Date();
+  return n.getFullYear()+'/'+(n.getMonth()+1)+'/'+n.getDate()+' '+n.getHours()+':'+String(n.getMinutes()).padStart(2,'0');
+}
+/** 指定年月に表示すべきイベントを展開して返す */
+function getVisibleEvents(calY,calM){
+  const ym=`${calY}-${String(calM).padStart(2,'0')}`;
+  const vis=[];
+  S.events.forEach(e=>{
+    const d=new Date(e.date);
+    if(e.repeat==='yearly'){
+      const nd=new Date(d);nd.setFullYear(calY);
+      if(nd.toISOString().slice(0,7)===ym)vis.push({...e,date:nd.toISOString().slice(0,10)});
+    }else if(e.repeat==='monthly'){
+      const nd=new Date(d);nd.setFullYear(calY);nd.setMonth(calM-1);
+      if(nd.toISOString().slice(0,7)===ym)vis.push({...e,date:nd.toISOString().slice(0,10)});
+    }else if(e.date&&e.date.startsWith(ym)){vis.push(e);}
+  });
+  return vis;
+}
+// ────────────────────────────────────────────────────
+
 function showToast(){
   const t=document.getElementById('save-toast');
   t.classList.add('on');
@@ -1643,13 +1682,12 @@ function switchFilm(pane){
   if(pane==='airing')renderDramaAiring();
   if(pane==='log')renderFilmarks();
 }
-function updateCnt(){}
 function openData(){document.getElementById('sc-data').style.display='block';renderDataPage();}
 function closeData(){document.getElementById('sc-data').style.display='none';}
-function updateTop(){}
 
-// ── アジェンダ（次に会ったら）──
-// ── ドラマ ──
+// ═══ アジェンダ ═══
+
+// ═══ ドラマ ═══
 let dramaIdCnt=1,watchedIdCnt=1,epEditCtx=null,waGenreSel='ドラマ',waStarSel=0,epStarSel=0;
 let watchedFilterCat='all';
 
@@ -2573,8 +2611,7 @@ function modalSelMood(btn,e,l,d){
 function modalSendMood(){
   if(!modalMoodE){alert('気持ちを選んでください');return;}
   const txt=document.getElementById('mood-modal-text').value.trim();
-  const now=new Date();
-  const ts=now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  const now=new Date();const ts=fmtNow();
   S.moodLog.push({who:me,emoji:modalMoodE,label:modalMoodL,desc:modalMoodD,msg:txt,ts,date:now.toISOString().slice(0,10)});
   closeMoodModal();
   // トップカード更新
@@ -2623,8 +2660,7 @@ function homeSendMoodText(){
   const l=homeMoodSelL||(txt||'気持ちを記録');
   const displayLabel=homeMoodSelE?l+(txt?'　'+txt:''):txt;
   if(!homeMoodSelE&&!txt){alert('気持ちを選ぶか、一言入力してください');return;}
-  const now=new Date();
-  const ts=now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  const now=new Date();const ts=fmtNow();
   S.moodLog.push({who:me,emoji:e,label:displayLabel,msg:txt,ts,date:now.toISOString().slice(0,10)});
   // 送信済み表示（グリッド構造：絵文字は独立行なので常に表示）
   document.getElementById('home-my-prompt').style.display='none';
@@ -2752,7 +2788,7 @@ function doSendPartnerMood(){
   if(!partnerMoodSelE){alert('気持ちを選んでください');return;}
   const partner=me==='ig'?'tk':'ig';
   const msg=document.getElementById('partner-mood-msg').value.trim();
-  const now=new Date();const ts=now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  const now=new Date();const ts=fmtNow();
   S.moodLog.push({who:partner,emoji:partnerMoodSelE,label:partnerMoodSelL,msg,ts,date:now.toISOString().slice(0,10)});
   togglePartnerMoodEdit();
   renderPartnerMood();
@@ -3254,8 +3290,6 @@ async function qInit(){
   await qLoad();
 }
 async function qLoad(){
-  // qLoadingが詰まっている場合は強制リセット
-  qLoading=false;
   qLoading=true;
   S.igAns=null;S.tkAns=null;myStamp='';
   ['q-state-a','q-state-b','q-state-c'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
@@ -3575,17 +3609,16 @@ function slRender(){
   }
   const areaOrder=['三ノ宮','尼崎','塚口','梅田','その他'];
   const GNI2={'和食':'🍱','韓国料理':'🥘','イタリアン':'🍝','焼肉':'🥩','ラーメン':'🍜','バー・飲み':'🍻','居酒屋':'🍶','カフェ':'☕','洋食':'🍽','その他':'🍽'};
+  // 訪問回数をMapに事前集計（O(n²)→O(n)最適化）
+  const visitMap=new Map();
+  (S.recs||[]).forEach(r=>{if(r.shop)visitMap.set(r.shop,(visitMap.get(r.shop)||0)+1);});
   // エリアごとにグループ
   const grouped={};
   filtered.forEach(s=>{const a=s.area||'その他';if(!grouped[a])grouped[a]=[];grouped[a].push(s);});
   const areas=(slAreaFilter==='all'?areaOrder:areaOrder.filter(a=>a===slAreaFilter)).filter(a=>grouped[a]);
   let html='';
   areas.forEach(area=>{
-    const sorted=[...grouped[area]].sort((a,b)=>{
-      const va=(S.recs||[]).filter(r=>r.shop===a.name).length;
-      const vb=(S.recs||[]).filter(r=>r.shop===b.name).length;
-      return vb-va;
-    });
+    const sorted=[...grouped[area]].sort((a,b)=>(visitMap.get(b.name)||0)-(visitMap.get(a.name)||0));
     if(slAreaFilter==='all'){
       html+=`<div style="font-size:11px;font-weight:700;color:var(--wg);margin:12px 0 6px;display:flex;align-items:center;gap:6px">
         <span style="background:var(--ig-bg);color:var(--ig-d);border-radius:8px;padding:2px 9px">${area}</span>
@@ -3654,7 +3687,34 @@ function gChip(btn,type,val){
   else if(type==='area'){document.querySelectorAll('#gf-area .chip').forEach(b=>{b.classList.remove('on','ig-on');});btn.classList.add('on','ig-on');newGArea=val;}
   else{const isOn=btn.classList.contains('on');document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));if(!isOn){btn.classList.add('on','tk-on');newGGenre=val;}else newGGenre='';}
 }
-function gOpen(){document.getElementById('gf-date').value=new Date().toISOString().slice(0,10);['gf-shop','gf-ig','gf-tk','gf-ig-n','gf-tk-n'].forEach(id=>document.getElementById(id).value='');document.getElementById('gf-hint').classList.remove('on');newGCat='ランチ';newGGenre='';newGArea='三ノ宮';document.querySelectorAll('#gf-cat .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-area .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));document.getElementById('gf-memo').value='';document.getElementById('gf-edit-id').value='';document.getElementById('gf-save-btn').textContent='記録する ✓';document.getElementById('g-ov').classList.add('on');}
+function gOpen(){document.getElementById('gf-date').value=new Date().toISOString().slice(0,10);['gf-shop','gf-ig','gf-tk','gf-ig-n','gf-tk-n'].forEach(id=>document.getElementById(id).value='');document.getElementById('gf-hint').classList.remove('on');newGCat='ランチ';newGGenre='';newGArea='三ノ宮';document.querySelectorAll('#gf-cat .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-area .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));document.getElementById('gf-memo').value='';document.getElementById('gf-edit-id').value='';document.getElementById('gf-save-btn').textContent='記録する ✓';document.getElementById('gf-del-btn').style.display='none';document.getElementById('g-ov').classList.add('on');}
+function gDelete(id){
+  const r=S.recs.find(x=>x.id===id);if(!r)return;
+  const old=document.getElementById('g-del-confirm');if(old)old.remove();
+  const ui=document.createElement('div');
+  ui.id='g-del-confirm';
+  ui.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2020;color:white;border-radius:16px;padding:13px 16px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;display:flex;align-items:center;gap:10px;z-index:500;box-shadow:0 4px 24px rgba(0,0,0,.4);white-space:nowrap;max-width:90vw';
+  ui.innerHTML=`<span>「${r.shop}」を削除しますか？</span>
+    <button onclick="document.getElementById('g-del-confirm').remove()" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.18);color:white">やめる</button>
+    <button onclick="gDeleteConfirm(${id})" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:#cc3333;color:white;font-weight:600">削除する</button>`;
+  document.body.appendChild(ui);
+  setTimeout(()=>{if(ui.parentElement)ui.remove();},5000);
+}
+function gDeleteFromModal(){
+  const id=parseInt(document.getElementById('gf-edit-id').value);
+  if(!id)return;
+  gClose();
+  gDelete(id);
+}
+function gDeleteConfirm(id){
+  document.getElementById('g-del-confirm')?.remove();
+  S.recs=S.recs.filter(r=>r.id!==id);
+  gClose();gRender();calRender();updateTop();lsSave();
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(60,50,40,.88);color:white;border-radius:20px;padding:8px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:500;white-space:nowrap';
+  t.textContent='🗑 記録を削除しました';
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2000);
+}
 function gEdit(id){
   const r=S.recs.find(x=>x.id===id);if(!r)return;
   document.getElementById('gf-edit-id').value=String(id);
@@ -3673,6 +3733,7 @@ function gEdit(id){
   newGGenre=r.genre||'';
   document.querySelectorAll('#gf-genre .chip').forEach(b=>{b.classList.remove('on','tk-on');if(r.genre&&b.textContent.includes(r.genre))b.classList.add('on','tk-on');});
   document.getElementById('gf-save-btn').textContent='更新する ✓';
+  document.getElementById('gf-del-btn').style.display='';
   document.getElementById('g-ov').classList.add('on');
 }
 function gClose(){document.getElementById('g-ov').classList.remove('on');}
@@ -3726,7 +3787,7 @@ function gRender(){
   else{const bar=document.getElementById('g-bar');if(bar)bar.style.width='50%';const pct=document.getElementById('g-pct');if(pct)pct.textContent='—';}
   const list=document.getElementById('g-list');
   if(!mr.length){list.innerHTML=`<div style="text-align:center;padding:14px;font-size:12px;color:#ccc">${gMonth}月の記録はありません</div>`;return;}
-  list.innerHTML=mr.map(r=>{const cb=GCC[r.cat]||'#f5f5f5';const gi=GNI[r.genre]||'🍽';const is=r.igAmt>0,ts=r.tkAmt>0;return `<div class="g-rec"><div class="g-rec-top"><div class="g-rec-ic" style="background:${cb}">${gi}</div><div style="flex:1;min-width:0"><div class="g-rec-name">${r.shop}<a class="tb-link" href="${tbUrl(r.shop)}" target="_blank">食べログ ↗</a></div><div style="font-size:10px;color:var(--wg);display:flex;gap:4px;flex-wrap:wrap"><span>${r.date}</span>${r.area?`<span class="gtag" style="background:var(--ig-bg);color:var(--ig-d)">${r.area}</span>`:''}<span class="gtag" style="background:${cb};color:#555">${r.cat}</span></div></div><button onclick="gEdit(${r.id})" style="background:none;border:1px solid var(--bd);border-radius:8px;padding:3px 9px;font-size:10px;cursor:pointer;color:var(--wg);flex-shrink:0;font-family:'Noto Sans JP',sans-serif">編集</button></div>${r.memo?`<div style="font-size:11px;color:var(--wg);background:var(--cream);border-radius:7px;padding:5px 8px;margin:4px 0;line-height:1.5">💬 ${r.memo}</div>`:''}<div class="pay-chips"><div class="pchip ${is?'ig':'none'}"><div class="pw ${is?'ig':''}">💙 井口さん</div><div class="pa ${is?'ig':'none'}">${is?'¥'+r.igAmt.toLocaleString():'—'}</div>${r.igNote?`<div class="pn">${r.igNote}</div>`:''}</div><div class="pchip ${ts?'tk':'none'}"><div class="pw ${ts?'tk':''}">🌸 瀧本さん</div><div class="pa ${ts?'tk':'none'}">${ts?'¥'+r.tkAmt.toLocaleString():'—'}</div>${r.tkNote?`<div class="pn">${r.tkNote}</div>`:''}</div></div></div>`;}).join('');
+  list.innerHTML=mr.map(r=>{const cb=GCC[r.cat]||'#f5f5f5';const gi=GNI[r.genre]||'🍽';const is=r.igAmt>0,ts=r.tkAmt>0;return `<div class="g-rec"><div class="g-rec-top"><div class="g-rec-ic" style="background:${cb}">${gi}</div><div style="flex:1;min-width:0"><div class="g-rec-name">${r.shop}<a class="tb-link" href="${tbUrl(r.shop)}" target="_blank">食べログ ↗</a></div><div style="font-size:10px;color:var(--wg);display:flex;gap:4px;flex-wrap:wrap"><span>${r.date}</span>${r.area?`<span class="gtag" style="background:var(--ig-bg);color:var(--ig-d)">${r.area}</span>`:''}<span class="gtag" style="background:${cb};color:#555">${r.cat}</span></div></div><div style="display:flex;gap:5px;flex-shrink:0"><button onclick="gEdit(${r.id})" style="background:none;border:1px solid var(--bd);border-radius:8px;padding:3px 9px;font-size:10px;cursor:pointer;color:var(--wg);font-family:'Noto Sans JP',sans-serif">✏ 編集</button><button onclick="gDelete(${r.id})" style="background:none;border:1px solid rgba(200,50,50,.3);border-radius:8px;padding:3px 9px;font-size:10px;cursor:pointer;color:#cc3333;font-family:'Noto Sans JP',sans-serif">🗑</button></div></div>${r.memo?`<div style="font-size:11px;color:var(--wg);background:var(--cream);border-radius:7px;padding:5px 8px;margin:4px 0;line-height:1.5">💬 ${r.memo}</div>`:''}<div class="pay-chips"><div class="pchip ${is?'ig':'none'}"><div class="pw ${is?'ig':''}">💙 井口さん</div><div class="pa ${is?'ig':'none'}">${is?'¥'+r.igAmt.toLocaleString():'—'}</div>${r.igNote?`<div class="pn">${r.igNote}</div>`:''}</div><div class="pchip ${ts?'tk':'none'}"><div class="pw ${ts?'tk':''}">🌸 瀧本さん</div><div class="pa ${ts?'tk':'none'}">${ts?'¥'+r.tkAmt.toLocaleString():'—'}</div>${r.tkNote?`<div class="pn">${r.tkNote}</div>`:''}</div></div></div>`;}).join('');
 }
 
 // NOTE
@@ -3837,7 +3898,7 @@ function saveCheckin(){
   if(!me){alert('ユーザーを選択してください');return;}
   const now=new Date();
   const date=now.toISOString().slice(0,10);
-  const ts=now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  const ts=fmtNow();
   // 今表示中の質問を取得
   const qEl=document.getElementById('checkin-q');
   const question=qEl?.textContent?.trim()||'';
@@ -3862,8 +3923,27 @@ function saveCheckin(){
 
 function checkinDeletePost(id){
   if(!S.posts)return;
+  const p=S.posts.find(x=>x.id===id);if(!p)return;
+  const preview=p.text?p.text.slice(0,15)+(p.text.length>15?'…':''):'この投稿';
+  const old=document.getElementById('checkin-del-confirm');if(old)old.remove();
+  const ui=document.createElement('div');
+  ui.id='checkin-del-confirm';
+  ui.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2020;color:white;border-radius:16px;padding:13px 16px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;display:flex;align-items:center;gap:10px;z-index:500;box-shadow:0 4px 24px rgba(0,0,0,.4);white-space:nowrap;max-width:90vw';
+  ui.innerHTML=`<span>「${preview}」を削除しますか？</span>
+    <button onclick="document.getElementById('checkin-del-confirm').remove()" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.18);color:white">やめる</button>
+    <button onclick="checkinDeleteConfirm(${id})" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:#cc3333;color:white;font-weight:600">削除する</button>`;
+  document.body.appendChild(ui);
+  setTimeout(()=>{if(ui.parentElement)ui.remove();},5000);
+}
+function checkinDeleteConfirm(id){
+  document.getElementById('checkin-del-confirm')?.remove();
+  if(!S.posts)return;
   S.posts=S.posts.filter(p=>p.id!==id);
   checkinRenderTimeline();calRender();lsSave();
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(60,50,40,.88);color:white;border-radius:20px;padding:8px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:500;white-space:nowrap';
+  t.textContent='🗑 記録を削除しました';
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2000);
 }
 
 let checkinEditId=null, checkinEditMoodE='', checkinEditMoodL='';
@@ -3982,20 +4062,18 @@ function checkinCancelEdit(){
 }
 
 function checkinUpdateView(){checkinRenderTimeline();checkinLoadQ();}
-function resetCheckin(){}
 
-// 旧omoide stub（参照エラー防止）
-function omoideCalMove(){}
-function omoideSelectDate(){}
-function omoideRenderList(){}
-function omoideRender(){}
-function openOmoideForm(){}
-function closeOmoideForm(){}
-function saveOmoide(){}
-function deleteOmoide(){}
-function omoideTypeFilter(){}
-function openOmoideRecForm(){}
-function closeOmoideRecForm(){}
+// ── 旧omoide互換スタブ（参照エラー防止・将来削除予定） ──
+const _noop=()=>{};
+// 空実装だが呼び出し箇所が多いため関数として定義
+function updateCnt(){}
+function updateTop(){}
+function evType(){}
+[
+  'omoideCalMove','omoideSelectDate','omoideRenderList','omoideRender',
+  'openOmoideForm','closeOmoideForm','saveOmoide','deleteOmoide','omoideTypeFilter',
+  'openOmoideRecForm','closeOmoideRecForm',
+].forEach(n=>window[n]=_noop);
 let omoideCalY=new Date().getFullYear(), omoideCalM=new Date().getMonth()+1, omoideSelDate=null;
 
 function calRender(){
@@ -4007,8 +4085,7 @@ function calRender(){
   grid.innerHTML=['日','月','火','水','木','金','土'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
   const first=new Date(calY,calM-1,1).getDay(),days=new Date(calY,calM,0).getDate(),today=new Date();
   const ym=`${calY}-${String(calM).padStart(2,'0')}`;
-  const vis=[];
-  S.events.forEach(e=>{const d=new Date(e.date);if(e.repeat==='yearly'){const nd=new Date(d);nd.setFullYear(calY);if(nd.toISOString().slice(0,7)===ym)vis.push({...e,date:nd.toISOString().slice(0,10)});}else if(e.repeat==='monthly'){const nd=new Date(d);nd.setFullYear(calY);nd.setMonth(calM-1);if(nd.toISOString().slice(0,7)===ym)vis.push({...e,date:nd.toISOString().slice(0,10)});}else if(e.date&&e.date.startsWith(ym)){vis.push(e);}});
+  const vis=getVisibleEvents(calY,calM);
   const evSet=new Set(vis.map(e=>e.date));
   const postDates=new Set((S.posts||[]).filter(p=>p.date&&p.date.startsWith(ym)).map(p=>p.date));
   const recDates=new Set((S.recs||[]).filter(r=>r.date&&r.date.startsWith(ym)).map(r=>r.date));
@@ -4035,8 +4112,7 @@ function calSelectDate(ds){
 function calRenderEvs(visOverride){
   const{calY,calM}=S;
   const ym=`${calY}-${String(calM).padStart(2,'0')}`;
-  let vis=visOverride;
-  if(!vis){vis=[];S.events.forEach(e=>{const d=new Date(e.date);if(e.repeat==='yearly'){const nd=new Date(d);nd.setFullYear(calY);if(nd.toISOString().slice(0,7)===ym)vis.push({...e,date:nd.toISOString().slice(0,10)});}else if(e.repeat==='monthly'){const nd=new Date(d);nd.setFullYear(calY);nd.setMonth(calM-1);if(nd.toISOString().slice(0,7)===ym)vis.push({...e,date:nd.toISOString().slice(0,10)});}else if(e.date&&e.date.startsWith(ym)){vis.push(e);}});}
+  const vis=visOverride||getVisibleEvents(calY,calM);
   const sel=S.calSelDate;
   const dayNames=['日','月','火','水','木','金','土'];
   const lbl=document.getElementById('cal-ev-lbl');
@@ -4116,8 +4192,6 @@ function renderCalDaylog(date,vis){
   html+=renderUp(tkPosts,'tk');
   viewEl.innerHTML=html;
 }
-function toggleDiaryEdit(){}
-function saveDiaryFromCal(){}
 
 function calMove(d){S.calM+=d;if(S.calM>12){S.calM=1;S.calY++;}if(S.calM<1){S.calM=12;S.calY--;}S.calSelDate=null;calRender();}
 function openAddEv(){openAddEvWithDate(new Date().toISOString().slice(0,10));}
@@ -4147,7 +4221,6 @@ function openEditEv(id){
   document.getElementById('ev-ov').classList.add('on');
 }
 function closeAddEv(){document.getElementById('ev-ov').classList.remove('on');}
-function evType(){}
 function evRep(btn,r){document.querySelectorAll('#ev-rep-chips .chip').forEach(b=>b.classList.remove('on','ig-on'));btn.classList.add('on','ig-on');nEvRep=r;}
 function saveEv(){
   const name=document.getElementById('ev-name').value.trim(),date=document.getElementById('ev-date').value;
@@ -4214,7 +4287,7 @@ function doSendMood(){
   if(!selMoodE){alert('気持ちを選んでください');return;}
   const partner=me==='ig'?'瀧本さん':'井口さん';const pe=me==='ig'?'🌸':'💙';
   const msg='';
-  const now=new Date();const ts=now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  const now=new Date();const ts=fmtNow();
   S.moodLog.push({who:me,emoji:selMoodE,label:selMoodL,desc:selMoodD,msg,ts,date:now.toISOString().slice(0,10)});
   document.getElementById('mood-form').style.display='none';
   const sent=document.getElementById('mood-sent');sent.classList.add('on');
@@ -4281,7 +4354,6 @@ function switchDrama(pane){
 }
 
 // ═══ window への公開（type="module" 対応） ═══
-// ═══ window への公開（type="module" 対応） ═══
 [
  boot,goSel,goTop,go,applyTheme,
  openData,closeData,switchExport,downloadExport,copyExport,
@@ -4314,12 +4386,12 @@ function switchDrama(pane){
  watchedFilter,toggleWatchedFav,renderDramaWatched,
  openAddFilmark,closeAddFilmark,saveFilmark,fmChip,fmTitleInput,hideFmSuggest,setFmStar,toggleFilmarkDetail,fmAutoFill,selectFmSuggest,toggleFmInfoEdit,
  filmarkFilter,filmarkStatusFilter,filmarkWhoFilter,openFilmarkEdit,closeFilmarkEdit,saveFilmarkEdit,deleteFilmark,renderFilmarks,
- gOpen,gClose,gChip,gHint,gSave,gEdit,gMove,gRender,gSelectShop,addToShopList,
+ gOpen,gClose,gChip,gHint,gSave,gEdit,gDelete,gDeleteConfirm,gDeleteFromModal,gMove,gRender,gSelectShop,addToShopList,
  openShopList,closeShopList,slFilter,slRender,
  openEditShop,closeEditShop,shopEditChip,saveEditShop,deleteShop,
  checkinLoadQ,saveCheckin,checkinCharCount,checkinLoadImg,checkinRemoveImg,
  checkinSelMood,checkinEditSelMood,checkinCancelEdit,checkinSaveEdit,
- checkinDeletePost,checkinEditPost,checkinUpdateView,checkinUseQ,checkinRenderTimeline,resetCheckin,
+ checkinDeletePost,checkinDeleteConfirm,checkinEditPost,checkinUpdateView,checkinUseQ,checkinRenderTimeline,resetCheckin,
  openRecForm,closeRecForm,saveRec,recFilter,renderRecords,rCat,
  openOmoideForm,closeOmoideForm,saveOmoide,deleteOmoide,omoideRender,omoideRenderList,omoideTypeFilter,omoideCalMove,omoideSelectDate,
  openOmoideRecForm,closeOmoideRecForm,
@@ -4340,24 +4412,7 @@ function switchDrama(pane){
   <div class="mbtns"><button class="mcx" onclick="closeDramaAdd()">キャンセル</button><button class="msv" onclick="saveDramaAdd()">追加する ✓</button></div>
 </div></div>
 
-<!-- エピソード感想モーダル -->
-<div class="ov" id="ep-ov"><div class="modal">
-  <div class="mt">✏️ 感想を追加</div>
-  <div style="font-size:12px;color:var(--lav);font-weight:500;margin-bottom:10px" id="ep-drama-title"></div>
-  <div class="fl">話数</div><input class="fi" id="ep-num-inp" type="number" placeholder="例：3"/>
-  <div class="fl">視聴日</div><input class="fi" id="ep-date-inp" type="date"/>
-  <div class="fl">評価</div>
-  <div style="display:flex;gap:6px;margin-bottom:4px">
-    <span class="ep-star" onclick="setEpStar(1)" style="font-size:26px;cursor:pointer;transition:all .15s">⭐</span>
-    <span class="ep-star" onclick="setEpStar(2)" style="font-size:26px;cursor:pointer;transition:all .15s">⭐</span>
-    <span class="ep-star" onclick="setEpStar(3)" style="font-size:26px;cursor:pointer;transition:all .15s">⭐</span>
-    <span class="ep-star" onclick="setEpStar(4)" style="font-size:26px;cursor:pointer;transition:all .15s">⭐</span>
-    <span class="ep-star" onclick="setEpStar(5)" style="font-size:26px;cursor:pointer;transition:all .15s">⭐</span>
-  </div>
-  <div class="fl">感想</div>
-  <textarea class="fi" id="ep-review-inp" style="min-height:75px;resize:none;line-height:1.7" placeholder="この話どうだった？ネタバレOKで！"></textarea>
-  <div class="mbtns"><button class="mcx" onclick="closeEpModal()">キャンセル</button><button class="msv" onclick="saveEp()">保存する ✓</button></div>
-</div></div>
+<!-- ep-ov は「各話感想モーダル」として上部で定義済み（重複削除）-->
 
 <!-- 鑑賞記録追加モーダル -->
 <div class="ov" id="filmark-ov"><div class="modal">
@@ -4442,7 +4497,7 @@ function switchDrama(pane){
   <textarea class="fi" id="shop-edit-memo" placeholder="おすすめポイント、雰囲気など…" rows="2" style="resize:none;line-height:1.6"></textarea>
   <div class="mbtns" style="margin-top:14px">
     <button class="mcx" onclick="closeEditShop()">キャンセル</button>
-    <button onclick="deleteShop()" style="flex:1;padding:11px;border-radius:10px;border:none;background:#fff0f0;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:#cc3333;transition:all .15s">🗑 削除</button>
+    <button onclick="deleteShop()" class="danger-btn">🗑 削除</button>
     <button class="msv" onclick="saveEditShop()">保存する ✓</button>
   </div>
 </div></div>
