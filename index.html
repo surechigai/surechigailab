@@ -3822,27 +3822,56 @@ function gSave(){
   } else {
     S.recs.unshift({id:S.nRecId++,...recData});
   }
+  // 追加前にエリア・カテゴリ・ジャンルを保存（gClose後も使えるように）
+  const _savedShop=shop, _savedArea=newGArea, _savedCat=newGCat, _savedGenre=newGGenre||'その他';
   gClose();gRender();calRender();updateTop();lsSave();
   // 通知送信
   const partner=me==='ig'?'tk':'ig';
   const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
-  if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${shop}`);
-  // お店リスト登録確認（新規のみ）
+  if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${_savedShop}`);
+  // お店リスト登録確認（新規のみ・未登録のみ）
   if(!editId){
-  // お店リスト登録確認
-  const alreadyIn=S.shopList&&S.shopList.some(s=>s.name===shop);
-  if(!alreadyIn){
-    setTimeout(()=>{
-      const ui=document.createElement('div');
-      ui.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2a2a;color:white;border-radius:16px;padding:13px 16px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;display:flex;align-items:center;gap:10px;z-index:500;box-shadow:0 4px 24px rgba(0,0,0,.35);white-space:nowrap';
-      ui.innerHTML=`<span>「${shop}」をお店リストに追加しますか？</span>
-        <button onclick="addToShopList('${shop.replace(/'/g,"\\'")}','${newGArea}','${newGCat}','${newGGenre||'その他'}');this.parentElement.remove();" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:linear-gradient(135deg,#b8d9f8,#8ec4f0);color:var(--ig-d);font-weight:600">追加</button>
-        <button onclick="this.parentElement.remove()" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.18);color:white">あとで</button>`;
-      document.body.appendChild(ui);
-      setTimeout(()=>{if(ui.parentElement)ui.remove();},6000);
-    },400);
+    const alreadyIn=(S.shopList||[]).some(s=>s.name===_savedShop);
+    if(!alreadyIn){
+      setTimeout(()=>_gShowAddShopDialog(_savedShop,_savedArea,_savedCat,_savedGenre), 350);
+    }
   }
-  }
+}
+
+function _gShowAddShopDialog(shop,area,cat,genre){
+  const old=document.getElementById('_g-add-shop-dialog');if(old)old.remove();
+  const ui=document.createElement('div');
+  ui.id='_g-add-shop-dialog';
+  ui.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)';
+  ui.innerHTML=`
+    <div style="background:var(--cream);border-radius:22px 22px 0 0;padding:22px 20px 28px;width:100%;max-width:430px;box-shadow:0 -4px 32px rgba(0,0,0,.18)">
+      <div style="width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:0 auto 18px"></div>
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">🍽 お店リストに追加する？</div>
+      <div style="font-size:12px;color:var(--wg);margin-bottom:18px;line-height:1.6">
+        <b style="color:var(--text)">「${shop}」</b>をリストに登録しておくと<br>次回から名前を打たずにすぐ選べます
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('_g-add-shop-dialog').remove()"
+          style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--bd2);background:white;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg);cursor:pointer">
+          今回はスキップ
+        </button>
+        <button onclick="addToShopList('${shop.replace(/'/g,"\'")}','${area}','${cat}','${genre}');document.getElementById('_g-add-shop-dialog').remove();_gShowAddedToast('${shop.replace(/'/g,"\'")}');"
+          style="flex:2;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--ig),var(--lav));color:white;font-size:13px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;box-shadow:0 3px 10px rgba(74,143,212,.3)">
+          ＋ リストに追加する
+        </button>
+      </div>
+    </div>`;
+  // 背景タップで閉じる
+  ui.addEventListener('click',e=>{if(e.target===ui)ui.remove();});
+  document.body.appendChild(ui);
+}
+
+function _gShowAddedToast(shop){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:rgba(40,100,60,.92);color:white;border-radius:20px;padding:9px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:700;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.25)';
+  t.textContent=`✅ 「${shop}」をリストに追加しました`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2200);
 }
 function gRender(){
   const ym=`${gYear}-${String(gMonth).padStart(2,'0')}`;
@@ -4448,7 +4477,7 @@ function switchDrama(pane){
  rFmt,rIco,rCat,addItem,delItem,togItem,openItemMemo,saveItemMemo,clearDone,
  switchNote,calMove,calRender,calSelectDate,calRenderEvs,renderCalDaylog,
  openAddEv,closeAddEv,openEditEv,saveEv,deleteEv,evType,evRep,openAddEvWithDate,expandEvs,
- saveDiaryFromCal,toggleDiaryEdit,
+
  switchFilm,
  openAddDrama,closeDramaAdd,saveDramaAdd,dramaTitleInput,fetchDramaSuggest,hideDramaSuggest,selectDramaSuggest,dramaAutoFill,dramaSub,
  openDramaDetail,closeDramaDetail,revealSpoil,addEpisodeToAiring,
@@ -4473,7 +4502,7 @@ function switchDrama(pane){
  updateCnt,updateTop,updateHomeEvs,
  renderDataPage,buildExportData,
  tbUrl,
-].forEach(fn=>{ if(typeof fn==='function') window[fn.name]=fn; });
+].forEach(fn=>{ if(fn && typeof fn==='function') window[fn.name]=fn; });
 </script>
 
 <!-- ドラマ追加モーダル -->
