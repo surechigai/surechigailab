@@ -3290,8 +3290,11 @@ async function qGenQ(){
   }
 }
 async function qInit(){
-  // 初回起動・ユーザー切替時：S.curQがあればそのまま表示、なければ生成
-  if(S.curQ){qRender();return;}
+  // 両方回答済みの状態で保存されていた場合は新しい質問をロード
+  // （そのままqRenderするとqtextがdisplay:noneになるバグ対策）
+  const bothAnswered=S.curQ&&S.igAns&&S.tkAns;
+  if(S.curQ&&!bothAnswered){qRender();return;}
+  S.curQ=null;S.igAns=null;S.tkAns=null;
   await qLoad();
 }
 async function qLoad(){
