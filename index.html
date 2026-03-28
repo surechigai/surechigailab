@@ -3301,26 +3301,33 @@ async function qLoad(){
   const answersEl=document.getElementById('q-answers');if(answersEl)answersEl.style.display='none';
   const ldAn=document.getElementById('q-analysis-ld');if(ldAn)ldAn.style.display='flex';
   const txAn=document.getElementById('q-analysis-text');if(txAn)txAn.style.display='none';
-  const qtextEl=document.getElementById('qtext');if(qtextEl)qtextEl.style.display='none';
-  document.getElementById('q-ld').style.display='flex';
   const qta=document.getElementById('q-ta');if(qta)qta.value='';
+
+  // ── フォールバック質問をまず即時表示（APIを待たずに表示） ──
+  const cats=['love','touch','future','daily','gap'];
+  const tc=S.qCat==='all'?cats[Math.floor(Math.random()*cats.length)]:S.qCat;
+  const fbText=(FB_Q[tc]||FB_Q.love)[Math.floor(Math.random()*(FB_Q[tc]||FB_Q.love).length)];
+  S.curQ={text:fbText,cat:tc,bm:false};
+  document.getElementById('qtext').textContent=fbText;
+  document.getElementById('qtext').style.display='block';
+  document.getElementById('q-ld').style.display='none';
+  if(document.getElementById('qcatpill'))document.getElementById('qcatpill').textContent=(CAT[tc]||CAT.love).label;
+  if(document.getElementById('qnum'))document.getElementById('qnum').textContent=S.qHist.length+'問回答済み';
+  qRender();
+
+  // ── バックグラウンドでAI生成し、成功したら差し替え ──
   try{
     const q=await qGenQ();
-    S.curQ=q;
-    document.getElementById('qtop').style.background='';
-    if(document.getElementById('qcatpill'))document.getElementById('qcatpill').textContent=(CAT[q.cat]||CAT.love).label;
-    document.getElementById('qtext').textContent=q.text;
-    document.getElementById('qtext').style.display='block';
-    if(document.getElementById('qnum'))document.getElementById('qnum').textContent=S.qHist.length+'問回答済み';
-    document.getElementById('q-ld').style.display='none';
-    qRender();
+    // 回答前ならAI生成質問に差し替え
+    if(!S.igAns&&!S.tkAns){
+      S.curQ=q;
+      document.getElementById('qtop').style.background='';
+      if(document.getElementById('qcatpill'))document.getElementById('qcatpill').textContent=(CAT[q.cat]||CAT.love).label;
+      document.getElementById('qtext').textContent=q.text;
+      document.getElementById('qtext').style.display='block';
+    }
   }catch(e){
-    // ここには来ないはずだがフェイルセーフ
-    S.curQ={text:'最近、うれしかったことを教えて？',cat:'love',bm:false};
-    document.getElementById('qtext').textContent=S.curQ.text;
-    document.getElementById('qtext').style.display='block';
-    document.getElementById('q-ld').style.display='none';
-    qRender();
+    // タイムアウト・エラー時はフォールバックのまま（既に表示済み）
   }finally{
     qLoading=false;
   }
@@ -3681,6 +3688,7 @@ function gHint(val){
   clearTimeout(_gHintTimer);
   if(!val.trim()){h.classList.remove('on');h.innerHTML='';return;}
 
+  // ① 自前データ（お店リスト＋外食記録）から即時サジェスト
   const visitMap=new Map();
   (S.recs||[]).forEach(r=>{if(r.shop)visitMap.set(r.shop,(visitMap.get(r.shop)||0)+1);});
   const shopMap=new Map();
@@ -3690,10 +3698,72 @@ function gHint(val){
       shopMap.set(r.shop,{name:r.shop,area:r.area||'',cat:r.cat||'',genre:r.genre||''});
   });
   const shops=[...shopMap.values()].sort((a,b)=>(visitMap.get(b.name)||0)-(visitMap.get(a.name)||0));
-
   const q=val.trim();
-  const matched=_gFuzzyMatch(shops,q);
-  _gHintRender(h,matched,q);
+  const myMatched=_gFuzzyMatch(shops,q);
+  _gHintRender(h,myMatched,q,false);
+
+  // ② 0.8秒後にAIで周辺エリアのお店を提案
+  _gHintTimer=setTimeout(()=>_gHintAISuggest(h,q,myMatched),800);
+}
+
+async function _gHintAISuggest(h,q,alreadyShown){
+  // ローディング表示
+  const ldId='_ghint-ld';
+  const ldEl=document.createElement('div');
+  ldEl.id=ldId;
+  ldEl.style.cssText='display:flex;align-items:center;gap:6px;padding:6px 13px;font-size:11px;color:var(--wg);border-top:'+(alreadyShown.length?'1px solid var(--bd)':'none');
+  ldEl.innerHTML='<span style="animation:spin 1s linear infinite;display:inline-block">✦</span> お店を検索中…';
+  document.getElementById(ldId)?.remove();
+  h.appendChild(ldEl);
+  h.classList.add('on');
+
+  const areas='三ノ宮・尼崎・塚口・梅田周辺（兵庫・大阪）';
+  const prompt=`あなたは飲食店データベースです。「${q}」というキーワードで${areas}のお店を最大4件提案してください。
+実在するお店のみ。チェーン店は避け、地元の店を優先。
+出力JSONのみ（他のテキスト不要）:
+{"shops":[{"name":"店名","area":"エリア(三ノ宮/尼崎/塚口/梅田/その他)","genre":"ジャンル(居酒屋/和食/洋食/イタリアン/韓国料理/ラーメン/カフェ/その他)","cat":"シーン(ランチ/ディナー/カフェ/その他)"}]}`;
+
+  try{
+    const res=await Promise.race([
+      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,
+          messages:[{role:'user',content:prompt}]})
+      }),
+      new Promise((_,rej)=>setTimeout(()=>rej('timeout'),8000))
+    ]);
+    const data=await res.json();
+    const txt=data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const m=txt?.match(/\{[\s\S]*\}/);
+    document.getElementById(ldId)?.remove();
+    if(!m) return;
+    const p=JSON.parse(m[0]);
+    const aiShops=(p.shops||[]).filter(s=>s.name&&!alreadyShown.some(a=>a.name===s.name));
+    if(!aiShops.length) return;
+    // AI候補を追記
+    const sep=document.createElement('div');
+    sep.style.cssText='font-size:10px;color:var(--wg);padding:4px 13px 2px;border-top:'+(alreadyShown.length?'1px solid var(--bd)':'none')+';opacity:.7';
+    sep.textContent='🔍 AIが提案するお店';
+    h.appendChild(sep);
+    aiShops.slice(0,4).forEach((s,i)=>{
+      const GNI2={'和食':'🍱','韓国料理':'🥘','イタリアン':'🍝','焼肉':'🥩','ラーメン':'🍜','バー・飲み':'🍻','居酒屋':'🍶','カフェ':'☕','洋食':'🍽','その他':'🍽'};
+      const el=document.createElement('div');
+      el.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;'+(i<aiShops.length-1?'border-bottom:1px solid var(--bd)':'');
+      el.innerHTML='<span style="font-size:16px">'+(GNI2[s.genre]||'🍽')+'</span>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:13px;font-weight:600;color:var(--text)">'+s.name+'</div>'+
+          '<div style="font-size:10px;color:var(--wg)">'+(s.area?s.area+' · ':'')+( s.genre||'')+'</div>'+
+        '</div>'+
+        '<span style="font-size:9px;color:var(--lav);background:var(--lav-bg);border-radius:6px;padding:1px 6px;flex-shrink:0">AI</span>';
+      el.ontouchstart=()=>el.style.background='var(--cream)';
+      el.ontouchend=()=>el.style.background='';
+      el.onclick=()=>gSelectShop(s.name,s.area||'',s.cat||'その他',s.genre||'その他');
+      h.appendChild(el);
+    });
+    h.classList.add('on');
+  }catch(e){
+    document.getElementById(ldId)?.remove();
+  }
 }
 
 function _gFuzzyMatch(shops,q){
@@ -3720,8 +3790,13 @@ function _gFuzzyMatch(shops,q){
   return scores.sort((a,b)=>b.score-a.score).slice(0,5).map(x=>x.s);
 }
 
-function _gHintRender(h,matched,val){
-  if(!matched.length){h.classList.remove('on');h.innerHTML='';return;}
+function _gHintRender(h,matched,val,resetForAI=true){
+  // 自前データなしでもコンテナをクリア（AIサジェストが後から追記するため消さない）
+  h.innerHTML='';
+  if(!matched.length){
+    // AIサジェストが追記するのでonクラスはまだ付けない
+    return;
+  }
   const GNI2={'和食':'🍱','韓国料理':'🥘','イタリアン':'🍝','焼肉':'🥩','ラーメン':'🍜','バー・飲み':'🍻','居酒屋':'🍶','カフェ':'☕','洋食':'🍽','その他':'🍽'};
   h.innerHTML=matched.map((s,i)=>{
     let hl=s.name;
