@@ -1177,7 +1177,12 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 <div class="ov" id="g-ov"><div class="modal" style="overflow-y:auto;overflow-x:hidden;max-height:92vh;width:100%;box-sizing:border-box">
   <div class="mt">🍴 外食を記録する</div>
   <div class="fl">お店の名前</div>
-  <input class="fi" id="gf-shop" placeholder="例：ぐるり、金魚…" oninput="gHint(this.value)"/>
+  <input class="fi" id="gf-shop" placeholder="お店名 または 食べログURLを貼り付け" oninput="gHint(this.value)" onpaste="setTimeout(()=>gHint(document.getElementById('gf-shop').value),50)"/>
+  <!-- URL取得中インジケーター -->
+  <div id="gf-url-ld" style="display:none;align-items:center;gap:6px;font-size:11px;color:var(--lav);padding:4px 2px 2px">
+    <span style="animation:spin 1s linear infinite;display:inline-block">✦</span>
+    <span id="gf-url-ld-txt">食べログから情報を取得中…</span>
+  </div>
   <div class="tb-hint2" id="gf-hint"></div>
   <div class="fl">日付</div><input class="fi" id="gf-date" type="date"/>
   <div class="fl">エリア</div>
@@ -3286,10 +3291,7 @@ async function qGenQ(){
 }
 async function qInit(){
   // 初回起動・ユーザー切替時：S.curQがあればそのまま表示、なければ生成
-  // 両方回答済みの場合は新しい質問をロード（前セッションの完了状態が残ると質問文がdisplay:noneになるバグ対策）
-  const bothAnswered = S.curQ && S.igAns && S.tkAns;
-  if(S.curQ && !bothAnswered){qRender();return;}
-  S.curQ=null;S.igAns=null;S.tkAns=null;
+  if(S.curQ){qRender();return;}
   await qLoad();
 }
 async function qLoad(){
@@ -3655,28 +3657,96 @@ function slRender(){
 // GOHAN
 function tbUrl(n){return `https://tabelog.com/rstLst/?vs=1&sk=${encodeURIComponent(n)}&sw=${encodeURIComponent(n)}`;}
 function gMove(d){gMonth+=d;if(gMonth>12){gMonth=1;gYear++;}if(gMonth<1){gMonth=12;gYear--;}gRender();}
+// ── お店曖昧検索 ──
+const _AREA_YOMI={
+  'さんのみや':'三ノ宮','さんみや':'三ノ宮','三宮':'三ノ宮',
+  'あまがさき':'尼崎','あま':'尼崎',
+  'つかぐち':'塚口','つか':'塚口',
+  'うめだ':'梅田','うめ':'梅田'
+};
+const _GENRE_YOMI={
+  '焼き鳥':'居酒屋','やきとり':'居酒屋','やき鳥':'居酒屋','鳥':'居酒屋',
+  '居酒':'居酒屋','いざかや':'居酒屋','飲み':'居酒屋','のみ':'居酒屋',
+  '韓国':'韓国料理','かんこく':'韓国料理','チゲ':'韓国料理','スンドゥブ':'韓国料理',
+  'イタリア':'イタリアン','パスタ':'イタリアン','ピザ':'イタリアン',
+  'らーめん':'ラーメン','ラメン':'ラーメン','拉麺':'ラーメン',
+  'カフェ':'カフェ','珈琲':'カフェ','コーヒー':'カフェ','喫茶':'カフェ',
+  '和食':'和食','寿司':'和食','すし':'和食','天ぷら':'和食',
+  '洋食':'洋食','フレンチ':'洋食','ビストロ':'洋食'
+};
+let _gHintTimer=null;
+
 function gHint(val){
   const h=document.getElementById('gf-hint');
+  clearTimeout(_gHintTimer);
   if(!val.trim()){h.classList.remove('on');h.innerHTML='';return;}
-  // お店リストからサジェスト
-  const shops=S.shopList||[];
-  const matched=shops.filter(s=>s.name.includes(val)||val.includes(s.name));
-  let inner='';
-  if(matched.length){
-    inner+=matched.slice(0,3).map(s=>`<div onclick="gSelectShop('${s.name.replace(/'/g,"\\'")}','${s.area||''}','${s.cat||''}','${s.genre||''}')" style="display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;border-radius:8px;transition:background .1s" onmouseover="this.style.background='var(--bd)'" onmouseout="this.style.background=''">
-      <span style="font-size:13px">🍽</span>
+
+  const visitMap=new Map();
+  (S.recs||[]).forEach(r=>{if(r.shop)visitMap.set(r.shop,(visitMap.get(r.shop)||0)+1);});
+  const shopMap=new Map();
+  (S.shopList||[]).forEach(s=>shopMap.set(s.name,{...s}));
+  (S.recs||[]).forEach(r=>{
+    if(r.shop&&!shopMap.has(r.shop))
+      shopMap.set(r.shop,{name:r.shop,area:r.area||'',cat:r.cat||'',genre:r.genre||''});
+  });
+  const shops=[...shopMap.values()].sort((a,b)=>(visitMap.get(b.name)||0)-(visitMap.get(a.name)||0));
+
+  const q=val.trim();
+  const matched=_gFuzzyMatch(shops,q);
+  _gHintRender(h,matched,q);
+}
+
+function _gFuzzyMatch(shops,q){
+  const areaKey=_AREA_YOMI[q]||null;
+  const genreKey=_GENRE_YOMI[q]||null;
+  const scores=[];
+  shops.forEach(s=>{
+    let score=0;
+    if(s.name===q) score+=100;
+    else if(s.name.startsWith(q)) score+=80;
+    else if(s.name.includes(q)) score+=60;
+    else if(q.length>=2){
+      const chars=[...q];
+      const hit=chars.filter(c=>s.name.includes(c)).length;
+      if(hit/chars.length>=0.6) score+=Math.round(30*(hit/chars.length));
+    }
+    if(areaKey&&s.area===areaKey) score+=50;
+    if(genreKey&&s.genre===genreKey) score+=50;
+    if(!areaKey&&s.area&&s.area.includes(q)) score+=40;
+    if(!genreKey&&s.genre&&s.genre.includes(q)) score+=40;
+    if(s.memo&&s.memo.includes(q)) score+=20;
+    if(score>0) scores.push({s,score});
+  });
+  return scores.sort((a,b)=>b.score-a.score).slice(0,5).map(x=>x.s);
+}
+
+function _gHintRender(h,matched,val){
+  if(!matched.length){h.classList.remove('on');h.innerHTML='';return;}
+  const GNI2={'和食':'🍱','韓国料理':'🥘','イタリアン':'🍝','焼肉':'🥩','ラーメン':'🍜','バー・飲み':'🍻','居酒屋':'🍶','カフェ':'☕','洋食':'🍽','その他':'🍽'};
+  h.innerHTML=matched.map((s,i)=>{
+    let hl=s.name;
+    try{
+      const esc=val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      hl=s.name.replace(new RegExp(esc,'gi'),m=>`<b style="color:var(--ig-d)">${m}</b>`);
+    }catch(e){}
+    const sub=[s.area,s.genre].filter(x=>x&&x!=='その他').join(' · ');
+    const sn=s.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const sa=(s.area||'').replace(/'/g,"\\'");
+    const sc=(s.cat||'').replace(/'/g,"\\'");
+    const sg=(s.genre||'').replace(/'/g,"\\'");
+    const bd=i<matched.length-1?'border-bottom:1px solid var(--bd);':'';
+    return `<div onclick="gSelectShop('${sn}','${sa}','${sc}','${sg}')"
+      style="display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;${bd}"
+      ontouchstart="this.style.background='var(--cream)'" ontouchend="this.style.background=''">
+      <span style="font-size:16px">${GNI2[s.genre]||'🍽'}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:600;color:var(--text)">${s.name}</div>
-        <div style="font-size:10px;color:var(--wg)">${s.area||''} · ${s.cat||''} · ${s.genre||''}</div>
-      </div>
-    </div>`).join('');
-    inner+=`<div style="border-top:1px solid var(--bd);margin-top:4px;padding-top:4px">`;
-  }
-  inner+=`<div style="padding:4px 10px"><a href="${tbUrl(val)}" target="_blank" style="color:var(--tk-d);font-size:11px;font-weight:500">📋「${val}」を食べログで検索 ↗</a></div>`;
-  if(matched.length)inner+=`</div>`;
-  h.innerHTML=inner;
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${hl}</div>
+        <div style="font-size:10px;color:var(--wg)">${sub}</div>
+      </div></div>`;
+  }).join('');
   h.classList.add('on');
 }
+
 function gSelectShop(name,area,cat,genre){
   document.getElementById('gf-shop').value=name;
   // エリア・シーン・ジャンルを自動セット
