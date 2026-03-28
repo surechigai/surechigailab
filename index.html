@@ -3286,7 +3286,10 @@ async function qGenQ(){
 }
 async function qInit(){
   // 初回起動・ユーザー切替時：S.curQがあればそのまま表示、なければ生成
-  if(S.curQ){qRender();return;}
+  // 両方回答済みの場合は新しい質問をロード（前セッションの完了状態が残ると質問文がdisplay:noneになるバグ対策）
+  const bothAnswered = S.curQ && S.igAns && S.tkAns;
+  if(S.curQ && !bothAnswered){qRender();return;}
+  S.curQ=null;S.igAns=null;S.tkAns=null;
   await qLoad();
 }
 async function qLoad(){
