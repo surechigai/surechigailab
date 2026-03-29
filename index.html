@@ -3561,16 +3561,22 @@ function qlogSaveEdit(id){
 function qlogDelete(id){
   const h=S.qHist.find(x=>x.id===id);
   if(!h)return;
-  const preview=h.text.slice(0,20)+(h.text.length>20?'…':'');
-  const old=document.getElementById('_qlog-del-confirm');if(old)old.remove();
+  // カード内にインライン確認UIを表示（sc-qlogがfixedより前面のためトースト方式が使えない）
+  const card=document.getElementById('qlog-card-'+id);
+  if(!card)return;
+  // すでに確認UI表示中なら削除
+  const existing=card.querySelector('._qlog-inline-confirm');
+  if(existing){existing.remove();return;}
+  const preview=h.text.slice(0,15)+(h.text.length>15?'…':'');
   const ui=document.createElement('div');
-  ui.id='_qlog-del-confirm';
-  ui.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2020;color:white;border-radius:16px;padding:13px 16px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;display:flex;align-items:center;gap:10px;z-index:600;box-shadow:0 4px 24px rgba(0,0,0,.4);white-space:nowrap;max-width:90vw';
-  ui.innerHTML=`<span>「${preview}」を削除？</span>
-    <button onclick="document.getElementById('_qlog-del-confirm').remove()" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.18);color:white">やめる</button>
-    <button onclick="qlogDeleteConfirm(${id})" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:#cc3333;color:white;font-weight:600">削除する</button>`;
-  document.body.appendChild(ui);
-  setTimeout(()=>{if(ui.parentElement)ui.remove();},5000);
+  ui.className='_qlog-inline-confirm';
+  ui.style.cssText='margin-top:10px;background:#fff0f0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+  ui.innerHTML=`<span style="font-size:12px;color:#cc3333;flex:1">「${preview}」を削除しますか？</span>
+    <div style="display:flex;gap:6px">
+      <button onclick="this.closest('._qlog-inline-confirm').remove()" style="border:none;background:rgba(0,0,0,.08);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">やめる</button>
+      <button onclick="qlogDeleteConfirm(${id})" style="border:none;background:#cc3333;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;color:white;font-weight:600">削除する</button>
+    </div>`;
+  card.appendChild(ui);
 }
 
 function qlogDeleteConfirm(id){
