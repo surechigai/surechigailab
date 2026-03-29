@@ -1597,6 +1597,8 @@ function boot(u){
   lsLoad();
   // 必須配列が undefined の場合に初期化（古いデータとの互換性）
   ['qHist','moodLog','records','recs','events','agenda','dramas','dramaAiring','dramaWatched','filmarks','shopList','posts'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=[];});
+  // qHistのIDが未設定のエントリに付与（後方互換）
+  S.qHist.forEach((h,i)=>{if(!h.id)h.id=Date.now()-i*1000;});
   if(!S.spiceLikes||typeof S.spiceLikes!=='object')S.spiceLikes={quote:[],game:[],date:[]};
   ['quote','game','date'].forEach(k=>{if(!Array.isArray(S.spiceLikes[k]))S.spiceLikes[k]=[];});
   // 外食記録由来の投稿をS.postsから除去（過去データのクリーンアップ）
@@ -3581,17 +3583,16 @@ function qlogDelete(id){
 
 function qlogDeleteConfirm(id){
   document.getElementById('_qlog-del-confirm')?.remove();
-  // 削除するエントリが現在表示中の質問と一致する場合はリセット
-  const h=S.qHist.find(x=>x.id===id);
+  // onclickから文字列で来る場合があるので数値に統一
+  const nid=Number(id);
+  const h=S.qHist.find(x=>Number(x.id)===nid);
   if(h&&S.curQ&&S.curQ.text===h.text){
     S.curQ=null;S.igAns=null;S.tkAns=null;
   }
-  S.qHist=S.qHist.filter(h=>h.id!==id);
+  S.qHist=S.qHist.filter(x=>Number(x.id)!==nid);
   lsSave();
   qlogRender();
   qRH();
-  // 質問タブの表示も更新
-  if(S.curQ) qRender(); else qLoad();
   const t=document.createElement('div');
   t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(60,50,40,.88);color:white;border-radius:20px;padding:8px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:600;white-space:nowrap';
   t.textContent='🗑 回答を削除しました';
