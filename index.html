@@ -3714,92 +3714,70 @@ function gHint(val){
   _gHintRender(h,myMatched,q);
 
   // ② 0.8秒後にAIで周辺エリアのお店を提案
-  _gHintTimer=setTimeout(()=>_gHintAISuggest(h,q,myMatched,sid),800);
+  _gHintTimer=setTimeout(()=>_gHintAISuggest(q,sid),800);
 }
 
-async function _gHintAISuggest(h,q,alreadyShown,sid){
+async function _gHintAISuggest(q,sid){
   if(sid!==_gHintSession) return;
-  // hを毎回IDから取り直す（DOM参照が古くなっている場合の対策）
-  h=document.getElementById('gf-hint');
+  const h=document.getElementById('gf-hint');
   if(!h) return;
-  const ldId='_ghint-ld';
+
+  // ローディング表示
   const ldEl=document.createElement('div');
-  ldEl.id=ldId;
-  ldEl.style.cssText='display:flex;align-items:center;gap:6px;padding:6px 13px;font-size:11px;color:var(--wg);border-top:'+(alreadyShown.length?'1px solid var(--bd)':'none');
-  ldEl.innerHTML='<span style="animation:spin 1s linear infinite;display:inline-block">✦</span> お店を検索中…';
-  document.getElementById(ldId)?.remove();
+  ldEl.id='_ghint-ld';
+  ldEl.style.cssText='display:flex;align-items:center;gap:6px;padding:8px 13px;font-size:12px;color:var(--wg)';
+  ldEl.innerHTML='<span style="animation:spin 1s linear infinite;display:inline-block">✦</span> 検索中…';
+  h.innerHTML='';
   h.appendChild(ldEl);
   h.style.display='block';
 
-  const areas='三ノ宮・尼崎・塚口・梅田周辺（兵庫・大阪）';
-  const prompt=`あなたは飲食店データベースです。「${q}」というキーワードで${areas}のお店を最大4件提案してください。
-実在するお店のみ。チェーン店は避け、地元の店を優先。
-出力JSONのみ（他のテキスト不要）:
-{"shops":[{"name":"店名","area":"エリア(三ノ宮/尼崎/塚口/梅田/その他)","genre":"ジャンル(居酒屋/和食/洋食/イタリアン/韓国料理/ラーメン/カフェ/その他)","cat":"シーン(ランチ/ディナー/カフェ/その他)"}]}`;
-
   try{
+    const prompt='あなたは飲食店の検索エンジンです。「'+q+'」というキーワードで三ノ宮・尼崎・塚口・梅田周辺の飲食店を最大4件提案してください。実在する店のみ。出力はJSONのみ: {"shops":[{"name":"店名","area":"エリア","genre":"ジャンル","cat":"シーン"}]}';
     const res=await Promise.race([
       fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,
-          messages:[{role:'user',content:prompt}]})
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:prompt}]})
       }),
-      new Promise((_,rej)=>setTimeout(()=>rej('timeout'),8000))
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))
     ]);
+    if(sid!==_gHintSession) return;
     const data=await res.json();
-    const txt=data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-    const m=txt?.match(/\{[\s\S]*\}/);
-    document.getElementById(ldId)?.remove();
-    if(sid!==_gHintSession){
-      // デバッグ：sid不一致を表示
-      const h2=document.getElementById('gf-hint');
-      if(h2){const e2=document.createElement('div');e2.style.cssText='font-size:10px;color:orange;padding:4px 10px';e2.textContent='sid不一致(入力変更)';h2.appendChild(e2);h2.style.display='block';}
-      return;
-    }
-    // デバッグ：レスポンス全体を表示
-    const _dbgEl=document.createElement('div');
-    _dbgEl.style.cssText='font-size:10px;color:blue;padding:4px 10px;word-break:break-all';
-    _dbgEl.textContent='RAW: '+JSON.stringify(data).slice(0,200);
-    h.appendChild(_dbgEl);
-    h.style.display='block';
-    if(!m){const e2=document.createElement('div');e2.style.cssText='font-size:10px;color:red;padding:2px 10px';e2.textContent='JSONなし';h.appendChild(e2);return;}
-    const p=JSON.parse(m[0]);
-    const aiShops=(p.shops||[]).filter(s=>s.name&&!alreadyShown.some(a=>a.name===s.name));
-    if(!aiShops.length){const e2=document.createElement('div');e2.style.cssText='font-size:10px;color:red;padding:2px 10px';e2.textContent='shops空 raw:'+JSON.stringify(p).slice(0,80);h.appendChild(e2);return;}
-    // AI候補を追記
-    const sep=document.createElement('div');
-    sep.style.cssText='font-size:10px;color:var(--wg);padding:4px 13px 2px;border-top:'+(alreadyShown.length?'1px solid var(--bd)':'none')+';opacity:.7';
-    sep.textContent='🔍 AIが提案するお店';
-    h.appendChild(sep);
-    aiShops.slice(0,4).forEach((s,i)=>{
-      const GNI2={'和食':'🍱','韓国料理':'🥘','イタリアン':'🍝','焼肉':'🥩','ラーメン':'🍜','バー・飲み':'🍻','居酒屋':'🍶','カフェ':'☕','洋食':'🍽','その他':'🍽'};
+    // Workersのレスポンス形式に応じて抽出
+    let txt='';
+    if(data.content) txt=data.content.map(c=>c.text||'').join('');
+    else if(data.completion) txt=data.completion;
+    else txt=JSON.stringify(data);
+    txt=txt.replace(/```json|```/g,'').trim();
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(!m) throw new Error('no json: '+txt.slice(0,50));
+    const shops=(JSON.parse(m[0]).shops||[]).filter(s=>s&&s.name);
+    if(!shops.length) throw new Error('shops empty');
+
+    h.innerHTML='';
+    const GNI={'和食':'🍱','韓国料理':'🥘','イタリアン':'🍝','焼肉':'🥩','ラーメン':'🍜','居酒屋':'🍶','カフェ':'☕','洋食':'🍽','その他':'🍽'};
+    shops.slice(0,4).forEach((s,i)=>{
       const el=document.createElement('div');
-      el.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;'+(i<aiShops.length-1?'border-bottom:1px solid var(--bd)':'');
-      el.innerHTML='<span style="font-size:16px">'+(GNI2[s.genre]||'🍽')+'</span>'+
+      el.style.cssText='display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer;'+(i>0?'border-top:1px solid var(--bd)':'');
+      el.innerHTML=
+        '<span style="font-size:17px">'+(GNI[s.genre]||'🍽')+'</span>'+
         '<div style="flex:1;min-width:0">'+
           '<div style="font-size:13px;font-weight:600;color:var(--text)">'+s.name+'</div>'+
-          '<div style="font-size:10px;color:var(--wg)">'+(s.area?s.area+' · ':'')+( s.genre||'')+'</div>'+
+          '<div style="font-size:10px;color:var(--wg)">'+(s.area||'')+(s.genre?' · '+s.genre:'')+'</div>'+
         '</div>'+
-        '<span style="font-size:9px;color:var(--lav);background:var(--lav-bg);border-radius:6px;padding:1px 6px;flex-shrink:0">AI</span>';
-      el.ontouchstart=()=>el.style.background='var(--cream)';
-      el.ontouchend=()=>el.style.background='';
-      el.onclick=()=>gSelectShop(s.name,s.area||'',s.cat||'その他',s.genre||'その他');
+        '<span style="font-size:9px;color:var(--lav);background:var(--lav-bg);border-radius:6px;padding:2px 7px">AI</span>';
+      el.ontouchstart=function(){this.style.background='var(--ig-bg)';};
+      el.ontouchend=function(){this.style.background='';};
+      el.onclick=function(){gSelectShop(s.name,s.area||'',s.cat||'ディナー',s.genre||'その他');};
       h.appendChild(el);
     });
     h.style.display='block';
   }catch(e){
-    document.getElementById(ldId)?.remove();
-    // デバッグ：エラー内容を画面に表示
-    const h2=document.getElementById('gf-hint');
-    if(h2){
-      const errEl=document.createElement('div');
-      errEl.style.cssText='font-size:10px;color:red;padding:4px 10px;word-break:break-all';
-      errEl.textContent='エラー: '+String(e);
-      h2.appendChild(errEl);
-      h2.style.display='block';
-    }
+    h.innerHTML='<div style="padding:8px 13px;font-size:11px;color:var(--wg)">候補が見つかりませんでした</div>';
+    h.style.display='block';
   }
 }
+
 
 function _gFuzzyMatch(shops,q){
   const areaKey=_AREA_YOMI[q]||null;
