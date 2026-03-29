@@ -172,7 +172,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .ov.on .modal{transform:translateY(0)}
 .mt{font-family:'Zen Maru Gothic',serif;font-size:16px;font-weight:700;margin-bottom:6px;letter-spacing:.02em}
 .fl{font-size:11px;color:var(--wg);font-weight:600;margin:12px 0 5px;letter-spacing:.04em}
-.fi{width:100%;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;padding:10px 13px;font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;background:white;transition:border-color .18s,box-shadow .18s}
+.fi{width:100%;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;padding:10px 13px;font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;background:white;transition:border-color .18s,box-shadow .18s;box-sizing:border-box}
 .fi:focus{border-color:var(--ig);background:white;box-shadow:0 0 0 3px rgba(74,143,212,.12)}
 .mbtns{display:flex;gap:8px;margin-top:16px}
 .mcx{flex:1;padding:12px;border-radius:12px;border:1.5px solid rgba(0,0,0,.1);background:white;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:var(--wg);transition:all .18s;box-shadow:var(--shadow-sm)}
@@ -3754,7 +3754,7 @@ function slRender(){
 }
 
 // GOHAN
-function tbUrl(n){return `https://tabelog.com/rstLst/?vs=1&sk=${encodeURIComponent(n)}&sw=${encodeURIComponent(n)}`;}
+function tbUrl(n){return `https://www.google.com/search?q=${encodeURIComponent(n+'　食べログ')}`;}
 function gMove(d){gMonth+=d;if(gMonth>12){gMonth=1;gYear++;}if(gMonth<1){gMonth=12;gYear--;}gRender();}
 // ── お店曖昧検索 ──
 const _AREA_YOMI={
