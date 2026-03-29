@@ -3581,10 +3581,17 @@ function qlogDelete(id){
 
 function qlogDeleteConfirm(id){
   document.getElementById('_qlog-del-confirm')?.remove();
+  // 削除するエントリが現在表示中の質問と一致する場合はリセット
+  const h=S.qHist.find(x=>x.id===id);
+  if(h&&S.curQ&&S.curQ.text===h.text){
+    S.curQ=null;S.igAns=null;S.tkAns=null;
+  }
   S.qHist=S.qHist.filter(h=>h.id!==id);
   lsSave();
   qlogRender();
   qRH();
+  // 質問タブの表示も更新
+  if(S.curQ) qRender(); else qLoad();
   const t=document.createElement('div');
   t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(60,50,40,.88);color:white;border-radius:20px;padding:8px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:600;white-space:nowrap';
   t.textContent='🗑 回答を削除しました';
