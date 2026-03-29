@@ -232,7 +232,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .cv-info{flex:1}.cv-nm{font-size:15px;font-weight:700;color:var(--text);letter-spacing:.01em}.cv-sub{font-size:10px;color:var(--text);opacity:.5;margin-top:1px}
 .cv-abt{background:rgba(0,0,0,.06);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:10px;color:var(--text);font-family:'Noto Sans JP',sans-serif;transition:all .18s}
 .cv-abt:active{background:rgba(0,0,0,.12)}
-.msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;background:var(--cream)}
+.msgs{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;background:var(--cream)}
 .ddiv{text-align:center;margin:6px 0;position:relative}
 .ddiv::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--bd)}
 .ddiv span{background:var(--cream);padding:0 10px;font-size:10px;color:var(--wg);position:relative;letter-spacing:.04em}
@@ -242,8 +242,8 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .mg-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .mg-av.ig{background:var(--ig-bg)}.mg-av.tk{background:var(--tk-bg)}
 .mg-nm{font-size:9px;color:var(--wg);font-weight:500}
-.brow{display:flex;align-items:flex-end;gap:4px;margin-bottom:6px;min-width:0}.brow.mine{flex-direction:row-reverse}
-.bbl{max-width:85%;width:max-content;padding:8px 13px;font-size:13px;line-height:1.6;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;display:inline-block;box-sizing:border-box}
+.brow{display:flex;align-items:flex-end;gap:4px;margin-bottom:6px;min-width:0;max-width:100%}.brow.mine{flex-direction:row-reverse}
+.bbl{max-width:75%;padding:8px 13px;font-size:13px;line-height:1.6;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;display:inline-block;box-sizing:border-box}
 .bbl.th-ig,.bbl.th-tk{background:white;border:1.5px solid var(--bd);border-radius:18px 18px 18px 5px;box-shadow:var(--shadow-sm)}
 .bbl.mn-ig{background:#c4dcf5;border-radius:18px 18px 5px 18px;box-shadow:0 2px 6px rgba(74,143,212,.15)}
 .bbl.mn-tk{background:#f5c2d4;border-radius:18px 18px 5px 18px;box-shadow:0 2px 6px rgba(224,112,144,.15)}
@@ -3371,7 +3371,7 @@ function qRender(){
     // 履歴に追加（初回のみ）
     const isNew=!S.qHist.length||S.qHist[0].text!==S.curQ.text;
     if(isNew){
-      S.qHist.unshift({text:S.curQ.text,cat:S.curQ.cat,igA:S.igAns.text,tkA:S.tkAns.text,ts:new Date().toISOString().slice(0,10)});
+      S.qHist.unshift({id:Date.now(),text:S.curQ.text,cat:S.curQ.cat,igA:S.igAns.text,tkA:S.tkAns.text,ts:new Date().toISOString().slice(0,10)});
       updateCnt();qRH();lsSave();
     }
     // 分析テキストがすでに保存済みなら即表示、なければAPI生成
@@ -3485,16 +3485,21 @@ function qlogFilter(cat,btn){
 function qlogRender(){
   const list=document.getElementById('qlog-list');
   if(!list)return;
+  // idがないエントリに付与（後方互換）
+  S.qHist.forEach((h,i)=>{if(!h.id)h.id=Date.now()-i;});
   const filtered=qlogCat==='all'?S.qHist:S.qHist.filter(h=>h.cat===qlogCat);
   const countEl=document.getElementById('qlog-count');
   if(countEl)countEl.textContent=filtered.length+'件';
   if(!filtered.length){list.innerHTML='<div style="text-align:center;padding:32px 0;font-size:12px;color:#ccc">このカテゴリの回答はまだありません</div>';return;}
   list.innerHTML=filtered.map(h=>{
     const ci=CAT[h.cat]||CAT.love;
-    return `<div class="hcard" style="margin-bottom:10px">
+    const hid=h.id;
+    return `<div class="hcard" style="margin-bottom:10px" id="qlog-card-${hid}">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
         <span style="font-size:9px;padding:2px 7px;border-radius:10px;background:${ci.bg};color:${ci.tc};font-weight:600;flex-shrink:0">${ci.label}</span>
-        <span style="font-size:10px;color:var(--wg);margin-left:auto;flex-shrink:0">${h.ts||''}</span>
+        <span style="font-size:10px;color:var(--wg);flex:1">${h.ts||''}</span>
+        <button onclick="qlogEdit(${hid})" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:2px 9px;font-size:10px;cursor:pointer;color:var(--wg);font-family:'Noto Sans JP',sans-serif">✏ 編集</button>
+        <button onclick="qlogDelete(${hid})" style="background:none;border:1px solid rgba(200,50,50,.3);border-radius:7px;padding:2px 9px;font-size:10px;cursor:pointer;color:#cc3333;font-family:'Noto Sans JP',sans-serif">🗑</button>
       </div>
       <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:9px">${h.text}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
@@ -3509,6 +3514,75 @@ function qlogRender(){
       </div>
     </div>`;
   }).join('');
+}
+
+function qlogEdit(id){
+  const h=S.qHist.find(x=>x.id===id);
+  if(!h)return;
+  const card=document.getElementById('qlog-card-'+id);
+  if(!card)return;
+  card.innerHTML=`
+    <div style="font-size:10px;color:var(--lav);font-weight:600;margin-bottom:8px">✏ 編集中</div>
+    <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.5;margin-bottom:10px;padding:8px;background:var(--cream);border-radius:8px">${h.text}</div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:10px;color:var(--ig-d);font-weight:700;margin-bottom:4px">💙 井口さんの回答</div>
+      <textarea id="qe-ig-${id}" style="width:100%;border:1.5px solid var(--ig);border-radius:8px;padding:7px 9px;font-size:12px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.6;min-height:56px;box-sizing:border-box" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'">${h.igA||''}</textarea>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;color:var(--tk-d);font-weight:700;margin-bottom:4px">🌸 瀧本さんの回答</div>
+      <textarea id="qe-tk-${id}" style="width:100%;border:1.5px solid var(--tk);border-radius:8px;padding:7px 9px;font-size:12px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.6;min-height:56px;box-sizing:border-box" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'">${h.tkA||''}</textarea>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="qlogRender()" style="flex:1;padding:9px;border-radius:10px;border:1.5px solid var(--bd);background:none;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:var(--wg);cursor:pointer">キャンセル</button>
+      <button onclick="qlogSaveEdit(${id})" style="flex:2;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--ig),var(--lav));color:white;font-size:12px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer">保存する ✓</button>
+    </div>`;
+  // テキストエリアの高さ調整
+  setTimeout(()=>{
+    [`qe-ig-${id}`,`qe-tk-${id}`].forEach(eid=>{
+      const el=document.getElementById(eid);
+      if(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+    });
+  },30);
+}
+
+function qlogSaveEdit(id){
+  const h=S.qHist.find(x=>x.id===id);
+  if(!h)return;
+  const igEl=document.getElementById('qe-ig-'+id);
+  const tkEl=document.getElementById('qe-tk-'+id);
+  if(!igEl||!tkEl)return;
+  h.igA=igEl.value.trim()||h.igA;
+  h.tkA=tkEl.value.trim()||h.tkA;
+  lsSave();
+  qlogRender();
+  qRH();
+}
+
+function qlogDelete(id){
+  const h=S.qHist.find(x=>x.id===id);
+  if(!h)return;
+  const preview=h.text.slice(0,20)+(h.text.length>20?'…':'');
+  const old=document.getElementById('_qlog-del-confirm');if(old)old.remove();
+  const ui=document.createElement('div');
+  ui.id='_qlog-del-confirm';
+  ui.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2020;color:white;border-radius:16px;padding:13px 16px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;display:flex;align-items:center;gap:10px;z-index:600;box-shadow:0 4px 24px rgba(0,0,0,.4);white-space:nowrap;max-width:90vw';
+  ui.innerHTML=`<span>「${preview}」を削除？</span>
+    <button onclick="document.getElementById('_qlog-del-confirm').remove()" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.18);color:white">やめる</button>
+    <button onclick="qlogDeleteConfirm(${id})" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:#cc3333;color:white;font-weight:600">削除する</button>`;
+  document.body.appendChild(ui);
+  setTimeout(()=>{if(ui.parentElement)ui.remove();},5000);
+}
+
+function qlogDeleteConfirm(id){
+  document.getElementById('_qlog-del-confirm')?.remove();
+  S.qHist=S.qHist.filter(h=>h.id!==id);
+  lsSave();
+  qlogRender();
+  qRH();
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(60,50,40,.88);color:white;border-radius:20px;padding:8px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:600;white-space:nowrap';
+  t.textContent='🗑 回答を削除しました';
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2000);
 }
 function qRH(){
   const list=document.getElementById('q-hist');
@@ -4534,6 +4608,7 @@ function switchDrama(pane){
  checkinLoadQ,saveCheckin,checkinCharCount,checkinLoadImg,checkinRemoveImg,
  checkinSelMood,checkinEditSelMood,checkinCancelEdit,checkinSaveEdit,
  checkinDeletePost,checkinDeleteConfirm,checkinEditPost,checkinUpdateView,checkinUseQ,checkinRenderTimeline,
+ qlogEdit,qlogSaveEdit,qlogDelete,qlogDeleteConfirm,
  openRecForm,closeRecForm,saveRec,recFilter,renderRecords,rCat,
  openOmoideForm,closeOmoideForm,saveOmoide,deleteOmoide,omoideRender,omoideRenderList,omoideTypeFilter,omoideCalMove,omoideSelectDate,
  openOmoideRecForm,closeOmoideRecForm,
