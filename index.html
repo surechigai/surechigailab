@@ -1456,7 +1456,7 @@ function lsSave(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{
     try{
-      localStorage.setItem(LS_KEY, JSON.stringify({S, R, gYear, gMonth}));
+      localStorage.setItem(LS_KEY, JSON.stringify({S, R, gYear, gMonth, nRid, nIid}));
       fbSave();
       showToast();
     }catch(e){console.warn('保存失敗',e);}
@@ -1516,6 +1516,11 @@ function lsLoad(){
       const d = JSON.parse(raw);
       if(d.S){Object.assign(S, d.S);}
       if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));}
+      // nRid・nIidを復元（復元しないと新規ルームが既存ルームと同じIDになるバグ防止）
+      if(d.nRid && d.nRid>nRid) nRid=d.nRid;
+      if(d.nIid && d.nIid>nIid) nIid=d.nIid;
+      // 念のためRの最大IDより大きい値を保証
+      if(R.length) nRid=Math.max(nRid, ...R.map(r=>r.id+1));
       // gYear/gMonthはlocalStorageから復元しない（常に現在月を使う）
     }
     // Firebaseからデータを読み込んでからUI更新
@@ -1747,19 +1752,17 @@ async function fmAutoFill(title){
   if(stTxt)stTxt.textContent='「'+title+'」の情報を検索中…';
   if(infoArea)infoArea.style.display='none';
   try{
-    const prompt=`web_searchツールで「${title} 映画 OR ドラマ 出演 あらすじ」「${title} 配信 Netflix OR Disney OR Prime OR TVer」を検索し、以下のJSON形式のみで回答してください（前後に何も付けない）:
-{"ch":"放送局または公開年（例：2022年 / フジテレビ月曜21時）","stream":"配信サービス（例：Netflix / Prime Video / TVer）","cast":"主要キャスト3〜5名","memo":"ネタバレなしのあらすじ1〜2文","type":"movie か drama か anime のいずれか"}`;
+    const prompt=`web_searchツールで「${title} 映画 OR ドラマ 出演 あらすじ」を検索し、以下のJSON形式のみで回答（前後に何も付けない）:
+{"ch":"放送局または公開年","stream":"配信サービス","cast":"主要キャスト3〜5名","memo":"ネタバレなしのあらすじ1〜2文","type":"movie か drama か anime"}`;
     const res=await Promise.race([
       fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',max_tokens:800,
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
           tools:[{type:'web_search_20250305',name:'web_search'}],
           tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]
-        })
+          messages:[{role:'user',content:prompt}]})
       }),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),20000))
     ]);
     const data=await res.json();
     const txt=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
@@ -1769,11 +1772,11 @@ async function fmAutoFill(title){
       fmAutoFillData=p;
       if(p.type){
         const typeMap={movie:'movie',drama:'drama',anime:'drama'};
-        const typeVal=typeMap[p.type]||'movie';
-        filmarkTypeSel=typeVal;
+        const tv=typeMap[p.type]||'movie';
+        filmarkTypeSel=tv;
         document.querySelectorAll('#fm-type-chips .chip').forEach(b=>{
           b.classList.remove('on','lav-on');
-          if(b.getAttribute('onclick').includes("'"+typeVal+"'"))b.classList.add('on','lav-on');
+          if(b.getAttribute('onclick').includes("'"+tv+"'"))b.classList.add('on','lav-on');
         });
       }
       if(p.ch)document.getElementById('fm-ch-inp').value=p.ch;
@@ -1840,15 +1843,11 @@ async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
 出力はJSONのみ（前後に何も付けない）: {"titles":["タイトル1","タイトル2",...]}`;
     const res=await Promise.race([
       fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:400,
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,
           tools:[{type:'web_search_20250305',name:'web_search'}],
           tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]
-        })
+          messages:[{role:'user',content:prompt}]})
       }),
       new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),12000))
     ]);
@@ -1860,9 +1859,9 @@ async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
       if(!titles.length){suggest.style.display='none';return;}
       const fn=onSelect||'selectDramaSuggest';
       suggest.innerHTML=titles.map((t,i)=>{
-        const esc=t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const esc=t.replace(/'/g,"\'");
         return `<div onclick="${fn}('${esc}')"
-             style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px;transition:background .1s"
+             style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px"
              onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''">
           <span style="font-size:14px">📺</span><span>${t}</span>
         </div>`;
@@ -1882,23 +1881,20 @@ async function dramaAutoFill(){
   if(stTxt)stTxt.textContent='「'+title+'」を検索中…';
   if(btn){btn.disabled=true;btn.style.opacity='.5';}
   try{
-    const prompt=`web_searchツールで「${title} ドラマ 放送局 何話 2025」「${title} 配信 TVer FOD」「${title} キャスト 出演者」をそれぞれ検索してから、以下のJSON形式のみで回答してください（前後に何も付けない）:\n{"ch":"放送局と曜日時間（例：フジテレビ 月曜21時）","eps":全話数の数値（不明は0）,"stream":"配信サービスと条件（例：TVer最新話無料／FOD見逃し／Netflix全話）","cast":"主要キャスト3〜5名（例：竹野内豊、石原さとみ、松坂桃李）","memo":"ネタバレなしのあらすじ1〜2文"}`;
+    const prompt=`web_searchツールで「${title} ドラマ 放送局 何話」「${title} キャスト 出演者」を検索し、以下のJSON形式のみで回答（前後に何も付けない）:
+{"ch":"放送局と曜日時間","eps":全話数の数値（不明は0）,"stream":"配信サービス","cast":"主要キャスト3〜5名","memo":"ネタバレなしのあらすじ1〜2文"}`;
     const res=await Promise.race([
       fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:800,
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
           tools:[{type:'web_search_20250305',name:'web_search'}],
           tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]
-        })
+          messages:[{role:'user',content:prompt}]})
       }),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),20000))
     ]);
     const data=await res.json();
-    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+    const txt=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
     const match=txt.match(/\{[\s\S]*?\}/);
     if(match){
       const p=JSON.parse(match[0]);
@@ -2912,71 +2908,52 @@ function buildSpicePrompt(type,ctx){
 }
 
 async function spiceLoad(){
-  if(spiceLoading)return;spiceLoading=true;
-  document.getElementById('spice-ld').style.display='flex';
-  document.getElementById('spice-content').style.display='none';
-  document.getElementById('spice-reload').classList.add('loading');
-
-  const ctx=buildCtx();
-  const prompt=buildSpicePrompt(spiceType,ctx);
-
-  // 1回目のAPI試行
-  let success=false;
+  spiceLoading=true;
+  const ldEl=document.getElementById('spice-ld');
+  const contentEl=document.getElementById('spice-content');
+  if(ldEl)ldEl.style.display='flex';
+  if(contentEl)contentEl.style.display='none';
+  const FALLBACK={
+    quote:{text:'「ありがとう」を1日1回、言葉にして直接伝えてみよう。当たり前のことも、言葉にすると伝わり方が全然違う。',learn:'感謝の言語化',tag:'💬 日常'},
+    game:{text:'「もしも100万円もらったら？」お互いの使い道を当てっこしてみよう。価値観の違いが面白い発見になる。',learn:'価値観の発見',tag:'🎮 どこでも'},
+    date:{text:'近所の行ったことのない路地を散歩してみよう。新しい発見が会話のきっかけになる。',learn:'新鮮な体験',tag:'🌈 お外'}
+  };
   try{
-    const res=await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,messages:[{role:'user',content:prompt}]})
-    });
+    const prompt=`すれちがい研究所のコンテンツを1件生成してください。カテゴリ: ${spiceType}。
+${spiceType==='quote'?'カップルのすれちがい解消や関係改善に役立つ小ネタ・豆知識':spiceType==='game'?'2人でできる簡単なゲームや会話のアイデア':'デートやおでかけのアイデア'}
+出力JSONのみ: {"text":"内容（50〜100字）","learn":"学べること（10字以内）","tag":"タグ（例：☕ カフェ）"}`;
+    const res=await Promise.race([
+      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})}),
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000))
+    ]);
     const data=await res.json();
-    const txt=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-    const p=JSON.parse(txt.match(/\{[\s\S]*?\}/)[0]);
-    renderSpice(p);success=true;
-  }catch(e1){
-    // API失敗時：別プロンプトで再試行
-    try{
-      const res2=await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,messages:[{role:'user',content:SP_SYS[spiceType](ctx)}]})
-      });
-      const data2=await res2.json();
-      const txt2=data2.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-      const p2=JSON.parse(txt2.match(/\{[\s\S]*?\}/)[0]);
-      renderSpice(p2);success=true;
-    }catch(e2){
-      // 完全オフライン時のみ固定リストにフォールバック
-      const fb=SP_FB[spiceType];
-      renderSpice(fb[Math.floor(Math.random()*fb.length)]);
+    const txt=data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const m=txt?.match(/\{[\s\S]*?\}/);
+    if(m){
+      const p=JSON.parse(m[0]);
+      _spiceShow(p.text||FALLBACK[spiceType].text, p.learn||FALLBACK[spiceType].learn, p.tag||FALLBACK[spiceType].tag);
+      return;
     }
-  }
+  }catch(e){}
+  const fb=FALLBACK[spiceType];
+  _spiceShow(fb.text, fb.learn, fb.tag);
+}
+function _spiceShow(text, learn, tag){
   spiceLoading=false;
-  document.getElementById('spice-reload').classList.remove('loading');
+  const ldEl=document.getElementById('spice-ld');
+  const contentEl=document.getElementById('spice-content');
+  const textEl=document.getElementById('spice-text');
+  const learnEl=document.getElementById('spice-learn');
+  const labelEl=document.getElementById('spice-label');
+  if(ldEl)ldEl.style.display='none';
+  if(textEl)textEl.textContent=text;
+  if(learnEl)learnEl.textContent='💡 '+learn;
+  if(labelEl)labelEl.textContent=tag||'';
+  if(contentEl)contentEl.style.display='block';
+  updateSpiceLikeBtn();
 }
-function renderSpice(p){
-  document.getElementById('spice-ld').style.display='none';
-  document.getElementById('spice-content').style.display='block';
-  let text='',label='';
-  if(spiceType==='quote'){text=`💡 <strong>小ネタ</strong><br>${p.text||''}`;label=`${p.source||''}`;}
-  else if(spiceType==='game'){text=`🎮 <strong>${p.title||''}</strong><br>${p.text||''}`;label=`${p.tag||''}`;}
-  else{text=`🌈 <strong>${p.title||''}</strong><br>${p.text||''}`;label=`${p.tag||''}`;}
-  document.getElementById('spice-text').innerHTML=text;
-  document.getElementById('spice-label').textContent=label;
 
-  // 現在の提案を記録し、いいね状態を確認
-  spiceCurrent={type:spiceType, data:p, liked:false};
-  if(S.spiceLikes&&S.spiceLikes[spiceType]){
-    const key=JSON.stringify(p);
-    spiceCurrent.liked=S.spiceLikes[spiceType].some(x=>JSON.stringify(x)===key);
-  }
-  updateSpiceLikeBtn(spiceCurrent.liked);
-
-  // 学習状態の表示
-  const cnt=S.qHist.length+S.recs.length+S.moodLog.length;
-  const likeTotal=Object.values(S.spiceLikes||{}).flat().length;
-  let learnTxt='';
-  if(likeTotal>0)learnTxt+=`👍 好み学習中`;
-  if(cnt>0)learnTxt+=(learnTxt?' · ':'')+`📈 データ蓄積中`;
-  document.getElementById('spice-learn').textContent=learnTxt;
-}
 function spiceTab(t){spiceType=t;document.querySelectorAll('.spice-tab').forEach(b=>b.classList.remove('on'));document.getElementById('stab-'+t).classList.add('on');spiceLoad();}
 
 // TALK
@@ -3264,7 +3241,6 @@ function doRoomExport(){
 async function qGenQ(){
   const cats=['love','touch','future','daily','gap'];
   const tc=S.qCat==='all'?cats[Math.floor(Math.random()*cats.length)]:S.qCat;
-  // まずフォールバックを準備（APIが失敗してもこれが使われる）
   const fallback=(FB_Q[tc]||FB_Q.love);
   const fbText=fallback[Math.floor(Math.random()*fallback.length)];
   try{
@@ -3280,10 +3256,10 @@ async function qGenQ(){
     if(!p.question)throw new Error('no question');
     return {text:p.question,cat:p.cat||tc,bm:false};
   }catch(e){
-    // APIエラー・タイムアウト時はフォールバックを使用
     return {text:fbText,cat:tc,bm:false};
   }
 }
+
 async function qInit(){
   // 両方回答済みの状態で保存されていた場合は新しい質問をロード
   // （そのままqRenderするとqtextがdisplay:noneになるバグ対策）
@@ -3408,18 +3384,15 @@ async function qAnalysis(){
     const res=await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     const txt=data.content?.map(c=>c.text||'').join('').trim();
-    txEl.textContent=txt||'お互いの答え、面白い！似てるところもあって、ちがうところも。それがふたりの魅力かも 🔬';
+    txEl.textContent=txt||'お互いの答え、それぞれの個性が出てて面白い！共通点もちがいも、ふたりの魅力かも 🔬';
   }catch(e){
     txEl.textContent='お互いの答え、なんだか似てる部分もあって面白い！次の質問も楽しみにしてね 🔬';
   }
-  // 分析テキストを保存（ユーザー切替後も再表示できるように）
   if(S.curQ)S.curQ.analysis=txEl.textContent;
-  // 分析完了 → 回答を表示
   ldEl.style.display='none';
   txEl.style.display='block';
   if(answersEl){
     answersEl.style.display='block';
-    // スクロールして回答へ誘導
     setTimeout(()=>answersEl.scrollIntoView({behavior:'smooth',block:'nearest'}),300);
   }
 }
