@@ -3750,7 +3750,12 @@ async function _gHintAISuggest(h,q,alreadyShown,sid){
     const txt=data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
     const m=txt?.match(/\{[\s\S]*\}/);
     document.getElementById(ldId)?.remove();
-    if(sid!==_gHintSession) return;
+    if(sid!==_gHintSession){
+      // デバッグ：sid不一致を表示
+      const h2=document.getElementById('gf-hint');
+      if(h2){const e2=document.createElement('div');e2.style.cssText='font-size:10px;color:orange;padding:4px 10px';e2.textContent='sid不一致(入力変更)';h2.appendChild(e2);h2.style.display='block';}
+      return;
+    }
     // デバッグ：レスポンス内容を画面に表示
     const _dbgEl=document.createElement('div');
     _dbgEl.style.cssText='font-size:10px;color:blue;padding:4px 10px;word-break:break-all';
@@ -3784,6 +3789,15 @@ async function _gHintAISuggest(h,q,alreadyShown,sid){
     h.style.display='block';
   }catch(e){
     document.getElementById(ldId)?.remove();
+    // デバッグ：エラー内容を画面に表示
+    const h2=document.getElementById('gf-hint');
+    if(h2){
+      const errEl=document.createElement('div');
+      errEl.style.cssText='font-size:10px;color:red;padding:4px 10px;word-break:break-all';
+      errEl.textContent='エラー: '+String(e);
+      h2.appendChild(errEl);
+      h2.style.display='block';
+    }
   }
 }
 
