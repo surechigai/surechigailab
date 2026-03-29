@@ -168,7 +168,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 /* MODAL */
 .ov{position:fixed;inset:0;background:rgba(20,10,10,.5);display:flex;align-items:flex-end;justify-content:center;z-index:300;opacity:0;pointer-events:none;transition:opacity .28s}
 .ov.on{opacity:1;pointer-events:all}
-.modal{background:var(--cream);border-radius:26px 26px 0 0;padding:22px 18px max(32px,env(safe-area-inset-bottom));width:100%;max-width:430px;transform:translateY(50px);transition:transform .28s cubic-bezier(.34,1.2,.64,1);max-height:90vh;overflow-y:auto;box-shadow:0 -4px 30px rgba(0,0,0,.12)}
+.modal{background:var(--cream);border-radius:26px 26px 0 0;padding:22px 18px max(32px,env(safe-area-inset-bottom));width:100%;max-width:430px;transform:translateY(50px);transition:transform .28s cubic-bezier(.34,1.2,.64,1);max-height:90vh;overflow-y:auto;box-shadow:0 -4px 30px rgba(0,0,0,.12);box-sizing:border-box}
 .ov.on .modal{transform:translateY(0)}
 .mt{font-family:'Zen Maru Gothic',serif;font-size:16px;font-weight:700;margin-bottom:6px;letter-spacing:.02em}
 .fl{font-size:11px;color:var(--wg);font-weight:600;margin:12px 0 5px;letter-spacing:.04em}
@@ -1762,12 +1762,11 @@ async function fmAutoFill(title){
       new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
     ]);
     const data=await res.json();
-    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+    const txt=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
     const match=txt.match(/\{[\s\S]*?\}/);
     if(match){
       const p=JSON.parse(match[0]);
       fmAutoFillData=p;
-      // 種別チップを自動選択
       if(p.type){
         const typeMap={movie:'movie',drama:'drama',anime:'drama'};
         const typeVal=typeMap[p.type]||'movie';
@@ -1777,11 +1776,9 @@ async function fmAutoFill(title){
           if(b.getAttribute('onclick').includes("'"+typeVal+"'"))b.classList.add('on','lav-on');
         });
       }
-      // 詳細欄に反映
       if(p.ch)document.getElementById('fm-ch-inp').value=p.ch;
       if(p.stream)document.getElementById('fm-stream-inp').value=p.stream;
       if(p.cast)document.getElementById('fm-cast-inp').value=p.cast;
-      // プレビュー表示
       if(infoHtml){
         let rows='';
         if(p.ch)rows+=`<div><span style="color:var(--wg);margin-right:4px">📺</span>${p.ch}</div>`;
@@ -1839,12 +1836,7 @@ async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
   try{
     const prompt=`web_searchツールを使って「${val}」を検索してください（複数クエリ可：「${val} ドラマ」「${val} 映画」「${val} anime」など）。
 検索結果をもとに、以下の条件で「${val}」に部分一致するタイトルを最大6件選んでください。
-対象：
-- 日本ドラマ・映画・アニメ（年代問わず過去作含む）
-- 韓国ドラマ・映画
-- 洋ドラ・洋画
-- Netflix / Disney+ / Prime Video / Apple TV+ / Hulu / WOWOW 等の配信オリジナル作品
-- 2025〜2026年の最新作も積極的に含める
+対象：日本ドラマ・映画・アニメ、韓国ドラマ・映画、洋ドラ・洋画、配信オリジナル作品、2025〜2026年最新作も含める
 出力はJSONのみ（前後に何も付けない）: {"titles":["タイトル1","タイトル2",...]}`;
     const res=await Promise.race([
       fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
@@ -1861,7 +1853,7 @@ async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
       new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),12000))
     ]);
     const data=await res.json();
-    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+    const txt=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
     const match=txt.match(/\{[\s\S]*?\}/);
     if(match){
       const titles=(JSON.parse(match[0]).titles||[]).filter(Boolean);
