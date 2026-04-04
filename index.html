@@ -657,14 +657,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
         </div>
       </div>
 
-      <!-- タイムライン -->
-      <div style="margin:0 12px 8px;background:var(--card);border-radius:16px;border:1.5px solid var(--bd);overflow:hidden;box-shadow:var(--shadow-sm)">
-        <div style="padding:8px 13px 0;display:flex;align-items:center;justify-content:space-between">
-          <div style="font-size:11px;font-weight:700;color:var(--wg);letter-spacing:.04em">みんなの記録</div>
-          <div id="checkin-avatar" style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--ig-bg)">💙</div>
-        </div>
-        <div id="checkin-timeline"></div>
-      </div>
+
 
       <!-- ④ すれちがい解消スパイス -->
       <div class="spice-wrap">
@@ -3286,39 +3279,53 @@ function doRoomExport(){
 }
 
 // QUESTION
+// Workerの疎通状態をキャッシュ（一度失敗したら以降はスキップ）
+let _workerOk = null;
+
 async function qGenQ(){
   const cats=['love','touch','future','daily','gap'];
   const tc=S.qCat==='all'?cats[Math.floor(Math.random()*cats.length)]:S.qCat;
-  // まずフォールバックを準備（APIが失敗してもこれが使われる）
   const fallback=(FB_Q[tc]||FB_Q.love);
   const fbText=fallback[Math.floor(Math.random()*fallback.length)];
+
+  // Workerが既に失敗済みならすぐフォールバック
+  if(_workerOk===false){
+    return {text:fbText,cat:tc,bm:false};
+  }
+
   try{
     const res=await Promise.race([
-      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:SYS_Q.replace('{CAT}',CAT[tc]?.label||tc)}]})}),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000))
+      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,
+          messages:[{role:'user',content:SYS_Q.replace('{CAT}',CAT[tc]?.label||tc)}]})
+      }),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),4000))
     ]);
     if(!res.ok){
-      const errText=await res.text().catch(()=>'');
-      console.warn('qGenQ Worker error',res.status,errText.slice(0,200));
+      _workerOk=false;
       throw new Error('worker_error_'+res.status);
     }
     const data=await res.json();
-    if(data.error){console.warn('qGenQ API error',data.error);throw new Error('api_error');}
+    if(data.error){_workerOk=false;throw new Error('api_error');}
     const txt=data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
     const m=txt?.match(/\{[\s\S]*?\}/);
-    if(!m){console.warn('qGenQ no JSON in response:',txt?.slice(0,100));throw new Error('no json');}
+    if(!m){throw new Error('no json');}
     const p=JSON.parse(m[0]);
     if(!p.question)throw new Error('no question');
+    _workerOk=true;
     return {text:p.question,cat:p.cat||tc,bm:false};
   }catch(e){
-    // APIエラー・タイムアウト時はフォールバックを使用
-    console.warn('qGenQ fallback used:',e.message);
+    console.warn('qGenQ fallback:',e.message);
+    if(e.message==='timeout'||e.message.startsWith('worker_error')||e.message==='Failed to fetch')_workerOk=false;
     return {text:fbText,cat:tc,bm:false};
   }
 }
 async function qInit(){
-  // 初回起動・ユーザー切替時：S.curQがあればそのまま表示、なければ生成
-  if(S.curQ){qRender();return;}
+  // curQが残っているが text がない場合はリセット
+  if(S.curQ&&S.curQ.text){qRender();return;}
+  S.curQ=null;
   await qLoad();
 }
 async function qLoad(){
@@ -3329,7 +3336,11 @@ async function qLoad(){
   const ldAn=document.getElementById('q-analysis-ld');if(ldAn)ldAn.style.display='flex';
   const txAn=document.getElementById('q-analysis-text');if(txAn)txAn.style.display='none';
   const qtextEl=document.getElementById('qtext');if(qtextEl)qtextEl.style.display='none';
-  document.getElementById('q-ld').style.display='flex';
+  const qLdEl=document.getElementById('q-ld');
+  if(qLdEl){
+    // Workerが使えない場合はローディング表示をスキップ（即フォールバック）
+    qLdEl.style.display=_workerOk===false?'none':'flex';
+  }
   const qta=document.getElementById('q-ta');if(qta)qta.value='';
   try{
     const q=await qGenQ();
@@ -3827,12 +3838,14 @@ function gRender(){
       <div style="display:flex;align-items:center;gap:6px">
         <span style="font-size:14px;flex-shrink:0">${gi}</span>
         <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px">${r.shop}</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:4px">
+            <span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.shop}</span>
+            <span style="font-size:9px;color:var(--wg);flex-shrink:0">${r.date.slice(5).replace('-','/')}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:2px;flex-wrap:wrap">
             <a class="tb-link" href="${tbUrl(r.shop)}" target="_blank">食べログ</a>
             <span class="gtag" style="background:${cb};color:#555;font-size:9px">${r.cat}</span>
             ${r.area?`<span class="gtag" style="background:var(--ig-bg);color:var(--ig-d);font-size:9px">${r.area}</span>`:''}
-            <span style="font-size:9px;color:var(--wg);margin-left:auto;flex-shrink:0">${r.date.slice(5).replace('-','/')}</span>
           </div>
           ${(is||ts)?`<div style="display:flex;gap:4px;margin-top:4px;align-items:center">
             ${is?`<span style="font-size:11px;font-weight:700;color:var(--ig-d)">💙¥${r.igAmt.toLocaleString()}</span>${r.igNote?`<span style="font-size:9px;color:var(--wg)">${r.igNote}</span>`:''}`:'' }
