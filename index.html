@@ -168,11 +168,11 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 /* MODAL */
 .ov{position:fixed;inset:0;background:rgba(20,10,10,.5);display:flex;align-items:flex-end;justify-content:center;z-index:300;opacity:0;pointer-events:none;transition:opacity .28s}
 .ov.on{opacity:1;pointer-events:all}
-.modal{background:var(--cream);border-radius:26px 26px 0 0;padding:22px 18px max(32px,env(safe-area-inset-bottom));width:100%;max-width:430px;transform:translateY(50px);transition:transform .28s cubic-bezier(.34,1.2,.64,1);max-height:90vh;overflow-y:auto;box-shadow:0 -4px 30px rgba(0,0,0,.12);box-sizing:border-box}
+.modal{background:var(--cream);border-radius:26px 26px 0 0;padding:22px 18px max(32px,env(safe-area-inset-bottom));width:100%;max-width:430px;transform:translateY(50px);transition:transform .28s cubic-bezier(.34,1.2,.64,1);max-height:90vh;overflow-y:auto;box-shadow:0 -4px 30px rgba(0,0,0,.12)}
 .ov.on .modal{transform:translateY(0)}
 .mt{font-family:'Zen Maru Gothic',serif;font-size:16px;font-weight:700;margin-bottom:6px;letter-spacing:.02em}
 .fl{font-size:11px;color:var(--wg);font-weight:600;margin:12px 0 5px;letter-spacing:.04em}
-.fi{width:100%;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;padding:10px 13px;font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;background:white;transition:border-color .18s,box-shadow .18s;box-sizing:border-box}
+.fi{width:100%;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;padding:10px 13px;font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;background:white;transition:border-color .18s,box-shadow .18s}
 .fi:focus{border-color:var(--ig);background:white;box-shadow:0 0 0 3px rgba(74,143,212,.12)}
 .mbtns{display:flex;gap:8px;margin-top:16px}
 .mcx{flex:1;padding:12px;border-radius:12px;border:1.5px solid rgba(0,0,0,.1);background:white;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:var(--wg);transition:all .18s;box-shadow:var(--shadow-sm)}
@@ -232,7 +232,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .cv-info{flex:1}.cv-nm{font-size:15px;font-weight:700;color:var(--text);letter-spacing:.01em}.cv-sub{font-size:10px;color:var(--text);opacity:.5;margin-top:1px}
 .cv-abt{background:rgba(0,0,0,.06);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:10px;color:var(--text);font-family:'Noto Sans JP',sans-serif;transition:all .18s}
 .cv-abt:active{background:rgba(0,0,0,.12)}
-.msgs{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;background:var(--cream)}
+.msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;background:var(--cream)}
 .ddiv{text-align:center;margin:6px 0;position:relative}
 .ddiv::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--bd)}
 .ddiv span{background:var(--cream);padding:0 10px;font-size:10px;color:var(--wg);position:relative;letter-spacing:.04em}
@@ -242,8 +242,8 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .mg-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .mg-av.ig{background:var(--ig-bg)}.mg-av.tk{background:var(--tk-bg)}
 .mg-nm{font-size:9px;color:var(--wg);font-weight:500}
-.brow{display:flex;align-items:flex-end;gap:4px;margin-bottom:6px;min-width:0;max-width:100%}.brow.mine{flex-direction:row-reverse}
-.bbl{max-width:75%;padding:8px 13px;font-size:13px;line-height:1.6;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;display:inline-block;box-sizing:border-box}
+.brow{display:flex;align-items:flex-end;gap:4px;margin-bottom:6px;min-width:0}.brow.mine{flex-direction:row-reverse}
+.bbl{max-width:85%;width:max-content;padding:8px 13px;font-size:13px;line-height:1.6;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;display:inline-block;box-sizing:border-box}
 .bbl.th-ig,.bbl.th-tk{background:white;border:1.5px solid var(--bd);border-radius:18px 18px 18px 5px;box-shadow:var(--shadow-sm)}
 .bbl.mn-ig{background:#c4dcf5;border-radius:18px 18px 5px 18px;box-shadow:0 2px 6px rgba(74,143,212,.15)}
 .bbl.mn-tk{background:#f5c2d4;border-radius:18px 18px 5px 18px;box-shadow:0 2px 6px rgba(224,112,144,.15)}
@@ -645,6 +645,25 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
             <button onclick="saveCheckin()" id="checkin-post-btn" style="border:none;border-radius:12px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Zen Maru Gothic',serif;color:white;background:linear-gradient(135deg,var(--lav),var(--ig));transition:all .18s;flex-shrink:0">記録 ✓</button>
           </div>
         </div>
+        <!-- きもちボタン行 -->
+        <div id="checkin-mood-row" style="display:flex;gap:5px;flex-wrap:wrap;padding:4px 13px 8px"></div>
+      </div>
+
+      <!-- 今日の予定バナー（ダイアリーエリア直下） -->
+      <div id="checkin-today-evs" style="margin:0 12px 8px;display:none">
+        <div style="background:linear-gradient(135deg,#ffecd5,#ffd5e8);border-radius:14px;padding:9px 13px">
+          <div style="font-size:10px;font-weight:700;color:#8a4020;margin-bottom:6px;letter-spacing:.04em">📅 今日の予定</div>
+          <div id="checkin-today-evs-list"></div>
+        </div>
+      </div>
+
+      <!-- タイムライン -->
+      <div style="margin:0 12px 8px;background:var(--card);border-radius:16px;border:1.5px solid var(--bd);overflow:hidden;box-shadow:var(--shadow-sm)">
+        <div style="padding:8px 13px 0;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:11px;font-weight:700;color:var(--wg);letter-spacing:.04em">みんなの記録</div>
+          <div id="checkin-avatar" style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--ig-bg)">💙</div>
+        </div>
+        <div id="checkin-timeline"></div>
       </div>
 
       <!-- ④ すれちがい解消スパイス -->
@@ -1177,12 +1196,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 <div class="ov" id="g-ov"><div class="modal" style="overflow-y:auto;overflow-x:hidden;max-height:92vh;width:100%;box-sizing:border-box">
   <div class="mt">🍴 外食を記録する</div>
   <div class="fl">お店の名前</div>
-  <input class="fi" id="gf-shop" placeholder="お店名 または 食べログURLを貼り付け"/>
-  <!-- URL取得中インジケーター -->
-  <div id="gf-url-ld" style="display:none;align-items:center;gap:6px;font-size:11px;color:var(--lav);padding:4px 2px 2px">
-    <span style="animation:spin 1s linear infinite;display:inline-block">✦</span>
-    <span id="gf-url-ld-txt">食べログから情報を取得中…</span>
-  </div>
+  <input class="fi" id="gf-shop" placeholder="例：ぐるり、金魚…" oninput="gHint(this.value)"/>
   <div class="tb-hint2" id="gf-hint"></div>
   <div class="fl">日付</div><input class="fi" id="gf-date" type="date"/>
   <div class="fl">エリア</div>
@@ -1443,7 +1457,13 @@ const SYS_Q=`すれちがい研究所の質問生成AI。
 カテゴリ:{CAT}
 出力JSONのみ:{"question":"質問文","cat":"コード","hint":"15字以内"}
 コード:love/touch/future/daily/gap`;
-const FB_Q={love:['カラオケで相手が歌ったとき、どんな気持ちになった？','名前をどんなふうに呼ばれたい？'],touch:['手が触れたとき、気づいてる？','後ろからそっと呼び止められるの好き？'],future:['塚口と三宮、住むならどっち？','2人のホームグラウンドにしたいお店は？'],daily:['疲れたとき連絡してほしい？自分からしたい？','スンドゥブと唐揚げ定食、今食べるならどっち？'],gap:['感情がモヤっとしたとき、すぐ言える？','「温度差」を感じたことある？正直に教えて']};
+const FB_Q={
+  love:['カラオケで相手が歌ったとき、どんな気持ちになった？','名前をどんなふうに呼ばれたい？','好きって気持ちが一番つたわるのはどんなとき？','一緒にいてほっとするのはどんな瞬間？','自分のどんなところを好きでいてほしい？'],
+  touch:['手が触れたとき、気づいてる？','後ろからそっと呼び止められるの好き？','スキンシップ、もっとしてほしい？少なくていい？','ぎゅっとしたくなるのはどんなタイミング？','隣に座るとき、距離感って気になる？'],
+  future:['塚口と三宮、住むならどっち？','2人のホームグラウンドにしたいお店は？','5年後、どんな2人でいたい？','一緒に行ってみたい旅行先は？','理想の休日ルーティン、教えて'],
+  daily:['疲れたとき連絡してほしい？自分からしたい？','スンドゥブと唐揚げ定食、今食べるならどっち？','朝型？夜型？相手に合わせられる？','テンション低いとき、どうしてほしい？','ひとりの時間、どのくらい必要？'],
+  gap:['感情がモヤっとしたとき、すぐ言える？','「温度差」を感じたことある？正直に教えて','言えなかったこと、何かある？','「察してほしかった」と思ったことは？','不満をため込むタイプ？すぐ言うタイプ？']
+};
 
 // ═══ Firebase 同期ユーティリティ ═══
 const LS_KEY = 'surechigai_v8';
@@ -1456,7 +1476,7 @@ function lsSave(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{
     try{
-      localStorage.setItem(LS_KEY, JSON.stringify({S, R, gYear, gMonth, nRid, nIid}));
+      localStorage.setItem(LS_KEY, JSON.stringify({S, R, gYear, gMonth}));
       fbSave();
       showToast();
     }catch(e){console.warn('保存失敗',e);}
@@ -1516,11 +1536,6 @@ function lsLoad(){
       const d = JSON.parse(raw);
       if(d.S){Object.assign(S, d.S);}
       if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));}
-      // nRid・nIidを復元（復元しないと新規ルームが既存ルームと同じIDになるバグ防止）
-      if(d.nRid && d.nRid>nRid) nRid=d.nRid;
-      if(d.nIid && d.nIid>nIid) nIid=d.nIid;
-      // 念のためRの最大IDより大きい値を保証
-      if(R.length) nRid=Math.max(nRid, ...R.map(r=>r.id+1));
       // gYear/gMonthはlocalStorageから復元しない（常に現在月を使う）
     }
     // Firebaseからデータを読み込んでからUI更新
@@ -1530,7 +1545,6 @@ function lsLoad(){
       if(window._fbSave && window._fbListen){
         clearInterval(fbWait);
         // Firebaseから最新データを一度読み込む
-        if(!_db){fbStartListening();return;}
         _db.ref(_DB_PATH).once('value').then(snap=>{
           const val = snap.val();
           if(val){
@@ -1602,15 +1616,13 @@ function boot(u){
   lsLoad();
   // 必須配列が undefined の場合に初期化（古いデータとの互換性）
   ['qHist','moodLog','records','recs','events','agenda','dramas','dramaAiring','dramaWatched','filmarks','shopList','posts'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=[];});
-  // qHistのIDが未設定のエントリに付与（後方互換）
-  S.qHist.forEach((h,i)=>{if(!h.id)h.id=Date.now()-i*1000;});
   if(!S.spiceLikes||typeof S.spiceLikes!=='object')S.spiceLikes={quote:[],game:[],date:[]};
   ['quote','game','date'].forEach(k=>{if(!Array.isArray(S.spiceLikes[k]))S.spiceLikes[k]=[];});
   // 外食記録由来の投稿をS.postsから除去（過去データのクリーンアップ）
   S.posts=S.posts.filter(p=>!p.text||!p.text.startsWith('🍽'));
   document.getElementById('sel').style.display='none';
   document.getElementById('main').style.cssText='display:flex;flex-direction:column;height:100%;overflow:hidden';
-  applyTheme();renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();qInit();spiceLoad();checkinLoadQ();
+  applyTheme();renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();qInit();spiceLoad();checkinLoadQ();checkinRenderTimeline();checkinRenderTodayEvs();
   // 通知初期化
   if('Notification' in window && 'serviceWorker' in navigator){
     setTimeout(()=>initNotifications(me), 2000);
@@ -1752,36 +1764,41 @@ async function fmAutoFill(title){
   if(stTxt)stTxt.textContent='「'+title+'」の情報を検索中…';
   if(infoArea)infoArea.style.display='none';
   try{
-    const prompt=`web_searchツールで「${title} 映画 OR ドラマ 出演 あらすじ」を検索し、以下のJSON形式のみで回答（前後に何も付けない）:
-{"ch":"放送局または公開年","stream":"配信サービス","cast":"主要キャスト3〜5名","memo":"ネタバレなしのあらすじ1〜2文","type":"movie か drama か anime"}`;
+    const prompt=`web_searchツールで「${title} 映画 OR ドラマ 出演 あらすじ」「${title} 配信 Netflix OR Disney OR Prime OR TVer」を検索し、以下のJSON形式のみで回答してください（前後に何も付けない）:
+{"ch":"放送局または公開年（例：2022年 / フジテレビ月曜21時）","stream":"配信サービス（例：Netflix / Prime Video / TVer）","cast":"主要キャスト3〜5名","memo":"ネタバレなしのあらすじ1〜2文","type":"movie か drama か anime のいずれか"}`;
     const res=await Promise.race([
       fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',max_tokens:800,
           tools:[{type:'web_search_20250305',name:'web_search'}],
           tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]})
+          messages:[{role:'user',content:prompt}]
+        })
       }),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),20000))
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
     ]);
     const data=await res.json();
-    const txt=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
+    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
     const match=txt.match(/\{[\s\S]*?\}/);
     if(match){
       const p=JSON.parse(match[0]);
       fmAutoFillData=p;
+      // 種別チップを自動選択
       if(p.type){
         const typeMap={movie:'movie',drama:'drama',anime:'drama'};
-        const tv=typeMap[p.type]||'movie';
-        filmarkTypeSel=tv;
+        const typeVal=typeMap[p.type]||'movie';
+        filmarkTypeSel=typeVal;
         document.querySelectorAll('#fm-type-chips .chip').forEach(b=>{
           b.classList.remove('on','lav-on');
-          if(b.getAttribute('onclick').includes("'"+tv+"'"))b.classList.add('on','lav-on');
+          if(b.getAttribute('onclick').includes("'"+typeVal+"'"))b.classList.add('on','lav-on');
         });
       }
+      // 詳細欄に反映
       if(p.ch)document.getElementById('fm-ch-inp').value=p.ch;
       if(p.stream)document.getElementById('fm-stream-inp').value=p.stream;
       if(p.cast)document.getElementById('fm-cast-inp').value=p.cast;
+      // プレビュー表示
       if(infoHtml){
         let rows='';
         if(p.ch)rows+=`<div><span style="color:var(--wg);margin-right:4px">📺</span>${p.ch}</div>`;
@@ -1839,29 +1856,38 @@ async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
   try{
     const prompt=`web_searchツールを使って「${val}」を検索してください（複数クエリ可：「${val} ドラマ」「${val} 映画」「${val} anime」など）。
 検索結果をもとに、以下の条件で「${val}」に部分一致するタイトルを最大6件選んでください。
-対象：日本ドラマ・映画・アニメ、韓国ドラマ・映画、洋ドラ・洋画、配信オリジナル作品、2025〜2026年最新作も含める
+対象：
+- 日本ドラマ・映画・アニメ（年代問わず過去作含む）
+- 韓国ドラマ・映画
+- 洋ドラ・洋画
+- Netflix / Disney+ / Prime Video / Apple TV+ / Hulu / WOWOW 等の配信オリジナル作品
+- 2025〜2026年の最新作も積極的に含める
 出力はJSONのみ（前後に何も付けない）: {"titles":["タイトル1","タイトル2",...]}`;
     const res=await Promise.race([
       fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:400,
           tools:[{type:'web_search_20250305',name:'web_search'}],
           tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]})
+          messages:[{role:'user',content:prompt}]
+        })
       }),
       new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),12000))
     ]);
     const data=await res.json();
-    const txt=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
+    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
     const match=txt.match(/\{[\s\S]*?\}/);
     if(match){
       const titles=(JSON.parse(match[0]).titles||[]).filter(Boolean);
       if(!titles.length){suggest.style.display='none';return;}
       const fn=onSelect||'selectDramaSuggest';
       suggest.innerHTML=titles.map((t,i)=>{
-        const esc=t.replace(/'/g,"\'");
+        const esc=t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         return `<div onclick="${fn}('${esc}')"
-             style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px"
+             style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px;transition:background .1s"
              onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''">
           <span style="font-size:14px">📺</span><span>${t}</span>
         </div>`;
@@ -1881,20 +1907,23 @@ async function dramaAutoFill(){
   if(stTxt)stTxt.textContent='「'+title+'」を検索中…';
   if(btn){btn.disabled=true;btn.style.opacity='.5';}
   try{
-    const prompt=`web_searchツールで「${title} ドラマ 放送局 何話」「${title} キャスト 出演者」を検索し、以下のJSON形式のみで回答（前後に何も付けない）:
-{"ch":"放送局と曜日時間","eps":全話数の数値（不明は0）,"stream":"配信サービス","cast":"主要キャスト3〜5名","memo":"ネタバレなしのあらすじ1〜2文"}`;
+    const prompt=`web_searchツールで「${title} ドラマ 放送局 何話 2025」「${title} 配信 TVer FOD」「${title} キャスト 出演者」をそれぞれ検索してから、以下のJSON形式のみで回答してください（前後に何も付けない）:\n{"ch":"放送局と曜日時間（例：フジテレビ 月曜21時）","eps":全話数の数値（不明は0）,"stream":"配信サービスと条件（例：TVer最新話無料／FOD見逃し／Netflix全話）","cast":"主要キャスト3〜5名（例：竹野内豊、石原さとみ、松坂桃李）","memo":"ネタバレなしのあらすじ1〜2文"}`;
     const res=await Promise.race([
       fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:800,
           tools:[{type:'web_search_20250305',name:'web_search'}],
           tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]})
+          messages:[{role:'user',content:prompt}]
+        })
       }),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),20000))
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
     ]);
     const data=await res.json();
-    const txt=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
+    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
     const match=txt.match(/\{[\s\S]*?\}/);
     if(match){
       const p=JSON.parse(match[0]);
@@ -2908,52 +2937,71 @@ function buildSpicePrompt(type,ctx){
 }
 
 async function spiceLoad(){
-  spiceLoading=true;
-  const ldEl=document.getElementById('spice-ld');
-  const contentEl=document.getElementById('spice-content');
-  if(ldEl)ldEl.style.display='flex';
-  if(contentEl)contentEl.style.display='none';
-  const FALLBACK={
-    quote:{text:'「ありがとう」を1日1回、言葉にして直接伝えてみよう。当たり前のことも、言葉にすると伝わり方が全然違う。',learn:'感謝の言語化',tag:'💬 日常'},
-    game:{text:'「もしも100万円もらったら？」お互いの使い道を当てっこしてみよう。価値観の違いが面白い発見になる。',learn:'価値観の発見',tag:'🎮 どこでも'},
-    date:{text:'近所の行ったことのない路地を散歩してみよう。新しい発見が会話のきっかけになる。',learn:'新鮮な体験',tag:'🌈 お外'}
-  };
-  try{
-    const prompt=`すれちがい研究所のコンテンツを1件生成してください。カテゴリ: ${spiceType}。
-${spiceType==='quote'?'カップルのすれちがい解消や関係改善に役立つ小ネタ・豆知識':spiceType==='game'?'2人でできる簡単なゲームや会話のアイデア':'デートやおでかけのアイデア'}
-出力JSONのみ: {"text":"内容（50〜100字）","learn":"学べること（10字以内）","tag":"タグ（例：☕ カフェ）"}`;
-    const res=await Promise.race([
-      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})}),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000))
-    ]);
-    const data=await res.json();
-    const txt=data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-    const m=txt?.match(/\{[\s\S]*?\}/);
-    if(m){
-      const p=JSON.parse(m[0]);
-      _spiceShow(p.text||FALLBACK[spiceType].text, p.learn||FALLBACK[spiceType].learn, p.tag||FALLBACK[spiceType].tag);
-      return;
-    }
-  }catch(e){}
-  const fb=FALLBACK[spiceType];
-  _spiceShow(fb.text, fb.learn, fb.tag);
-}
-function _spiceShow(text, learn, tag){
-  spiceLoading=false;
-  const ldEl=document.getElementById('spice-ld');
-  const contentEl=document.getElementById('spice-content');
-  const textEl=document.getElementById('spice-text');
-  const learnEl=document.getElementById('spice-learn');
-  const labelEl=document.getElementById('spice-label');
-  if(ldEl)ldEl.style.display='none';
-  if(textEl)textEl.textContent=text;
-  if(learnEl)learnEl.textContent='💡 '+learn;
-  if(labelEl)labelEl.textContent=tag||'';
-  if(contentEl)contentEl.style.display='block';
-  updateSpiceLikeBtn();
-}
+  if(spiceLoading)return;spiceLoading=true;
+  document.getElementById('spice-ld').style.display='flex';
+  document.getElementById('spice-content').style.display='none';
+  document.getElementById('spice-reload').classList.add('loading');
 
+  const ctx=buildCtx();
+  const prompt=buildSpicePrompt(spiceType,ctx);
+
+  // 1回目のAPI試行
+  let success=false;
+  try{
+    const res=await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const txt=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const p=JSON.parse(txt.match(/\{[\s\S]*?\}/)[0]);
+    renderSpice(p);success=true;
+  }catch(e1){
+    // API失敗時：別プロンプトで再試行
+    try{
+      const res2=await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,messages:[{role:'user',content:SP_SYS[spiceType](ctx)}]})
+      });
+      const data2=await res2.json();
+      const txt2=data2.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+      const p2=JSON.parse(txt2.match(/\{[\s\S]*?\}/)[0]);
+      renderSpice(p2);success=true;
+    }catch(e2){
+      // 完全オフライン時のみ固定リストにフォールバック
+      const fb=SP_FB[spiceType];
+      renderSpice(fb[Math.floor(Math.random()*fb.length)]);
+    }
+  }
+  spiceLoading=false;
+  document.getElementById('spice-reload').classList.remove('loading');
+}
+function renderSpice(p){
+  document.getElementById('spice-ld').style.display='none';
+  document.getElementById('spice-content').style.display='block';
+  let text='',label='';
+  if(spiceType==='quote'){text=`💡 <strong>小ネタ</strong><br>${p.text||''}`;label=`${p.source||''}`;}
+  else if(spiceType==='game'){text=`🎮 <strong>${p.title||''}</strong><br>${p.text||''}`;label=`${p.tag||''}`;}
+  else{text=`🌈 <strong>${p.title||''}</strong><br>${p.text||''}`;label=`${p.tag||''}`;}
+  document.getElementById('spice-text').innerHTML=text;
+  document.getElementById('spice-label').textContent=label;
+
+  // 現在の提案を記録し、いいね状態を確認
+  spiceCurrent={type:spiceType, data:p, liked:false};
+  if(S.spiceLikes&&S.spiceLikes[spiceType]){
+    const key=JSON.stringify(p);
+    spiceCurrent.liked=S.spiceLikes[spiceType].some(x=>JSON.stringify(x)===key);
+  }
+  updateSpiceLikeBtn(spiceCurrent.liked);
+
+  // 学習状態の表示
+  const cnt=S.qHist.length+S.recs.length+S.moodLog.length;
+  const likeTotal=Object.values(S.spiceLikes||{}).flat().length;
+  let learnTxt='';
+  if(likeTotal>0)learnTxt+=`👍 好み学習中`;
+  if(cnt>0)learnTxt+=(learnTxt?' · ':'')+`📈 データ蓄積中`;
+  document.getElementById('spice-learn').textContent=learnTxt;
+}
 function spiceTab(t){spiceType=t;document.querySelectorAll('.spice-tab').forEach(b=>b.classList.remove('on'));document.getElementById('stab-'+t).classList.add('on');spiceLoad();}
 
 // TALK
@@ -3179,7 +3227,7 @@ function openRM(){document.getElementById('rn').value='';nFmt='free';nIco='💬'
 function closeRM(){document.getElementById('rm-ov').classList.remove('on');}
 function rFmt(btn,f){document.querySelectorAll('#rf .chip').forEach(b=>{b.classList.remove('on','ig-on');});btn.classList.add('on','ig-on');nFmt=f;}
 function rIco(btn,ico){document.querySelectorAll('#ri-chips .chip').forEach(b=>{b.classList.remove('on','ig-on');});btn.classList.add('on','ig-on');nIco=ico;}
-function saveRoom(){const name=document.getElementById('rn').value.trim();if(!name){alert('ルーム名を入力してください');return;}const newId=Date.now();const r={id:newId,name,icon:nIco,fmt:nFmt,badge:0};if(nFmt==='free'){r.msgs=[];r.nMid=1;}else if(nFmt==='memo')r.memo='';else r.items=[];R.unshift(r);closeRM();renderRooms();lsSave();}
+function saveRoom(){const name=document.getElementById('rn').value.trim();if(!name){alert('ルーム名を入力してください');return;}const r={id:nRid++,name,icon:nIco,fmt:nFmt,badge:0};if(nFmt==='free'){r.msgs=[];r.nMid=1;}else if(nFmt==='memo')r.memo='';else r.items=[];R.unshift(r);closeRM();renderRooms();lsSave();}
 // ルーム名長押し編集
 let roomNameLongTimer=null;
 function startRoomNameLong(){
@@ -3241,6 +3289,7 @@ function doRoomExport(){
 async function qGenQ(){
   const cats=['love','touch','future','daily','gap'];
   const tc=S.qCat==='all'?cats[Math.floor(Math.random()*cats.length)]:S.qCat;
+  // まずフォールバックを準備（APIが失敗してもこれが使われる）
   const fallback=(FB_Q[tc]||FB_Q.love);
   const fbText=fallback[Math.floor(Math.random()*fallback.length)];
   try{
@@ -3248,24 +3297,28 @@ async function qGenQ(){
       fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:SYS_Q.replace('{CAT}',CAT[tc]?.label||tc)}]})}),
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000))
     ]);
+    if(!res.ok){
+      const errText=await res.text().catch(()=>'');
+      console.warn('qGenQ Worker error',res.status,errText.slice(0,200));
+      throw new Error('worker_error_'+res.status);
+    }
     const data=await res.json();
+    if(data.error){console.warn('qGenQ API error',data.error);throw new Error('api_error');}
     const txt=data.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
     const m=txt?.match(/\{[\s\S]*?\}/);
-    if(!m)throw new Error('no json');
+    if(!m){console.warn('qGenQ no JSON in response:',txt?.slice(0,100));throw new Error('no json');}
     const p=JSON.parse(m[0]);
     if(!p.question)throw new Error('no question');
     return {text:p.question,cat:p.cat||tc,bm:false};
   }catch(e){
+    // APIエラー・タイムアウト時はフォールバックを使用
+    console.warn('qGenQ fallback used:',e.message);
     return {text:fbText,cat:tc,bm:false};
   }
 }
-
 async function qInit(){
-  // 両方回答済みの状態で保存されていた場合は新しい質問をロード
-  // （そのままqRenderするとqtextがdisplay:noneになるバグ対策）
-  const bothAnswered=S.curQ&&S.igAns&&S.tkAns;
-  if(S.curQ&&!bothAnswered){qRender();return;}
-  S.curQ=null;S.igAns=null;S.tkAns=null;
+  // 初回起動・ユーザー切替時：S.curQがあればそのまま表示、なければ生成
+  if(S.curQ){qRender();return;}
   await qLoad();
 }
 async function qLoad(){
@@ -3275,33 +3328,26 @@ async function qLoad(){
   const answersEl=document.getElementById('q-answers');if(answersEl)answersEl.style.display='none';
   const ldAn=document.getElementById('q-analysis-ld');if(ldAn)ldAn.style.display='flex';
   const txAn=document.getElementById('q-analysis-text');if(txAn)txAn.style.display='none';
+  const qtextEl=document.getElementById('qtext');if(qtextEl)qtextEl.style.display='none';
+  document.getElementById('q-ld').style.display='flex';
   const qta=document.getElementById('q-ta');if(qta)qta.value='';
-
-  // ── フォールバック質問をまず即時表示（APIを待たずに表示） ──
-  const cats=['love','touch','future','daily','gap'];
-  const tc=S.qCat==='all'?cats[Math.floor(Math.random()*cats.length)]:S.qCat;
-  const fbText=(FB_Q[tc]||FB_Q.love)[Math.floor(Math.random()*(FB_Q[tc]||FB_Q.love).length)];
-  S.curQ={text:fbText,cat:tc,bm:false};
-  document.getElementById('qtext').textContent=fbText;
-  document.getElementById('qtext').style.display='block';
-  document.getElementById('q-ld').style.display='none';
-  if(document.getElementById('qcatpill'))document.getElementById('qcatpill').textContent=(CAT[tc]||CAT.love).label;
-  if(document.getElementById('qnum'))document.getElementById('qnum').textContent=S.qHist.length+'問回答済み';
-  qRender();
-
-  // ── バックグラウンドでAI生成し、成功したら差し替え ──
   try{
     const q=await qGenQ();
-    // 回答前ならAI生成質問に差し替え
-    if(!S.igAns&&!S.tkAns){
-      S.curQ=q;
-      document.getElementById('qtop').style.background='';
-      if(document.getElementById('qcatpill'))document.getElementById('qcatpill').textContent=(CAT[q.cat]||CAT.love).label;
-      document.getElementById('qtext').textContent=q.text;
-      document.getElementById('qtext').style.display='block';
-    }
+    S.curQ=q;
+    document.getElementById('qtop').style.background='';
+    if(document.getElementById('qcatpill'))document.getElementById('qcatpill').textContent=(CAT[q.cat]||CAT.love).label;
+    document.getElementById('qtext').textContent=q.text;
+    document.getElementById('qtext').style.display='block';
+    if(document.getElementById('qnum'))document.getElementById('qnum').textContent=S.qHist.length+'問回答済み';
+    document.getElementById('q-ld').style.display='none';
+    qRender();
   }catch(e){
-    // タイムアウト・エラー時はフォールバックのまま（既に表示済み）
+    // ここには来ないはずだがフェイルセーフ
+    S.curQ={text:'最近、うれしかったことを教えて？',cat:'love',bm:false};
+    document.getElementById('qtext').textContent=S.curQ.text;
+    document.getElementById('qtext').style.display='block';
+    document.getElementById('q-ld').style.display='none';
+    qRender();
   }finally{
     qLoading=false;
   }
@@ -3341,7 +3387,7 @@ function qRender(){
     // 履歴に追加（初回のみ）
     const isNew=!S.qHist.length||S.qHist[0].text!==S.curQ.text;
     if(isNew){
-      S.qHist.unshift({id:Date.now(),text:S.curQ.text,cat:S.curQ.cat,igA:S.igAns.text,tkA:S.tkAns.text,ts:new Date().toISOString().slice(0,10)});
+      S.qHist.unshift({text:S.curQ.text,cat:S.curQ.cat,igA:S.igAns.text,tkA:S.tkAns.text,ts:new Date().toISOString().slice(0,10)});
       updateCnt();qRH();lsSave();
     }
     // 分析テキストがすでに保存済みなら即表示、なければAPI生成
@@ -3384,15 +3430,18 @@ async function qAnalysis(){
     const res=await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     const txt=data.content?.map(c=>c.text||'').join('').trim();
-    txEl.textContent=txt||'お互いの答え、それぞれの個性が出てて面白い！共通点もちがいも、ふたりの魅力かも 🔬';
+    txEl.textContent=txt||'お互いの答え、面白い！似てるところもあって、ちがうところも。それがふたりの魅力かも 🔬';
   }catch(e){
     txEl.textContent='お互いの答え、なんだか似てる部分もあって面白い！次の質問も楽しみにしてね 🔬';
   }
+  // 分析テキストを保存（ユーザー切替後も再表示できるように）
   if(S.curQ)S.curQ.analysis=txEl.textContent;
+  // 分析完了 → 回答を表示
   ldEl.style.display='none';
   txEl.style.display='block';
   if(answersEl){
     answersEl.style.display='block';
+    // スクロールして回答へ誘導
     setTimeout(()=>answersEl.scrollIntoView({behavior:'smooth',block:'nearest'}),300);
   }
 }
@@ -3452,21 +3501,16 @@ function qlogFilter(cat,btn){
 function qlogRender(){
   const list=document.getElementById('qlog-list');
   if(!list)return;
-  // idがないエントリに付与（後方互換）
-  S.qHist.forEach((h,i)=>{if(!h.id)h.id=Date.now()-i;});
   const filtered=qlogCat==='all'?S.qHist:S.qHist.filter(h=>h.cat===qlogCat);
   const countEl=document.getElementById('qlog-count');
   if(countEl)countEl.textContent=filtered.length+'件';
   if(!filtered.length){list.innerHTML='<div style="text-align:center;padding:32px 0;font-size:12px;color:#ccc">このカテゴリの回答はまだありません</div>';return;}
   list.innerHTML=filtered.map(h=>{
     const ci=CAT[h.cat]||CAT.love;
-    const hid=h.id;
-    return `<div class="hcard" style="margin-bottom:10px" id="qlog-card-${hid}">
+    return `<div class="hcard" style="margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
         <span style="font-size:9px;padding:2px 7px;border-radius:10px;background:${ci.bg};color:${ci.tc};font-weight:600;flex-shrink:0">${ci.label}</span>
-        <span style="font-size:10px;color:var(--wg);flex:1">${h.ts||''}</span>
-        <button onclick="qlogEdit(${hid})" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:2px 9px;font-size:10px;cursor:pointer;color:var(--wg);font-family:'Noto Sans JP',sans-serif">✏ 編集</button>
-        <button onclick="qlogDelete(${hid})" style="background:none;border:1px solid rgba(200,50,50,.3);border-radius:7px;padding:2px 9px;font-size:10px;cursor:pointer;color:#cc3333;font-family:'Noto Sans JP',sans-serif">🗑</button>
+        <span style="font-size:10px;color:var(--wg);margin-left:auto;flex-shrink:0">${h.ts||''}</span>
       </div>
       <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:9px">${h.text}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
@@ -3481,87 +3525,6 @@ function qlogRender(){
       </div>
     </div>`;
   }).join('');
-}
-
-function qlogEdit(id){
-  const h=S.qHist.find(x=>x.id===id);
-  if(!h)return;
-  const card=document.getElementById('qlog-card-'+id);
-  if(!card)return;
-  card.innerHTML=`
-    <div style="font-size:10px;color:var(--lav);font-weight:600;margin-bottom:8px">✏ 編集中</div>
-    <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.5;margin-bottom:10px;padding:8px;background:var(--cream);border-radius:8px">${h.text}</div>
-    <div style="margin-bottom:8px">
-      <div style="font-size:10px;color:var(--ig-d);font-weight:700;margin-bottom:4px">💙 井口さんの回答</div>
-      <textarea id="qe-ig-${id}" style="width:100%;border:1.5px solid var(--ig);border-radius:8px;padding:7px 9px;font-size:12px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.6;min-height:56px;box-sizing:border-box" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'">${h.igA||''}</textarea>
-    </div>
-    <div style="margin-bottom:12px">
-      <div style="font-size:10px;color:var(--tk-d);font-weight:700;margin-bottom:4px">🌸 瀧本さんの回答</div>
-      <textarea id="qe-tk-${id}" style="width:100%;border:1.5px solid var(--tk);border-radius:8px;padding:7px 9px;font-size:12px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.6;min-height:56px;box-sizing:border-box" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'">${h.tkA||''}</textarea>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button onclick="qlogRender()" style="flex:1;padding:9px;border-radius:10px;border:1.5px solid var(--bd);background:none;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:var(--wg);cursor:pointer">キャンセル</button>
-      <button onclick="qlogSaveEdit(${id})" style="flex:2;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--ig),var(--lav));color:white;font-size:12px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer">保存する ✓</button>
-    </div>`;
-  // テキストエリアの高さ調整
-  setTimeout(()=>{
-    [`qe-ig-${id}`,`qe-tk-${id}`].forEach(eid=>{
-      const el=document.getElementById(eid);
-      if(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
-    });
-  },30);
-}
-
-function qlogSaveEdit(id){
-  const h=S.qHist.find(x=>x.id===id);
-  if(!h)return;
-  const igEl=document.getElementById('qe-ig-'+id);
-  const tkEl=document.getElementById('qe-tk-'+id);
-  if(!igEl||!tkEl)return;
-  h.igA=igEl.value.trim()||h.igA;
-  h.tkA=tkEl.value.trim()||h.tkA;
-  lsSave();
-  qlogRender();
-  qRH();
-}
-
-function qlogDelete(id){
-  const h=S.qHist.find(x=>x.id===id);
-  if(!h)return;
-  // カード内にインライン確認UIを表示（sc-qlogがfixedより前面のためトースト方式が使えない）
-  const card=document.getElementById('qlog-card-'+id);
-  if(!card)return;
-  // すでに確認UI表示中なら削除
-  const existing=card.querySelector('._qlog-inline-confirm');
-  if(existing){existing.remove();return;}
-  const preview=h.text.slice(0,15)+(h.text.length>15?'…':'');
-  const ui=document.createElement('div');
-  ui.className='_qlog-inline-confirm';
-  ui.style.cssText='margin-top:10px;background:#fff0f0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap';
-  ui.innerHTML=`<span style="font-size:12px;color:#cc3333;flex:1">「${preview}」を削除しますか？</span>
-    <div style="display:flex;gap:6px">
-      <button onclick="this.closest('._qlog-inline-confirm').remove()" style="border:none;background:rgba(0,0,0,.08);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">やめる</button>
-      <button onclick="qlogDeleteConfirm(${id})" style="border:none;background:#cc3333;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;color:white;font-weight:600">削除する</button>
-    </div>`;
-  card.appendChild(ui);
-}
-
-function qlogDeleteConfirm(id){
-  document.getElementById('_qlog-del-confirm')?.remove();
-  // onclickから文字列で来る場合があるので数値に統一
-  const nid=Number(id);
-  const h=S.qHist.find(x=>Number(x.id)===nid);
-  if(h&&S.curQ&&S.curQ.text===h.text){
-    S.curQ=null;S.igAns=null;S.tkAns=null;
-  }
-  S.qHist=S.qHist.filter(x=>Number(x.id)!==nid);
-  lsSave();
-  qlogRender();
-  qRH();
-  const t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(60,50,40,.88);color:white;border-radius:20px;padding:8px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:600;white-space:nowrap';
-  t.textContent='🗑 回答を削除しました';
-  document.body.appendChild(t);setTimeout(()=>t.remove(),2000);
 }
 function qRH(){
   const list=document.getElementById('q-hist');
@@ -3703,7 +3666,7 @@ function slRender(){
         <div style="display:flex;align-items:center;gap:10px">
           <div style="width:34px;height:34px;border-radius:10px;background:var(--ig-bg);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${icon}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px">${s.name}<a class="tb-link" href="${tbUrl(s.name)}" target="_blank">食べログ</a></div>
             <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:2px">
               ${s.genre&&s.genre!=='その他'?`<span style="font-size:9px;background:var(--tk-bg);color:var(--tk-d);border-radius:6px;padding:1px 6px">${s.genre}</span>`:''}
               ${visits>0?`<span style="font-size:9px;color:var(--wg)">${visits}回 · 最終 ${lastDate}</span>`:`<span style="font-size:9px;color:#ccc">未訪問</span>`}
@@ -3719,112 +3682,30 @@ function slRender(){
 }
 
 // GOHAN
-function tbUrl(n){return `https://www.google.com/search?q=${encodeURIComponent(n+'　食べログ')}`;}
+function tbUrl(n){return `https://tabelog.com/rstLst/?vs=1&sk=${encodeURIComponent(n)}&sw=${encodeURIComponent(n)}`;}
 function gMove(d){gMonth+=d;if(gMonth>12){gMonth=1;gYear++;}if(gMonth<1){gMonth=12;gYear--;}gRender();}
-// ── お店曖昧検索 ──
-const _AREA_YOMI={
-  'さんのみや':'三ノ宮','さんみや':'三ノ宮','三宮':'三ノ宮',
-  'あまがさき':'尼崎','あま':'尼崎',
-  'つかぐち':'塚口','つか':'塚口',
-  'うめだ':'梅田','うめ':'梅田'
-};
-const _GENRE_YOMI={
-  '焼き鳥':'居酒屋','やきとり':'居酒屋','やき鳥':'居酒屋','鳥':'居酒屋',
-  '居酒':'居酒屋','いざかや':'居酒屋','飲み':'居酒屋','のみ':'居酒屋',
-  '韓国':'韓国料理','かんこく':'韓国料理','チゲ':'韓国料理','スンドゥブ':'韓国料理',
-  'イタリア':'イタリアン','パスタ':'イタリアン','ピザ':'イタリアン',
-  'らーめん':'ラーメン','ラメン':'ラーメン','拉麺':'ラーメン',
-  'カフェ':'カフェ','珈琲':'カフェ','コーヒー':'カフェ','喫茶':'カフェ',
-  '和食':'和食','寿司':'和食','すし':'和食','天ぷら':'和食',
-  '洋食':'洋食','フレンチ':'洋食','ビストロ':'洋食'
-};
-let _gHintTimer=null;
-
 function gHint(val){
   const h=document.getElementById('gf-hint');
-  if(!h) return;
-  clearTimeout(_gHintTimer);
-  if(!val.trim()){h.style.display='none';h.innerHTML='';return;}
-
-  // ヒントエリアを強制的に表示状態にする（.onクラスより確実）
-  h.style.display='block';
-  h.innerHTML='';
-  // ① 自前データ（お店リスト＋外食記録）から即時サジェスト
-  const visitMap=new Map();
-  (S.recs||[]).forEach(r=>{if(r.shop)visitMap.set(r.shop,(visitMap.get(r.shop)||0)+1);});
-  const shopMap=new Map();
-  (S.shopList||[]).forEach(s=>shopMap.set(s.name,{...s}));
-  (S.recs||[]).forEach(r=>{
-    if(r.shop&&!shopMap.has(r.shop))
-      shopMap.set(r.shop,{name:r.shop,area:r.area||'',cat:r.cat||'',genre:r.genre||''});
-  });
-  const shops=[...shopMap.values()].sort((a,b)=>(visitMap.get(b.name)||0)-(visitMap.get(a.name)||0));
-  const q=val.trim();
-  const myMatched=_gFuzzyMatch(shops,q);
-  _gHintRender(h,myMatched,q);
-
-
-}
-
-
-
-function _gFuzzyMatch(shops,q){
-  const areaKey=_AREA_YOMI[q]||null;
-  const genreKey=_GENRE_YOMI[q]||null;
-  const scores=[];
-  shops.forEach(s=>{
-    let score=0;
-    if(s.name===q) score+=100;
-    else if(s.name.startsWith(q)) score+=80;
-    else if(s.name.includes(q)) score+=60;
-    else if(q.length>=2){
-      const chars=[...q];
-      const hit=chars.filter(c=>s.name.includes(c)).length;
-      if(hit/chars.length>=0.6) score+=Math.round(30*(hit/chars.length));
-    }
-    if(areaKey&&s.area===areaKey) score+=50;
-    if(genreKey&&s.genre===genreKey) score+=50;
-    if(!areaKey&&s.area&&s.area.includes(q)) score+=40;
-    if(!genreKey&&s.genre&&s.genre.includes(q)) score+=40;
-    if(s.memo&&s.memo.includes(q)) score+=20;
-    if(score>0) scores.push({s,score});
-  });
-  return scores.sort((a,b)=>b.score-a.score).slice(0,5).map(x=>x.s);
-}
-
-function _gHintRender(h,matched,val){
-  h.innerHTML='';
-  if(!matched.length){
-    // 自前データなし→食べログ検索リンクだけ表示
-    h.innerHTML=`<div style="padding:7px 13px"><a href="${tbUrl(val)}" target="_blank" style="color:var(--tk-d);font-size:12px;font-weight:500">📋「${val}」を食べログで検索 ↗</a></div>`;
-    h.style.display='block';
-    return;
-  }
-  const GNI2={'和食':'🍱','韓国料理':'🥘','イタリアン':'🍝','焼肉':'🥩','ラーメン':'🍜','バー・飲み':'🍻','居酒屋':'🍶','カフェ':'☕','洋食':'🍽','その他':'🍽'};
-  h.innerHTML=matched.map((s,i)=>{
-    let hl=s.name;
-    try{
-      const esc=val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      hl=s.name.replace(new RegExp(esc,'gi'),m=>`<b style="color:var(--ig-d)">${m}</b>`);
-    }catch(e){}
-    const sub=[s.area,s.genre].filter(x=>x&&x!=='その他').join(' · ');
-    const sn=s.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    const sa=(s.area||'').replace(/'/g,"\\'");
-    const sc=(s.cat||'').replace(/'/g,"\\'");
-    const sg=(s.genre||'').replace(/'/g,"\\'");
-    const bd=i<matched.length-1?'border-bottom:1px solid var(--bd);':'';
-    return `<div onclick="gSelectShop('${sn}','${sa}','${sc}','${sg}')"
-      style="display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;${bd}"
-      ontouchstart="this.style.background='var(--cream)'" ontouchend="this.style.background=''">
-      <span style="font-size:16px">${GNI2[s.genre]||'🍽'}</span>
+  if(!val.trim()){h.classList.remove('on');h.innerHTML='';return;}
+  // お店リストからサジェスト
+  const shops=S.shopList||[];
+  const matched=shops.filter(s=>s.name.includes(val)||val.includes(s.name));
+  let inner='';
+  if(matched.length){
+    inner+=matched.slice(0,3).map(s=>`<div onclick="gSelectShop('${s.name.replace(/'/g,"\\'")}','${s.area||''}','${s.cat||''}','${s.genre||''}')" style="display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;border-radius:8px;transition:background .1s" onmouseover="this.style.background='var(--bd)'" onmouseout="this.style.background=''">
+      <span style="font-size:13px">🍽</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:var(--text)">${hl}</div>
-        <div style="font-size:10px;color:var(--wg)">${sub}</div>
-      </div></div>`;
-  }).join('');
+        <div style="font-size:12px;font-weight:600;color:var(--text)">${s.name}</div>
+        <div style="font-size:10px;color:var(--wg)">${s.area||''} · ${s.cat||''} · ${s.genre||''}</div>
+      </div>
+    </div>`).join('');
+    inner+=`<div style="border-top:1px solid var(--bd);margin-top:4px;padding-top:4px">`;
+  }
+  inner+=`<div style="padding:4px 10px"><a href="${tbUrl(val)}" target="_blank" style="color:var(--tk-d);font-size:11px;font-weight:500">📋「${val}」を食べログで検索 ↗</a></div>`;
+  if(matched.length)inner+=`</div>`;
+  h.innerHTML=inner;
   h.classList.add('on');
 }
-
 function gSelectShop(name,area,cat,genre){
   document.getElementById('gf-shop').value=name;
   // エリア・シーン・ジャンルを自動セット
@@ -3838,14 +3719,7 @@ function gChip(btn,type,val){
   else if(type==='area'){document.querySelectorAll('#gf-area .chip').forEach(b=>{b.classList.remove('on','ig-on');});btn.classList.add('on','ig-on');newGArea=val;}
   else{const isOn=btn.classList.contains('on');document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));if(!isOn){btn.classList.add('on','tk-on');newGGenre=val;}else newGGenre='';}
 }
-function gOpen(){
-  // 店名入力のサジェストをaddEventListenerで確実に設定
-  const shopInp=document.getElementById('gf-shop');
-  if(shopInp){
-    shopInp.oninput=function(){gHint(this.value);};
-    shopInp.onpaste=function(){setTimeout(()=>gHint(this.value),50);};
-  }
-  document.getElementById('gf-date').value=new Date().toISOString().slice(0,10);['gf-shop','gf-ig','gf-tk','gf-ig-n','gf-tk-n'].forEach(id=>document.getElementById(id).value='');document.getElementById('gf-hint').classList.remove('on');newGCat='ランチ';newGGenre='';newGArea='三ノ宮';document.querySelectorAll('#gf-cat .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-area .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));document.getElementById('gf-memo').value='';document.getElementById('gf-edit-id').value='';document.getElementById('gf-save-btn').textContent='記録する ✓';document.getElementById('gf-del-btn').style.display='none';document.getElementById('g-ov').classList.add('on');}
+function gOpen(){document.getElementById('gf-date').value=new Date().toISOString().slice(0,10);['gf-shop','gf-ig','gf-tk','gf-ig-n','gf-tk-n'].forEach(id=>document.getElementById(id).value='');document.getElementById('gf-hint').classList.remove('on');newGCat='ランチ';newGGenre='';newGArea='三ノ宮';document.querySelectorAll('#gf-cat .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-area .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));document.getElementById('gf-memo').value='';document.getElementById('gf-edit-id').value='';document.getElementById('gf-save-btn').textContent='記録する ✓';document.getElementById('gf-del-btn').style.display='none';document.getElementById('g-ov').classList.add('on');}
 function gDelete(id){
   const r=S.recs.find(x=>x.id===id);if(!r)return;
   const old=document.getElementById('g-del-confirm');if(old)old.remove();
@@ -3907,56 +3781,27 @@ function gSave(){
   } else {
     S.recs.unshift({id:S.nRecId++,...recData});
   }
-  // 追加前にエリア・カテゴリ・ジャンルを保存（gClose後も使えるように）
-  const _savedShop=shop, _savedArea=newGArea, _savedCat=newGCat, _savedGenre=newGGenre||'その他';
   gClose();gRender();calRender();updateTop();lsSave();
   // 通知送信
   const partner=me==='ig'?'tk':'ig';
   const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
-  if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${_savedShop}`);
-  // お店リスト登録確認（新規のみ・未登録のみ）
+  if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${shop}`);
+  // お店リスト登録確認（新規のみ）
   if(!editId){
-    const alreadyIn=(S.shopList||[]).some(s=>s.name===_savedShop);
-    if(!alreadyIn){
-      setTimeout(()=>_gShowAddShopDialog(_savedShop,_savedArea,_savedCat,_savedGenre), 350);
-    }
+  // お店リスト登録確認
+  const alreadyIn=S.shopList&&S.shopList.some(s=>s.name===shop);
+  if(!alreadyIn){
+    setTimeout(()=>{
+      const ui=document.createElement('div');
+      ui.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2a2a;color:white;border-radius:16px;padding:13px 16px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;display:flex;align-items:center;gap:10px;z-index:500;box-shadow:0 4px 24px rgba(0,0,0,.35);white-space:nowrap';
+      ui.innerHTML=`<span>「${shop}」をお店リストに追加しますか？</span>
+        <button onclick="addToShopList('${shop.replace(/'/g,"\\'")}','${newGArea}','${newGCat}','${newGGenre||'その他'}');this.parentElement.remove();" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:linear-gradient(135deg,#b8d9f8,#8ec4f0);color:var(--ig-d);font-weight:600">追加</button>
+        <button onclick="this.parentElement.remove()" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.18);color:white">あとで</button>`;
+      document.body.appendChild(ui);
+      setTimeout(()=>{if(ui.parentElement)ui.remove();},6000);
+    },400);
   }
-}
-
-function _gShowAddShopDialog(shop,area,cat,genre){
-  const old=document.getElementById('_g-add-shop-dialog');if(old)old.remove();
-  const ui=document.createElement('div');
-  ui.id='_g-add-shop-dialog';
-  ui.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)';
-  ui.innerHTML=`
-    <div style="background:var(--cream);border-radius:22px 22px 0 0;padding:22px 20px 28px;width:100%;max-width:430px;box-shadow:0 -4px 32px rgba(0,0,0,.18)">
-      <div style="width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:0 auto 18px"></div>
-      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">🍽 お店リストに追加する？</div>
-      <div style="font-size:12px;color:var(--wg);margin-bottom:18px;line-height:1.6">
-        <b style="color:var(--text)">「${shop}」</b>をリストに登録しておくと<br>次回から名前を打たずにすぐ選べます
-      </div>
-      <div style="display:flex;gap:10px">
-        <button onclick="document.getElementById('_g-add-shop-dialog').remove()"
-          style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--bd2);background:white;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg);cursor:pointer">
-          今回はスキップ
-        </button>
-        <button onclick="addToShopList('${shop.replace(/'/g,"\'")}','${area}','${cat}','${genre}');document.getElementById('_g-add-shop-dialog').remove();_gShowAddedToast('${shop.replace(/'/g,"\'")}');"
-          style="flex:2;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--ig),var(--lav));color:white;font-size:13px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;box-shadow:0 3px 10px rgba(74,143,212,.3)">
-          ＋ リストに追加する
-        </button>
-      </div>
-    </div>`;
-  // 背景タップで閉じる
-  ui.addEventListener('click',e=>{if(e.target===ui)ui.remove();});
-  document.body.appendChild(ui);
-}
-
-function _gShowAddedToast(shop){
-  const t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:rgba(40,100,60,.92);color:white;border-radius:20px;padding:9px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:700;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.25)';
-  t.textContent=`✅ 「${shop}」をリストに追加しました`;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2200);
+  }
 }
 function gRender(){
   const ym=`${gYear}-${String(gMonth).padStart(2,'0')}`;
@@ -3975,13 +3820,34 @@ function gRender(){
   const list=document.getElementById('g-list');
   if(!mr.length){list.innerHTML=`<div style="text-align:center;padding:14px;font-size:12px;color:#ccc">${gMonth}月の記録はありません</div>`;return;}
   list.innerHTML=mr.map(r=>{
-    const cb=GCC[r.cat]||'#f5f5f5';const gi=GNI[r.genre]||'🍽';const is=r.igAmt>0,ts=r.tkAmt>0;
-    const inList=(S.shopList||[]).some(s=>s.name===r.shop);
-    const sn=r.shop.replace(/'/g,"\'"),sa=(r.area||'').replace(/'/g,"\'"),sc=(r.cat||'').replace(/'/g,"\'"),sg=(r.genre||'').replace(/'/g,"\'");
-    const addBtn=inList
-      ?`<span style="font-size:9px;color:var(--ig-d);background:var(--ig-bg);border-radius:6px;padding:2px 7px">✓ リスト済</span>`
-      :`<button onclick="addToShopList('${sn}','${sa}','${sc}','${sg}');gRender();" style="background:none;border:1px solid var(--ig);border-radius:8px;padding:3px 9px;font-size:10px;cursor:pointer;color:var(--ig-d);font-family:'Noto Sans JP',sans-serif;white-space:nowrap;font-weight:600">＋ リスト</button>`;
-    return `<div class="g-rec"><div class="g-rec-top"><div class="g-rec-ic" style="background:${cb}">${gi}</div><div style="flex:1;min-width:0"><div class="g-rec-name">${r.shop}<a class="tb-link" href="${tbUrl(r.shop)}" target="_blank">食べログ ↗</a></div><div style="font-size:10px;color:var(--wg);display:flex;gap:4px;flex-wrap:wrap"><span>${r.date}</span>${r.area?`<span class="gtag" style="background:var(--ig-bg);color:var(--ig-d)">${r.area}</span>`:''}<span class="gtag" style="background:${cb};color:#555">${r.cat}</span></div></div><div style="display:flex;gap:5px;flex-shrink:0;align-items:center">${addBtn}<button onclick="gEdit(${r.id})" style="background:none;border:1px solid var(--bd);border-radius:8px;padding:3px 9px;font-size:10px;cursor:pointer;color:var(--wg);font-family:'Noto Sans JP',sans-serif">✏ 編集</button><button onclick="gDelete(${r.id})" style="background:none;border:1px solid rgba(200,50,50,.3);border-radius:8px;padding:3px 9px;font-size:10px;cursor:pointer;color:#cc3333;font-family:'Noto Sans JP',sans-serif">🗑</button></div></div>${r.memo?`<div style="font-size:11px;color:var(--wg);background:var(--cream);border-radius:7px;padding:5px 8px;margin:4px 0;line-height:1.5">💬 ${r.memo}</div>`:''}<div class="pay-chips"><div class="pchip ${is?'ig':'none'}"><div class="pw ${is?'ig':''}">💙 井口さん</div><div class="pa ${is?'ig':'none'}">${is?'¥'+r.igAmt.toLocaleString():'—'}</div>${r.igNote?`<div class="pn">${r.igNote}</div>`:''}</div><div class="pchip ${ts?'tk':'none'}"><div class="pw ${ts?'tk':''}">🌸 瀧本さん</div><div class="pa ${ts?'tk':'none'}">${ts?'¥'+r.tkAmt.toLocaleString():'—'}</div>${r.tkNote?`<div class="pn">${r.tkNote}</div>`:''}</div></div></div>`;
+    const cb=GCC[r.cat]||'#f5f5f5';const gi=GNI[r.genre]||'🍽';
+    const is=r.igAmt>0,ts=r.tkAmt>0;
+    const tot=(r.igAmt||0)+(r.tkAmt||0);
+    return `<div class="g-rec" style="padding:8px 11px;margin-bottom:5px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:14px;flex-shrink:0">${gi}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px">${r.shop}</span>
+            <a class="tb-link" href="${tbUrl(r.shop)}" target="_blank">食べログ</a>
+            <span class="gtag" style="background:${cb};color:#555;font-size:9px">${r.cat}</span>
+            ${r.area?`<span class="gtag" style="background:var(--ig-bg);color:var(--ig-d);font-size:9px">${r.area}</span>`:''}
+            <span style="font-size:9px;color:var(--wg);margin-left:auto;flex-shrink:0">${r.date.slice(5).replace('-','/')}</span>
+          </div>
+          ${(is||ts)?`<div style="display:flex;gap:4px;margin-top:4px;align-items:center">
+            ${is?`<span style="font-size:11px;font-weight:700;color:var(--ig-d)">💙¥${r.igAmt.toLocaleString()}</span>${r.igNote?`<span style="font-size:9px;color:var(--wg)">${r.igNote}</span>`:''}`:'' }
+            ${is&&ts?`<span style="font-size:9px;color:var(--bd)">|</span>`:''}
+            ${ts?`<span style="font-size:11px;font-weight:700;color:var(--tk-d)">🌸¥${r.tkAmt.toLocaleString()}</span>${r.tkNote?`<span style="font-size:9px;color:var(--wg)">${r.tkNote}</span>`:''}`:'' }
+            ${tot?`<span style="font-size:9px;color:var(--wg);margin-left:auto">計¥${tot.toLocaleString()}</span>`:''}
+          </div>`:''}
+          ${r.memo?`<div style="font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4">💬 ${r.memo}</div>`:''}
+        </div>
+        <div style="display:flex;gap:3px;flex-shrink:0;align-self:flex-start">
+          <button onclick="gEdit(${r.id})" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:2px 7px;font-size:10px;cursor:pointer;color:var(--wg);font-family:'Noto Sans JP',sans-serif">✏</button>
+          <button onclick="gDelete(${r.id})" style="background:none;border:1px solid rgba(200,50,50,.3);border-radius:7px;padding:2px 7px;font-size:10px;cursor:pointer;color:#cc3333;font-family:'Noto Sans JP',sans-serif">🗑</button>
+        </div>
+      </div>
+    </div>`;
   }).join('');
 }
 
@@ -3991,7 +3857,14 @@ function switchNote(pane){
   document.querySelectorAll('#sc-note .note-pane').forEach(p=>p.classList.remove('on'));
   const t=document.getElementById('ntab-'+pane);if(t)t.classList.add('on');
   const p=document.getElementById('npane-'+pane);if(p)p.classList.add('on');
-  if(pane==='cal')calRender();
+  if(pane==='cal'){
+    // カレンダー表示のたびに今日の年月に合わせて当日を選択状態にする
+    const today=new Date();
+    S.calY=today.getFullYear();
+    S.calM=today.getMonth()+1;
+    S.calSelDate=today.toISOString().slice(0,10);
+    calRender();
+  }
 }
 
 // ═══ チェックイン（今日の振り返り）═══
@@ -4112,6 +3985,7 @@ function saveCheckin(){
   checkinRemoveImg();checkinImgData='';
   // 質問を次のに切り替え（投稿後はランダム）
   checkinLoadQ(true);
+  checkinRenderTimeline();
   calRender();
   lsSave();
 }
@@ -4256,7 +4130,35 @@ function checkinCancelEdit(){
   checkinRenderTimeline();
 }
 
-function checkinUpdateView(){checkinRenderTimeline();checkinLoadQ();}
+function checkinUpdateView(){
+  checkinRenderTimeline();
+  checkinRenderTodayEvs();
+  checkinLoadQ();
+}
+function checkinRenderTodayEvs(){
+  const today=new Date().toISOString().slice(0,10);
+  const wrap=document.getElementById('checkin-today-evs');
+  const list=document.getElementById('checkin-today-evs-list');
+  if(!wrap||!list)return;
+  // 今日の予定を取得（calY/calMに依存せず今日の日付で直接フィルタ）
+  const todayEvs=[];
+  const {calY,calM}=S;
+  const ym=today.slice(0,7);
+  S.events.forEach(e=>{
+    const d=new Date(e.date);
+    if(e.repeat==='yearly'){const nd=new Date(d);nd.setFullYear(new Date().getFullYear());if(nd.toISOString().slice(0,10)===today)todayEvs.push({...e,date:today});}
+    else if(e.repeat==='monthly'){const nd=new Date(d);nd.setFullYear(new Date().getFullYear());nd.setMonth(new Date().getMonth());if(nd.toISOString().slice(0,10)===today)todayEvs.push({...e,date:today});}
+    else if(e.date===today){todayEvs.push(e);}
+  });
+  if(!todayEvs.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  list.innerHTML=todayEvs.map(e=>`
+    <div style="display:flex;align-items:center;gap:7px;padding:3px 0">
+      <div style="width:6px;height:6px;border-radius:50%;background:${e.color||'#9b7ec8'};flex-shrink:0"></div>
+      <div style="font-size:12px;font-weight:600;color:#5a3010;flex:1">${e.name}</div>
+      ${e.time?`<div style="font-size:10px;color:#9a5030">🕐 ${e.time}</div>`:''}
+    </div>`).join('');
+}
 
 // ── 旧omoide互換スタブ（参照エラー防止・将来削除予定） ──
 const _noop=()=>{};
@@ -4570,7 +4472,7 @@ function switchDrama(pane){
  rFmt,rIco,rCat,addItem,delItem,togItem,openItemMemo,saveItemMemo,clearDone,
  switchNote,calMove,calRender,calSelectDate,calRenderEvs,renderCalDaylog,
  openAddEv,closeAddEv,openEditEv,saveEv,deleteEv,evType,evRep,openAddEvWithDate,expandEvs,
-
+ saveDiaryFromCal,toggleDiaryEdit,
  switchFilm,
  openAddDrama,closeDramaAdd,saveDramaAdd,dramaTitleInput,fetchDramaSuggest,hideDramaSuggest,selectDramaSuggest,dramaAutoFill,dramaSub,
  openDramaDetail,closeDramaDetail,revealSpoil,addEpisodeToAiring,
@@ -4586,8 +4488,7 @@ function switchDrama(pane){
  openEditShop,closeEditShop,shopEditChip,saveEditShop,deleteShop,
  checkinLoadQ,saveCheckin,checkinCharCount,checkinLoadImg,checkinRemoveImg,
  checkinSelMood,checkinEditSelMood,checkinCancelEdit,checkinSaveEdit,
- checkinDeletePost,checkinDeleteConfirm,checkinEditPost,checkinUpdateView,checkinUseQ,checkinRenderTimeline,
- qlogEdit,qlogSaveEdit,qlogDelete,qlogDeleteConfirm,
+ checkinDeletePost,checkinDeleteConfirm,checkinEditPost,checkinUpdateView,checkinUseQ,checkinRenderTimeline,checkinRenderTodayEvs,resetCheckin,
  openRecForm,closeRecForm,saveRec,recFilter,renderRecords,rCat,
  openOmoideForm,closeOmoideForm,saveOmoide,deleteOmoide,omoideRender,omoideRenderList,omoideTypeFilter,omoideCalMove,omoideSelectDate,
  openOmoideRecForm,closeOmoideRecForm,
@@ -4596,7 +4497,7 @@ function switchDrama(pane){
  updateCnt,updateTop,updateHomeEvs,
  renderDataPage,buildExportData,
  tbUrl,
-].forEach(fn=>{ if(fn && typeof fn==='function') window[fn.name]=fn; });
+].forEach(fn=>{ if(typeof fn==='function') window[fn.name]=fn; });
 </script>
 
 <!-- ドラマ追加モーダル -->
