@@ -3300,7 +3300,7 @@ async function qGenQ(){
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,
           messages:[{role:'user',content:SYS_Q.replace('{CAT}',CAT[tc]?.label||tc)}]})
-      }),
+      }).catch(err=>{_workerOk=false;throw err;}),
       new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),4000))
     ]);
     if(!res.ok){
@@ -3323,9 +3323,11 @@ async function qGenQ(){
   }
 }
 async function qInit(){
-  // curQが残っているが text がない場合はリセット
-  if(S.curQ&&S.curQ.text){qRender();return;}
-  S.curQ=null;
+  if(S.curQ && typeof S.curQ.text==='string' && S.curQ.text.length>0){
+    qRender();
+    return;
+  }
+  S.curQ=null; S.igAns=null; S.tkAns=null;
   await qLoad();
 }
 async function qLoad(){
@@ -3374,8 +3376,13 @@ function qRender(){
   const sc=document.getElementById('q-state-c');
   if(!sa||!sb||!sc)return;
   sa.style.display='none';sb.style.display='none';sc.style.display='none';
-  // q-ldは常に非表示（生成中以外は不要）
   const qld=document.getElementById('q-ld');if(qld)qld.style.display='none';
+  // 質問文を確実に表示（両方回答済み状態C以外）
+  const qtextEl=document.getElementById('qtext');
+  if(qtextEl&&!(igD&&tkD)){
+    qtextEl.textContent=S.curQ.text;
+    qtextEl.style.display='block';
+  }
   // 回答者ラベル更新
   const aw=document.getElementById('q-aw');
   if(aw)aw.textContent=pD&&!myD?pName+'は回答済み！'+myName+'も答えてね':myName+'の回答';
