@@ -1223,19 +1223,19 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
       <div class="pay-av ig">💙</div><span class="pay-nm ig">井口さん</span>
       <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
         <input class="pay-inp" id="gf-ig" type="number" placeholder="¥" style="width:100%"/>
-        <input class="pay-ni" id="gf-ig-n" placeholder="メモ（任意）" style="width:100%;box-sizing:border-box"/>
+        <input class="pay-ni" id="gf-ig-n" placeholder="クーポン・割引など（任意）" style="width:100%;box-sizing:border-box"/>
       </div>
     </div>
     <div class="pay-row">
       <div class="pay-av tk">🌸</div><span class="pay-nm tk">瀧本さん</span>
       <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
         <input class="pay-inp" id="gf-tk" type="number" placeholder="¥" style="width:100%"/>
-        <input class="pay-ni" id="gf-tk-n" placeholder="メモ（任意）" style="width:100%;box-sizing:border-box"/>
+        <input class="pay-ni" id="gf-tk-n" placeholder="クーポン・割引など（任意）" style="width:100%;box-sizing:border-box"/>
       </div>
     </div>
   </div>
-  <div class="fl">メモ</div>
-  <textarea class="fi" id="gf-memo" placeholder="感想・おすすめポイントなど（任意）" rows="2" style="resize:none;line-height:1.5"></textarea>
+  <div class="fl">感想・おすすめメニュー</div>
+  <textarea class="fi" id="gf-memo" placeholder="おいしかったメニュー、お店の雰囲気など（任意）" rows="2" style="resize:none;line-height:1.5"></textarea>
   <div class="mbtns"><button class="mcx" onclick="gClose()">キャンセル</button><button id="gf-del-btn" onclick="gDeleteFromModal()" style="display:none;flex:1;padding:12px;border-radius:12px;border:none;background:#fff0f0;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:#cc3333;transition:all .15s">🗑 削除</button><button class="msv" id="gf-save-btn" onclick="gSave()">記録する ✓</button></div>
   <input type="hidden" id="gf-edit-id" value=""/>
 </div></div>
@@ -1998,13 +1998,14 @@ let fbListening = false;
 let fbRemoteUpdate = false;
 let saveTimer = null;
 
-function lsSave(){
+function lsSave(toast=false){
+  // toastフラグがtrueのとき即座にトーストを表示（ユーザー操作直後）
+  if(toast) showToast();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{
     try{
       localStorage.setItem(LS_KEY, JSON.stringify({S, R, gYear, gMonth}));
       fbSave();
-      showToast();
     }catch(e){console.warn('保存失敗',e);}
     saveTimer = null;
   }, 800);
@@ -2502,7 +2503,7 @@ function saveDramaEdit(){
 function deleteDramaAiring(){
   const id=parseInt(document.getElementById('de-id').value);
   S.dramaAiring=S.dramaAiring.filter(x=>x.id!==id);
-  closeDramaEdit();closeDramaDetail();renderDramaAiring();lsSave();
+  closeDramaEdit();closeDramaDetail();renderDramaAiring();lsSave(true);
 }
 function deleteEpReview(){
   if(!epEditCtx)return;
@@ -2529,7 +2530,7 @@ function saveDramaAdd(){
   const episodes=[];
   for(let i=1;i<=eps;i++)episodes.push({ep:i,igStar:0,igMemo:'',tkStar:0,tkMemo:''});
   S.dramaAiring.unshift({id:dramaIdCnt++,title,ch,eps,stream,cast,memo,episodes,epsFixed:eps>0});
-  closeDramaAdd();renderDramaAiring();lsSave();
+  closeDramaAdd();renderDramaAiring();lsSave(true);
 }
 function renderDramaNow(){
   // sc-dramaタブのdrama-now-list向け（S.dramasデータを使用）
@@ -2778,7 +2779,7 @@ function saveEp(){
   if(!e)return;
   if(me==='ig'){e.igStar=epStarSel;e.igMemo=document.getElementById('ep-memo').value.trim();}
   else{e.tkStar=epStarSel;e.tkMemo=document.getElementById('ep-memo').value.trim();}
-  closeEpModal();renderDramaAiring();
+  closeEpModal();renderDramaAiring();lsSave(true);
   // 詳細画面が開いていれば更新
   const detail=document.getElementById('drama-detail');
   if(detail&&detail.style.display!=='none') renderDramaDetailEps(d);
@@ -2954,7 +2955,7 @@ function saveFilmark(){
   S.filmarks.unshift({id:filmarkId++,title,type:filmarkTypeSel,status:filmarkStatusSel,star:filmarkStarSel,
     memo:document.getElementById('fm-memo-inp').value.trim(),
     date:document.getElementById('fm-date-inp').value,who:me,ch,stream,cast});
-  closeAddFilmark();renderFilmarks();omoideRender();lsSave();
+  closeAddFilmark();renderFilmarks();omoideRender();lsSave(true);
   // 通知送信
   const partner=me==='ig'?'tk':'ig';
   const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
@@ -3017,7 +3018,7 @@ function saveFilmarkEdit(){
   f.memo=document.getElementById('fe-memo').value.trim();
   f.star=feStarSel;
   f.status=feStatusSel;
-  closeFilmarkEdit();renderFilmarks();lsSave();
+  closeFilmarkEdit();renderFilmarks();lsSave(true);
 }
 function deleteFilmark(id){
   S.filmarks=S.filmarks.filter(x=>x.id!==id);
@@ -3716,7 +3717,7 @@ function openRM(){document.getElementById('rn').value='';nFmt='free';nIco='💬'
 function closeRM(){document.getElementById('rm-ov').classList.remove('on');}
 function rFmt(btn,f){document.querySelectorAll('#rf .chip').forEach(b=>{b.classList.remove('on','ig-on');});btn.classList.add('on','ig-on');nFmt=f;}
 function rIco(btn,ico){document.querySelectorAll('#ri-chips .chip').forEach(b=>{b.classList.remove('on','ig-on');});btn.classList.add('on','ig-on');nIco=ico;}
-function saveRoom(){const name=document.getElementById('rn').value.trim();if(!name){alert('ルーム名を入力してください');return;}const r={id:nRid++,name,icon:nIco,fmt:nFmt,badge:0};if(nFmt==='free'){r.msgs=[];r.nMid=1;}else if(nFmt==='memo')r.memo='';else r.items=[];R.unshift(r);closeRM();renderRooms();lsSave();}
+function saveRoom(){const name=document.getElementById('rn').value.trim();if(!name){alert('ルーム名を入力してください');return;}const r={id:nRid++,name,icon:nIco,fmt:nFmt,badge:0};if(nFmt==='free'){r.msgs=[];r.nMid=1;}else if(nFmt==='memo')r.memo='';else r.items=[];R.unshift(r);closeRM();renderRooms();lsSave(true);}
 // ルーム名長押し編集
 let roomNameLongTimer=null;
 function startRoomNameLong(){
@@ -4274,16 +4275,24 @@ function gSave(){
   } else {
     S.recs.unshift({id:S.nRecId++,...recData});
   }
-  gClose();gRender();calRender();updateTop();lsSave();
+  gClose();gRender();calRender();updateTop();lsSave(true);
   // 通知送信
   const partner=me==='ig'?'tk':'ig';
   const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
   if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${shop}`);
-  // お店リスト登録確認（新規のみ）
+  // お店リスト自動登録（新規のみ・メモ引き継ぎ）
   if(!editId){
     const alreadyIn=S.shopList&&S.shopList.some(s=>s.name===shop);
     if(!alreadyIn){
-      setTimeout(()=>showShopListPrompt(shop,newGArea,newGCat,newGGenre||'その他',memo),400);
+      addToShopList(shop,newGArea,newGCat,newGGenre||'その他',memo);
+      // 登録完了トースト
+      setTimeout(()=>{
+        const t=document.createElement('div');
+        t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(60,50,40,.88);color:white;border-radius:20px;padding:8px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:500;white-space:nowrap';
+        t.textContent=`🏪 「${shop}」をお店リストに追加しました`;
+        document.body.appendChild(t);
+        setTimeout(()=>t.remove(),2500);
+      },300);
     }
   }
 }
@@ -4352,9 +4361,9 @@ function gRender(){
             ${r.area?`<span class="gtag" style="background:var(--ig-bg);color:var(--ig-d);font-size:9px">${r.area}</span>`:''}
           </div>
           ${(is||ts)?`<div style="display:flex;gap:4px;margin-top:4px;align-items:center">
-            ${is?`<span style="font-size:11px;font-weight:700;color:var(--ig-d)">💙¥${r.igAmt.toLocaleString()}</span>${r.igNote?`<span style="font-size:9px;color:var(--wg)">${r.igNote}</span>`:''}`:'' }
+            ${is?`<span style="font-size:11px;font-weight:700;color:var(--ig-d)">💙¥${r.igAmt.toLocaleString()}</span>${r.igNote?`<span style="font-size:9px;color:var(--wg)">🏷${r.igNote}</span>`:''}`:'' }
             ${is&&ts?`<span style="font-size:9px;color:var(--bd)">|</span>`:''}
-            ${ts?`<span style="font-size:11px;font-weight:700;color:var(--tk-d)">🌸¥${r.tkAmt.toLocaleString()}</span>${r.tkNote?`<span style="font-size:9px;color:var(--wg)">${r.tkNote}</span>`:''}`:'' }
+            ${ts?`<span style="font-size:11px;font-weight:700;color:var(--tk-d)">🌸¥${r.tkAmt.toLocaleString()}</span>${r.tkNote?`<span style="font-size:9px;color:var(--wg)">🏷${r.tkNote}</span>`:''}`:'' }
             ${tot?`<span style="font-size:9px;color:var(--wg);margin-left:auto">計¥${tot.toLocaleString()}</span>`:''}
           </div>`:''}
           ${r.memo?`<div style="font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4">💬 ${r.memo}</div>`:''}
@@ -4639,7 +4648,7 @@ function checkinSaveEdit(id){
   }
   p.text=text;p.emoji=checkinEditMoodE;p.mood=checkinEditMoodL;
   checkinEditId=null;checkinEditMoodE='';checkinEditMoodL='';
-  checkinRenderTimeline();calRender();lsSave();
+  checkinRenderTimeline();calRender();lsSave(true);
 }
 
 function checkinCancelEdit(){
@@ -4847,7 +4856,7 @@ function saveEv(){
   } else {
     S.events.push({id:nEvId++,name,date,time,color:'#9b7ec8',repeat:nEvRep});
   }
-  closeAddEv();calRender();updateHomeEvs();lsSave();
+  closeAddEv();calRender();updateHomeEvs();lsSave(true);
 }
 function deleteEv(){
   const editId=document.getElementById('ev-edit-id').value;
@@ -4866,7 +4875,7 @@ function deleteEv(){
 }
 function confirmDeleteEv(editId){
   S.events=S.events.filter(e=>String(e.id)!==editId);
-  closeAddEv();calRender();updateHomeEvs();lsSave();
+  closeAddEv();calRender();updateHomeEvs();lsSave(true);
 }
 
 // 記録
@@ -4875,7 +4884,7 @@ function closeRecForm(){document.getElementById('rec-form').style.display='none'
 function rCat(btn,cat){document.querySelectorAll('#rec-cat-chips .chip').forEach(b=>b.classList.remove('on','lav-on'));btn.classList.add('on','lav-on');recCatSel=cat;}
 function recFilter(btn,cat){recFilterCat=cat;document.querySelectorAll('#rec-filter .chip').forEach(b=>b.classList.remove('on','lav-on'));btn.classList.add('on','lav-on');renderRecords();}
 function saveRec(){const text=document.getElementById('rec-ta').value.trim();if(!text){alert('内容を入力してください');return;}const date=document.getElementById('rec-date-inp').value||new Date().toISOString().slice(0,10);S.records.unshift({id:recId++,who:me,cat:recCatSel,text,date});// フォームを閉じる（両方対応）
-const rf=document.getElementById('rec-form');if(rf)rf.style.display='none';const orf=document.getElementById('omoide-rec-form');if(orf)orf.style.display='none';renderRecords();omoideRender();lsSave();}
+const rf=document.getElementById('rec-form');if(rf)rf.style.display='none';const orf=document.getElementById('omoide-rec-form');if(orf)orf.style.display='none';renderRecords();omoideRender();lsSave(true);}
 function renderRecords(){
   const list=document.getElementById('rec-list');
   if(!list)return;
