@@ -4066,10 +4066,10 @@ function slFilter(type,val,btn){
   btn.classList.add('on','ig-on');
   slRender();
 }
-function addToShopList(name,area,cat,genre){
+function addToShopList(name,area,cat,genre,memo){
   if(!S.shopList)S.shopList=[];
   if(S.shopList.some(s=>s.name===name))return;
-  S.shopList.unshift({name,area:area||'その他',cat:cat||'その他',genre:genre||'その他',addedAt:new Date().toISOString().slice(0,10)});
+  S.shopList.unshift({name,area:area||'その他',cat:cat||'その他',genre:genre||'その他',memo:memo||'',addedAt:new Date().toISOString().slice(0,10)});
   lsSave();
 }
 let shopEditArea='三ノ宮', shopEditCat='ランチ', shopEditGenre='その他';
@@ -4281,20 +4281,42 @@ function gSave(){
   if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${shop}`);
   // お店リスト登録確認（新規のみ）
   if(!editId){
-  // お店リスト登録確認
-  const alreadyIn=S.shopList&&S.shopList.some(s=>s.name===shop);
-  if(!alreadyIn){
-    setTimeout(()=>{
-      const ui=document.createElement('div');
-      ui.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2a2a;color:white;border-radius:16px;padding:13px 16px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;display:flex;align-items:center;gap:10px;z-index:500;box-shadow:0 4px 24px rgba(0,0,0,.35);white-space:nowrap';
-      ui.innerHTML=`<span>「${shop}」をお店リストに追加しますか？</span>
-        <button onclick="addToShopList('${shop.replace(/'/g,"\\'")}','${newGArea}','${newGCat}','${newGGenre||'その他'}');this.parentElement.remove();" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:linear-gradient(135deg,#b8d9f8,#8ec4f0);color:var(--ig-d);font-weight:600">追加</button>
-        <button onclick="this.parentElement.remove()" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.18);color:white">あとで</button>`;
-      document.body.appendChild(ui);
-      setTimeout(()=>{if(ui.parentElement)ui.remove();},6000);
-    },400);
+    const alreadyIn=S.shopList&&S.shopList.some(s=>s.name===shop);
+    if(!alreadyIn){
+      setTimeout(()=>showShopListPrompt(shop,newGArea,newGCat,newGGenre||'その他',memo),400);
+    }
   }
-  }
+}
+
+// お店リスト登録確認ダイアログ（メモ引き継ぎ選択あり）
+function showShopListPrompt(shop,area,cat,genre,memo){
+  const old=document.getElementById('shoplist-prompt');if(old)old.remove();
+  const ui=document.createElement('div');
+  ui.id='shoplist-prompt';
+
+  // メモがある場合は引き継ぎ選択UIを表示
+  const memoHtml=memo?`
+    <div style="font-size:10px;color:#aaa;margin:6px 0 2px">メモを引き継ぎますか？</div>
+    <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:5px 9px;font-size:11px;margin-bottom:8px;max-width:220px;white-space:normal;line-height:1.4">${memo}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button onclick="addToShopList('${shop.replace(/'/g,"\'")}','${area}','${cat}','${genre}','${memo.replace(/'/g,"\'")}');document.getElementById('shoplist-prompt').remove();"
+        style="border:none;border-radius:8px;padding:5px 11px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:linear-gradient(135deg,#b8d9f8,#8ec4f0);color:var(--ig-d);font-weight:600">メモも追加</button>
+      <button onclick="addToShopList('${shop.replace(/'/g,"\'")}','${area}','${cat}','${genre}','');document.getElementById('shoplist-prompt').remove();"
+        style="border:none;border-radius:8px;padding:5px 11px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.22);color:white">メモなしで追加</button>
+      <button onclick="document.getElementById('shoplist-prompt').remove()"
+        style="border:none;border-radius:8px;padding:5px 11px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.1);color:#aaa">あとで</button>
+    </div>`
+  :`<div style="display:flex;gap:6px;margin-top:6px">
+      <button onclick="addToShopList('${shop.replace(/'/g,"\'")}','${area}','${cat}','${genre}','');document.getElementById('shoplist-prompt').remove();"
+        style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:linear-gradient(135deg,#b8d9f8,#8ec4f0);color:var(--ig-d);font-weight:600">追加</button>
+      <button onclick="document.getElementById('shoplist-prompt').remove()"
+        style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.18);color:white">あとで</button>
+    </div>`;
+
+  ui.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2a2a;color:white;border-radius:16px;padding:13px 16px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:500;box-shadow:0 4px 24px rgba(0,0,0,.35);max-width:90vw';
+  ui.innerHTML=`<div style="font-weight:600;margin-bottom:4px">「${shop}」をお店リストに追加しますか？</div>${memoHtml}`;
+  document.body.appendChild(ui);
+  setTimeout(()=>{if(ui.parentElement)ui.remove();},10000);
 }
 function gRender(){
   const ym=`${gYear}-${String(gMonth).padStart(2,'0')}`;
@@ -4978,7 +5000,7 @@ function switchDrama(pane){
  watchedFilter,toggleWatchedFav,renderDramaWatched,
  openAddFilmark,closeAddFilmark,saveFilmark,fmChip,fmTitleInput,hideFmSuggest,setFmStar,toggleFilmarkDetail,fmAutoFill,selectFmSuggest,toggleFmInfoEdit,
  filmarkFilter,filmarkStatusFilter,filmarkWhoFilter,openFilmarkEdit,closeFilmarkEdit,saveFilmarkEdit,deleteFilmark,renderFilmarks,
- gOpen,gClose,gChip,gHint,gSave,gEdit,gDelete,gDeleteConfirm,gDeleteFromModal,gMove,gRender,gSelectShop,addToShopList,
+ gOpen,gClose,gChip,gHint,gSave,gEdit,gDelete,gDeleteConfirm,gDeleteFromModal,gMove,gRender,gSelectShop,addToShopList,showShopListPrompt,
  openShopList,closeShopList,slFilter,slRender,
  openEditShop,closeEditShop,shopEditChip,saveEditShop,deleteShop,
  checkinLoadQ,saveCheckin,checkinCharCount,checkinLoadImg,checkinRemoveImg,
