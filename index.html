@@ -3583,7 +3583,20 @@ function openRoom(id){
   else if(r.fmt==='memo'){document.getElementById('pane-memo').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';document.getElementById('memo-ed').innerText=r.memo||'';}
   else{document.getElementById('pane-list').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';document.getElementById('cv-act').innerHTML=`<button class="cv-abt" onclick="clearDone()">完了済みを削除</button>`;renderList(r);}
 }
-function closeChat(){document.getElementById('cv').style.cssText='display:none';document.getElementById('cv').classList.remove('on');document.getElementById('talk-list').style.display='block';}
+function closeChat(){
+  // 全paneを非表示
+  ['pane-free','pane-memo','pane-list'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.style.cssText='display:none';
+  });
+  // cv を非表示・クラス除去
+  const cv=document.getElementById('cv');
+  cv.style.cssText='display:none';
+  cv.classList.remove('on');
+  // ルーム一覧を表示
+  document.getElementById('talk-list').style.display='block';
+  curId=null;
+}
 function renderMsgs(r){
   const c=document.getElementById('msgs');
   const today=new Date();c.innerHTML=`<div class="ddiv"><span>${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日</span></div>`;
@@ -4156,20 +4169,35 @@ function slRender(){
       const visits=recs.length;
       const lastDate=recs[0]?recs[0].date.slice(5).replace('-','/'):'';
       const icon=GNI2[s.genre]||'🍽';
-      html+=`<div style="background:var(--card);border-radius:12px;border:1.5px solid var(--bd);padding:10px 13px;margin-bottom:7px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:34px;height:34px;border-radius:10px;background:var(--ig-bg);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${icon}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px">${s.name}<a class="tb-link" href="${tbUrl(s.name)}" target="_blank">食べログ</a></div>
-            <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:2px">
-              ${s.genre&&s.genre!=='その他'?`<span style="font-size:9px;background:var(--tk-bg);color:var(--tk-d);border-radius:6px;padding:1px 6px">${s.genre}</span>`:''}
-              ${visits>0?`<span style="font-size:9px;color:var(--wg)">${visits}回 · 最終 ${lastDate}</span>`:`<span style="font-size:9px;color:#ccc">未訪問</span>`}
-            </div>
-          </div>
-          <button onclick="openEditShop('${s.name.replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--wg);padding:2px 4px;flex-shrink:0;line-height:1;letter-spacing:-1px">⋯</button>
+      // 過去の食事メモを新しい順に最大3件取得
+      const memoHistory=recs.filter(r=>r.memo).slice(0,3);
+      const shopId='sl-'+s.name.replace(/[^\u0000-\uFFFF]/g,'').replace(/\s/g,'_').slice(0,20)+'_'+Math.abs(s.name.split('').reduce((a,c)=>a+c.charCodeAt(0),0));
+      const histHtml=memoHistory.length?`
+        <div id="${shopId}-hist" style="display:none;margin-top:5px;padding-top:5px;border-top:1px solid var(--bd)">
+          ${memoHistory.map(r=>`
+            <div style="display:flex;gap:6px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.04)">
+              <span style="font-size:9px;color:var(--wg);flex-shrink:0;padding-top:2px">${r.date.slice(5).replace('-','/')}</span>
+              <span style="font-size:11px;color:var(--text);line-height:1.5;flex:1">${r.memo}</span>
+            </div>`).join('')}
         </div>
-        ${s.memo?`<div style="font-size:11px;color:var(--wg);margin-top:7px;padding-top:7px;border-top:1px solid var(--bd);line-height:1.55">${s.memo}</div>`:''}
-      </div>`;
+        <button onclick="(function(btn){const el=document.getElementById('${shopId}-hist');const open=el.style.display!=='none';el.style.display=open?'none':'block';btn.textContent=open?'📋 訪問メモ（${memoHistory.length}件）':'▲ 閉じる';})(this)"
+          style="margin-top:4px;background:none;border:none;cursor:pointer;font-size:10px;color:var(--lav);font-family:'Noto Sans JP',sans-serif;padding:0">📋 訪問メモ（${memoHistory.length}件）</button>`:'';
+
+       html+=`<div style="background:var(--card);border-radius:12px;border:1.5px solid var(--bd);padding:10px 13px;margin-bottom:7px">
+         <div style="display:flex;align-items:center;gap:10px">
+           <div style="width:34px;height:34px;border-radius:10px;background:var(--ig-bg);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${icon}</div>
+           <div style="flex:1;min-width:0">
+             <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px">${s.name}<a class="tb-link" href="${tbUrl(s.name)}" target="_blank">食べログ</a></div>
+             <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:2px">
+               ${s.genre&&s.genre!=='その他'?`<span style="font-size:9px;background:var(--tk-bg);color:var(--tk-d);border-radius:6px;padding:1px 6px">${s.genre}</span>`:''}
+               ${visits>0?`<span style="font-size:9px;color:var(--wg)">${visits}回 · 最終 ${lastDate}</span>`:`<span style="font-size:9px;color:#ccc">未訪問</span>`}
+             </div>
+           </div>
+           <button onclick="openEditShop('${s.name.replace(/'/g,"\'")}')" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--wg);padding:2px 4px;flex-shrink:0;line-height:1;letter-spacing:-1px">⋯</button>
+         </div>
+         ${s.memo?`<div style="font-size:11px;color:var(--wg);margin-top:6px;padding-top:6px;border-top:1px solid var(--bd);line-height:1.55">📝 ${s.memo}</div>`:''}
+         ${histHtml}
+       </div>`;
     });
   });
   list.innerHTML=html;
@@ -4219,10 +4247,12 @@ function gDelete(id){
   const old=document.getElementById('g-del-confirm');if(old)old.remove();
   const ui=document.createElement('div');
   ui.id='g-del-confirm';
-  ui.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2020;color:white;border-radius:16px;padding:13px 16px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;display:flex;align-items:center;gap:10px;z-index:500;box-shadow:0 4px 24px rgba(0,0,0,.4);white-space:nowrap;max-width:90vw';
-  ui.innerHTML=`<span>「${r.shop}」を削除しますか？</span>
-    <button onclick="document.getElementById('g-del-confirm').remove()" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.18);color:white">やめる</button>
-    <button onclick="gDeleteConfirm(${id})" style="border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:#cc3333;color:white;font-weight:600">削除する</button>`;
+  ui.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a2020;color:white;border-radius:16px;padding:10px 13px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:500;box-shadow:0 4px 24px rgba(0,0,0,.4);max-width:72vw';
+  ui.innerHTML=`<div style="font-size:11px;margin-bottom:8px;line-height:1.4">「${r.shop}」を削除しますか？</div>
+    <div style="display:flex;gap:6px">
+      <button onclick="document.getElementById('g-del-confirm').remove()" style="flex:1;border:none;border-radius:8px;padding:6px 0;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:rgba(255,255,255,.18);color:white">やめる</button>
+      <button onclick="gDeleteConfirm(${id})" style="flex:1;border:none;border-radius:8px;padding:6px 0;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;background:#cc3333;color:white;font-weight:600">削除する</button>
+    </div>`;
   document.body.appendChild(ui);
   setTimeout(()=>{if(ui.parentElement)ui.remove();},5000);
 }
@@ -4280,18 +4310,18 @@ function gSave(){
   const partner=me==='ig'?'tk':'ig';
   const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
   if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${shop}`);
-  // お店リスト自動登録（新規のみ・メモ引き継ぎ）
+  // お店リスト自動登録（新規記録のみ）
   if(!editId){
-    const alreadyIn=S.shopList&&S.shopList.some(s=>s.name===shop);
-    if(!alreadyIn){
+    if(!S.shopList)S.shopList=[];
+    const existing=S.shopList.find(s=>s.name===shop);
+    if(!existing){
+      // 新規登録
       addToShopList(shop,newGArea,newGCat,newGGenre||'その他',memo);
-      // 登録完了トースト
       setTimeout(()=>{
         const t=document.createElement('div');
         t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(60,50,40,.88);color:white;border-radius:20px;padding:8px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:500;white-space:nowrap';
         t.textContent=`🏪 「${shop}」をお店リストに追加しました`;
-        document.body.appendChild(t);
-        setTimeout(()=>t.remove(),2500);
+        document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
       },300);
     }
   }
