@@ -208,21 +208,21 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 @keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite;display:inline-block}
 
 /* TALK */
-.ri-wrap{display:flex;align-items:center;gap:6px;margin-bottom:8px;position:relative}
-.ri-del{background:#ff5a5a;border:none;cursor:pointer;font-size:11px;font-weight:700;padding:0;border-radius:50%;flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:white;opacity:0;pointer-events:none;transition:all .22s;transform:scale(0.5);position:absolute;left:-6px;top:-6px;z-index:10;line-height:1}
+.ri-wrap{display:flex;align-items:center;position:relative;border-bottom:1px solid var(--bd)}
+.ri-del{background:#ff5a5a;border:none;cursor:pointer;font-size:11px;font-weight:700;padding:0;border-radius:50%;flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:white;opacity:0;pointer-events:none;transition:all .22s;transform:scale(0.5);position:absolute;left:4px;top:50%;margin-top:-11px;z-index:10;line-height:1}
 .rooms-edit .ri-del{opacity:1;pointer-events:all;transform:scale(1)}
-.rooms-edit .ri{transform:scale(.97);box-shadow:0 0 0 2px rgba(255,90,90,.2)}
-.ri{flex:1;background:var(--card);border-radius:16px;border:1.5px solid var(--bd);padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:11px;transition:all .2s;min-width:0;overflow:hidden;box-shadow:var(--shadow-sm)}
-.ri:active{transform:scale(.98);filter:brightness(.96)}
-.ri-ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;position:relative}
-.ri-dot{position:absolute;bottom:-2px;right:-2px;width:13px;height:13px;border-radius:50%;border:2px solid white;font-size:7px;display:flex;align-items:center;justify-content:center}
+.rooms-edit .ri{padding-left:36px;opacity:.85}
+.ri{flex:1;background:transparent;border-radius:0;border:none;padding:10px 14px 10px 12px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s;min-width:0;overflow:hidden;box-shadow:none}
+.ri:active{background:rgba(0,0,0,.05)}
+.ri-ic{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.ri-dot{position:absolute;bottom:0;right:0;width:13px;height:13px;border-radius:50%;border:2px solid white;font-size:7px;display:flex;align-items:center;justify-content:center}
 .ri-body{flex:1;min-width:0}
-.ri-name{font-size:13px;font-weight:600;margin-bottom:2px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ri-prev{font-size:11px;color:var(--wg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ri-r{text-align:right;flex-shrink:0;min-width:40px}
+.ri-name{font-size:14px;font-weight:600;margin-bottom:2px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ri-prev{font-size:12px;color:var(--wg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ri-r{text-align:right;flex-shrink:0;min-width:44px;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 .ri-time{font-size:10px;color:var(--wg)}
-.ri-badge{background:var(--tk);color:white;border-radius:9px;padding:2px 7px;font-size:9px;font-weight:600;margin-top:3px;display:inline-block}
-.add-rm{width:100%;padding:12px;border-radius:16px;border:2px dashed rgba(224,112,144,.35);background:none;cursor:pointer;color:var(--tk);font-size:12px;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .18s}
+.ri-badge{background:var(--tk);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+.add-rm{width:100%;padding:14px 12px;border:none;border-top:1px solid var(--bd);background:none;cursor:pointer;color:var(--tk);font-size:13px;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;margin-top:4px}
 .add-rm:active{background:var(--tk-bg)}
 .cv{display:none;flex-direction:column;height:100%;overflow:hidden}.cv.on{display:flex}
 .cv-hdr{padding:0 14px;height:54px;display:flex;align-items:center;gap:9px;flex-shrink:0;border-bottom:1px solid var(--bd);background:rgba(253,247,242,.92);backdrop-filter:blur(12px)}
@@ -691,9 +691,9 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 
     <!-- TALK -->
     <div class="scr" id="sc-t">
-      <div id="talk-list" style="padding:6px 12px 10px;flex:1;overflow-y:auto;box-sizing:border-box;min-width:0">
-        <div style="margin-bottom:10px">
-          <div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700">💬 トーク</div>
+      <div id="talk-list" style="flex:1;overflow-y:auto;box-sizing:border-box;min-width:0">
+        <div style="padding:12px 14px 8px;border-bottom:1px solid var(--bd)">
+          <div style="font-family:'Zen Maru Gothic',serif;font-size:16px;font-weight:700">💬 トーク</div>
         </div>
         <div id="rooms"></div>
       </div>
@@ -2031,7 +2031,7 @@ function fbApplyData(raw){
         if(!arrays.includes(k)) S[k] = d.S[k];
       });
     }
-    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
+    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));}
     // gYear/gMonthはFirebaseの値で上書きしない（各端末で独立して管理）
   }catch(e){console.warn('データ適用失敗',e);}
 }
@@ -2055,17 +2055,6 @@ function fbStartListening(){
   });
 }
 
-function _fixRoomIds(){
-  const seen=new Set();
-  R.forEach(r=>{
-    if(r.id==null||seen.has(r.id)){
-      r.id=Math.max(nRid,...R.map(x=>x.id||0))+1;
-      nRid=r.id+1;
-    }
-    seen.add(r.id);
-  });
-  if(R.length) nRid=Math.max(...R.map(r=>r.id||0))+1;
-}
 function lsLoad(){
   try{
     // localStorageにデータがあれば即時表示
@@ -2073,7 +2062,7 @@ function lsLoad(){
     if(raw){
       const d = JSON.parse(raw);
       if(d.S){Object.assign(S, d.S);}
-      if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
+      if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));}
       // gYear/gMonthはlocalStorageから復元しない（常に現在月を使う）
     }
     // Firebaseからデータを読み込んでからUI更新
@@ -3533,7 +3522,8 @@ function renderRooms(){
     const v=r.fmt==='free'?r.msgs?.filter(m=>!m.recalled):[];
     const ts=r.fmt==='free'&&v?.length?v[v.length-1].ts:'';
     return `<div class="ri-wrap">
-      <div class="ri" data-rid="${r.id}"
+      <div class="ri"
+        onclick="if(roomsEditMode){setRoomsEditMode(false);}else{openRoom(${r.id});}"
         ontouchstart="startRoomLong(${r.id})"
         ontouchend="clearRoomLong()"
         ontouchmove="clearRoomLong()"
@@ -3544,21 +3534,10 @@ function renderRooms(){
         <div class="ri-body"><div class="ri-name">${r.name}</div><div class="ri-prev">${prev}</div></div>
         <div class="ri-r"><div class="ri-time">${ts}</div>${r.badge?`<div class="ri-badge">${r.badge}</div>`:''}</div>
       </div>
-      <button class="ri-del" data-rid="${r.id}">✕</button>
+      <button class="ri-del" onclick="deleteRoom(${r.id},event)">✕</button>
     </div>`;
   }).join('')+`<button class="add-rm" onclick="openRM()">＋ 新しいルームを作る</button>`;
   if(roomsEditMode)c.classList.add('rooms-edit');
-  // イベントをdata属性から取得（onclick文字列によるID混入を防ぐ）
-  c.querySelectorAll('.ri[data-rid]').forEach(el=>{
-    const rid=parseInt(el.dataset.rid,10);
-    el.addEventListener('click',()=>{
-      if(roomsEditMode){setRoomsEditMode(false);}else{openRoom(rid);}
-    });
-  });
-  c.querySelectorAll('.ri-del[data-rid]').forEach(el=>{
-    const rid=parseInt(el.dataset.rid,10);
-    el.addEventListener('click',(e)=>deleteRoom(rid,e));
-  });
 }
 function deleteRoom(id,e){
   e.stopPropagation();
@@ -3587,8 +3566,10 @@ function confirmDeleteRoom(id){
 function openRoom(id){
   const r=R.find(x=>x.id===id);if(!r)return;curId=id;r.badge=0;
   if(r.msgs)r.msgs.forEach(m=>{if(m.who!==me)m.read=true;});
+  renderRooms();
   document.getElementById('talk-list').style.display='none';
   const cv=document.getElementById('cv');cv.classList.add('on');cv.style.cssText='display:flex;flex-direction:column;height:100%;overflow:hidden';
+  // hdrと親和性のある落ち着いたカラー（ユーザーテーマではなくアプリ統一色）
   const ig=me==='ig';
   const hdrBg=ig?'linear-gradient(135deg,#b8d9f8,#8ec4f0)':'linear-gradient(135deg,#f8bbd0,#f4a8c0)';
   document.getElementById('cv-hdr').style.background=hdrBg;
@@ -3596,6 +3577,7 @@ function openRoom(id){
   document.getElementById('cv-nm').textContent=r.icon+' '+r.name;
   document.getElementById('cv-sub2').textContent=FC[r.fmt].label;
   document.getElementById('cv-act').innerHTML='';
+  // ログ保存ボタンはフリートークのみ表示
   const logBtn=document.getElementById('cv-log-btn');
   if(logBtn)logBtn.style.display=r.fmt==='free'?'block':'none';
   ['pane-free','pane-memo','pane-list'].forEach(id=>document.getElementById(id).style.display='none');
@@ -3604,16 +3586,18 @@ function openRoom(id){
   else{document.getElementById('pane-list').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';document.getElementById('cv-act').innerHTML=`<button class="cv-abt" onclick="clearDone()">完了済みを削除</button>`;renderList(r);}
 }
 function closeChat(){
+  // 全paneを非表示
   ['pane-free','pane-memo','pane-list'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.style.cssText='display:none';
   });
+  // cv を非表示・クラス除去
   const cv=document.getElementById('cv');
   cv.style.cssText='display:none';
   cv.classList.remove('on');
-  document.getElementById('talk-list').style.display='';
+  // ルーム一覧を表示
+  document.getElementById('talk-list').style.display='block';
   curId=null;
-  renderRooms();
 }
 function renderMsgs(r){
   const c=document.getElementById('msgs');
