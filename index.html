@@ -2031,7 +2031,7 @@ function fbApplyData(raw){
         if(!arrays.includes(k)) S[k] = d.S[k];
       });
     }
-    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));}
+    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));if(R.length)nRid=Math.max(...R.map(r=>r.id||0))+1;}
     // gYear/gMonthはFirebaseの値で上書きしない（各端末で独立して管理）
   }catch(e){console.warn('データ適用失敗',e);}
 }
