@@ -2031,7 +2031,7 @@ function fbApplyData(raw){
         if(!arrays.includes(k)) S[k] = d.S[k];
       });
     }
-    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));if(R.length)nRid=Math.max(...R.map(r=>r.id||0))+1;}
+    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));const _idFixed=_fixRoomIds();if(_idFixed){try{const _saved=JSON.stringify({S,R,gYear,gMonth});localStorage.setItem(LS_KEY,_saved);if(window._fbSave)window._fbSave(_saved);}catch(e){}}}
     // gYear/gMonthはFirebaseの値で上書きしない（各端末で独立して管理）
   }catch(e){console.warn('データ適用失敗',e);}
 }
@@ -2055,6 +2055,15 @@ function fbStartListening(){
   });
 }
 
+function _fixRoomIds(){
+  let maxId=Math.max(nRid-1,...R.map(r=>typeof r.id==='number'?r.id:0));
+  const seen=new Set();let fixed=false;
+  R.forEach(r=>{
+    if(typeof r.id!=='number'||seen.has(r.id)){maxId++;r.id=maxId;fixed=true;}
+    seen.add(r.id);if(r.id>maxId)maxId=r.id;
+  });
+  nRid=maxId+1;return fixed;
+}
 function lsLoad(){
   try{
     // localStorageにデータがあれば即時表示
@@ -2062,7 +2071,7 @@ function lsLoad(){
     if(raw){
       const d = JSON.parse(raw);
       if(d.S){Object.assign(S, d.S);}
-      if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));nRid=Math.max(...R.map(r=>r.id||0))+1;}
+      if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
       // gYear/gMonthはlocalStorageから復元しない（常に現在月を使う）
     }
     // Firebaseからデータを読み込んでからUI更新
