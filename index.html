@@ -554,35 +554,35 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 
     <!-- HOME -->
     <div class="scr on" id="sc-home">
-      <div class="top-hero" id="top-hero" style="padding:5px 14px 4px;flex-shrink:0;display:flex;align-items:baseline;gap:8px">
-        <div class="top-greeting" id="top-greet" style="font-size:12px">おはよう 👋</div>
-        <div class="top-date" id="top-date" style="font-size:10px"></div>
+      <div class="top-hero" id="top-hero" style="padding:6px 14px 5px;flex-shrink:0;display:flex;align-items:center;gap:8px">
+        <div class="top-greeting" id="top-greet" style="font-size:13px;margin:0">おはよう 👋</div>
+        <div style="font-size:10px;color:var(--wg)" id="top-date"></div>
       </div>
       <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px">
 
-      <!-- ① きもちカード（元のサイズ） -->
+      <!-- ① きもちカード（縦幅アップ） -->
       <div style="margin:6px 12px 8px">
         <div style="background:var(--card);border-radius:16px;border:1.5px solid var(--bd);overflow:hidden;display:flex;align-items:stretch;box-shadow:var(--shadow-sm)">
           <!-- 左：相手のきもち -->
-          <div style="width:50%;flex-shrink:0;box-sizing:border-box;border-right:1px solid var(--bd);padding:8px 10px;display:flex;align-items:center;gap:8px;overflow:hidden;cursor:pointer" onclick="openPartnerMoodDetail()">
-            <div style="font-size:30px;line-height:1;flex-shrink:0" id="home-p-emoji">—</div>
+          <div style="width:50%;flex-shrink:0;box-sizing:border-box;border-right:1px solid var(--bd);padding:14px 12px;display:flex;align-items:center;gap:10px;overflow:hidden;cursor:pointer" onclick="openPartnerMoodDetail()">
+            <div style="font-size:34px;line-height:1;flex-shrink:0" id="home-p-emoji">—</div>
             <div style="min-width:0;overflow:hidden;flex:1">
-              <div style="font-size:8px;color:var(--wg);font-weight:500;height:12px;line-height:12px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-partner-lbl">🌸 瀧本さんの気持ち</div>
-              <div id="home-p-bubble" style="display:none;font-size:11px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-              <div id="home-p-empty" style="font-size:11px;color:#ccc;white-space:nowrap">まだ記録なし</div>
+              <div style="font-size:9px;color:var(--wg);font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-partner-lbl">🌸 瀧本さんの気持ち</div>
+              <div id="home-p-bubble" style="display:none;font-size:12px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+              <div id="home-p-empty" style="font-size:12px;color:#ccc;white-space:nowrap">まだ記録なし</div>
             </div>
           </div>
           <!-- 右：自分のきもち -->
-          <div style="width:50%;flex-shrink:0;box-sizing:border-box;padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;overflow:hidden" onclick="openMoodModal()">
-            <div style="font-size:30px;line-height:1;flex-shrink:0" id="home-my-emoji-disp">？</div>
+          <div style="width:50%;flex-shrink:0;box-sizing:border-box;padding:14px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;overflow:hidden" onclick="openMoodModal()">
+            <div style="font-size:34px;line-height:1;flex-shrink:0" id="home-my-emoji-disp">？</div>
             <div style="min-width:0;overflow:hidden;flex:1">
-              <div style="font-size:8px;color:var(--wg);font-weight:500;height:12px;line-height:12px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-my-ask">💙 井口さんの気持ち</div>
+              <div style="font-size:9px;color:var(--wg);font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-my-ask">💙 井口さんの気持ち</div>
               <div id="home-my-sent" style="display:none">
-                <div id="home-my-bubble" style="display:none;font-size:11px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-                <div id="home-my-label-disp" style="display:none;font-size:11px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+                <div id="home-my-bubble" style="display:none;font-size:12px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+                <div id="home-my-label-disp" style="display:none;font-size:12px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
               </div>
               <div id="home-my-prompt">
-                <div style="font-size:11px;color:#ccc;white-space:nowrap">タップして入力</div>
+                <div style="font-size:12px;color:#ccc;white-space:nowrap">タップして入力</div>
               </div>
             </div>
             <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" width="11" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
