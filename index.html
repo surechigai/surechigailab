@@ -208,21 +208,21 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 @keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite;display:inline-block}
 
 /* TALK */
-.ri-wrap{display:flex;align-items:center;gap:6px;margin-bottom:8px;position:relative}
-.ri-del{background:#ff5a5a;border:none;cursor:pointer;font-size:11px;font-weight:700;padding:0;border-radius:50%;flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:white;opacity:0;pointer-events:none;transition:all .22s;transform:scale(0.5);position:absolute;left:-6px;top:-6px;z-index:10;line-height:1}
+.ri-wrap{display:flex;align-items:center;position:relative;border-bottom:1px solid var(--bd)}
+.ri-del{background:#ff5a5a;border:none;cursor:pointer;font-size:11px;font-weight:700;padding:0;border-radius:50%;flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:white;opacity:0;pointer-events:none;transition:all .22s;transform:scale(0.5);position:absolute;left:4px;top:50%;margin-top:-11px;z-index:10;line-height:1}
 .rooms-edit .ri-del{opacity:1;pointer-events:all;transform:scale(1)}
-.rooms-edit .ri{transform:scale(.97);box-shadow:0 0 0 2px rgba(255,90,90,.2)}
-.ri{flex:1;background:var(--card);border-radius:16px;border:1.5px solid var(--bd);padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:11px;transition:all .2s;min-width:0;overflow:hidden;box-shadow:var(--shadow-sm)}
-.ri:active{transform:scale(.98);filter:brightness(.96)}
-.ri-ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;position:relative}
-.ri-dot{position:absolute;bottom:-2px;right:-2px;width:13px;height:13px;border-radius:50%;border:2px solid white;font-size:7px;display:flex;align-items:center;justify-content:center}
+.rooms-edit .ri{padding-left:36px;opacity:.85}
+.ri{flex:1;background:transparent;border-radius:0;border:none;padding:10px 14px 10px 12px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s;min-width:0;overflow:hidden;box-shadow:none}
+.ri:active{background:rgba(0,0,0,.05)}
+.ri-ic{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.ri-dot{position:absolute;bottom:0;right:0;width:13px;height:13px;border-radius:50%;border:2px solid white;font-size:7px;display:flex;align-items:center;justify-content:center}
 .ri-body{flex:1;min-width:0}
-.ri-name{font-size:13px;font-weight:600;margin-bottom:2px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ri-prev{font-size:11px;color:var(--wg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ri-r{text-align:right;flex-shrink:0;min-width:40px}
+.ri-name{font-size:14px;font-weight:600;margin-bottom:2px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ri-prev{font-size:12px;color:var(--wg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ri-r{text-align:right;flex-shrink:0;min-width:44px;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 .ri-time{font-size:10px;color:var(--wg)}
-.ri-badge{background:var(--tk);color:white;border-radius:9px;padding:2px 7px;font-size:9px;font-weight:600;margin-top:3px;display:inline-block}
-.add-rm{width:100%;padding:12px;border-radius:16px;border:2px dashed rgba(224,112,144,.35);background:none;cursor:pointer;color:var(--tk);font-size:12px;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .18s}
+.ri-badge{background:var(--tk);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+.add-rm{width:100%;padding:14px 12px;border:none;border-top:1px solid var(--bd);background:none;cursor:pointer;color:var(--tk);font-size:13px;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s}
 .add-rm:active{background:var(--tk-bg)}
 .cv{display:none;flex-direction:column;height:100%;overflow:hidden}.cv.on{display:flex}
 .cv-hdr{padding:0 14px;height:54px;display:flex;align-items:center;gap:9px;flex-shrink:0;border-bottom:1px solid var(--bd);background:rgba(253,247,242,.92);backdrop-filter:blur(12px)}
@@ -691,9 +691,9 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 
     <!-- TALK -->
     <div class="scr" id="sc-t">
-      <div id="talk-list" style="padding:6px 12px 10px;flex:1;overflow-y:auto;box-sizing:border-box;min-width:0">
-        <div style="margin-bottom:10px">
-          <div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700">💬 トーク</div>
+      <div id="talk-list" style="flex:1;overflow-y:auto;box-sizing:border-box;min-width:0">
+        <div style="padding:12px 14px 8px;border-bottom:1px solid var(--bd)">
+          <div style="font-family:'Zen Maru Gothic',serif;font-size:16px;font-weight:700">💬 トーク</div>
         </div>
         <div id="rooms"></div>
       </div>
@@ -2019,30 +2019,6 @@ function fbSave(){
   }catch(e){console.warn('Firebase保存失敗',e);}
 }
 
-function _fixRoomIds(){
-  // ルームIDの重複修正・nRid/nIid を正しい値に設定
-  const seen=new Set();
-  R.forEach(r=>{
-    if(r.id==null||seen.has(r.id)){
-      r.id=Math.max(nRid,...R.map(x=>x.id||0))+1;
-      nRid=r.id+1;
-    }
-    seen.add(r.id);
-    // アイテムIDの重複も修正
-    if(Array.isArray(r.items)){
-      const iSeen=new Set();
-      r.items.forEach(it=>{
-        if(it.id==null||iSeen.has(it.id)){
-          it.id=Math.max(nIid,...r.items.map(x=>x.id||0))+1;
-          nIid=it.id+1;
-        }
-        iSeen.add(it.id);
-        if(it.id>=nIid)nIid=it.id+1;
-      });
-    }
-  });
-  if(R.length) nRid=Math.max(...R.map(r=>r.id||0))+1;
-}
 function fbApplyData(raw){
   try{
     const d = JSON.parse(raw);
@@ -2055,7 +2031,7 @@ function fbApplyData(raw){
         if(!arrays.includes(k)) S[k] = d.S[k];
       });
     }
-    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
+    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));}
     // gYear/gMonthはFirebaseの値で上書きしない（各端末で独立して管理）
   }catch(e){console.warn('データ適用失敗',e);}
 }
@@ -2086,7 +2062,7 @@ function lsLoad(){
     if(raw){
       const d = JSON.parse(raw);
       if(d.S){Object.assign(S, d.S);}
-      if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
+      if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));}
       // gYear/gMonthはlocalStorageから復元しない（常に現在月を使う）
     }
     // Firebaseからデータを読み込んでからUI更新
@@ -2285,91 +2261,19 @@ function openAddDrama(){
 }
 function closeDramaAdd(){hideDramaSuggest();document.getElementById('drama-add-ov').classList.remove('on');}
 
+// ── AI課金なし版：タイトル入力のみ、詳細は手動入力 ──
 let fmSuggestTimer=null;
 function fmTitleInput(val){
-  hideFmSuggest();
-  clearTimeout(fmSuggestTimer);
-  if(!val.trim())return;
-  fmSuggestTimer=setTimeout(()=>fetchDramaSuggest(val.trim(),'fm-suggest','selectFmSuggest'),600);
+  // サジェストなし（手動入力のみ）
+  const s=document.getElementById('fm-suggest');if(s)s.style.display='none';
+  // 詳細欄を自動表示
+  const df=document.getElementById('fm-detail-fields');
+  if(df&&val.trim())df.style.display='block';
 }
-function hideFmSuggest(){
-  const s=document.getElementById('fm-suggest');
-  if(s)s.style.display='none';
-}
-function selectFmSuggest(title){
-  const inp=document.getElementById('fm-title-inp');
-  if(inp)inp.value=title;
-  hideFmSuggest();
-  clearTimeout(fmSuggestTimer);
-  fmAutoFill(title);
-}
-
+function hideFmSuggest(){const s=document.getElementById('fm-suggest');if(s)s.style.display='none';}
+function selectFmSuggest(title){}
 let fmAutoFillData={};
-async function fmAutoFill(title){
-  fmAutoFillData={};
-  const st=document.getElementById('fm-info-status');
-  const stTxt=document.getElementById('fm-info-status-txt');
-  const infoArea=document.getElementById('fm-info-area');
-  const infoHtml=document.getElementById('fm-info-html');
-  if(st)st.style.display='flex';
-  if(stTxt)stTxt.textContent='「'+title+'」の情報を検索中…';
-  if(infoArea)infoArea.style.display='none';
-  try{
-    const prompt=`web_searchツールで「${title} 映画 OR ドラマ 出演 あらすじ」「${title} 配信 Netflix OR Disney OR Prime OR TVer」を検索し、以下のJSON形式のみで回答してください（前後に何も付けない）:
-{"ch":"放送局または公開年（例：2022年 / フジテレビ月曜21時）","stream":"配信サービス（例：Netflix / Prime Video / TVer）","cast":"主要キャスト3〜5名","memo":"ネタバレなしのあらすじ1〜2文","type":"movie か drama か anime のいずれか"}`;
-    const res=await Promise.race([
-      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',max_tokens:800,
-          tools:[{type:'web_search_20250305',name:'web_search'}],
-          tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]
-        })
-      }),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
-    ]);
-    const data=await res.json();
-    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
-    const match=txt.match(/\{[\s\S]*?\}/);
-    if(match){
-      const p=JSON.parse(match[0]);
-      fmAutoFillData=p;
-      // 種別チップを自動選択
-      if(p.type){
-        const typeMap={movie:'movie',drama:'drama',anime:'drama'};
-        const typeVal=typeMap[p.type]||'movie';
-        filmarkTypeSel=typeVal;
-        document.querySelectorAll('#fm-type-chips .chip').forEach(b=>{
-          b.classList.remove('on','lav-on');
-          if(b.getAttribute('onclick').includes("'"+typeVal+"'"))b.classList.add('on','lav-on');
-        });
-      }
-      // 詳細欄に反映
-      if(p.ch)document.getElementById('fm-ch-inp').value=p.ch;
-      if(p.stream)document.getElementById('fm-stream-inp').value=p.stream;
-      if(p.cast)document.getElementById('fm-cast-inp').value=p.cast;
-      // プレビュー表示
-      if(infoHtml){
-        let rows='';
-        if(p.ch)rows+=`<div><span style="color:var(--wg);margin-right:4px">📺</span>${p.ch}</div>`;
-        if(p.stream)rows+=`<div><span style="color:var(--wg);margin-right:4px">▶</span>${p.stream}</div>`;
-        if(p.cast)rows+=`<div><span style="color:var(--wg);margin-right:4px">👤</span>${p.cast}</div>`;
-        if(p.memo)rows+=`<div style="margin-top:4px;color:var(--wg);font-size:11px;line-height:1.6">${p.memo}</div>`;
-        infoHtml.innerHTML=rows;
-      }
-      if(infoArea)infoArea.style.display='block';
-      if(stTxt)stTxt.textContent='✓ 情報を取得しました';
-      setTimeout(()=>{if(st)st.style.display='none';},2000);
-    } else {
-      if(stTxt)stTxt.textContent='情報が見つかりませんでした';
-      setTimeout(()=>{if(st)st.style.display='none';},2000);
-    }
-  }catch(e){
-    if(stTxt)stTxt.textContent='取得できませんでした';
-    setTimeout(()=>{if(st)st.style.display='none';},2000);
-  }
-}
+function fmAutoFill(title){}
 
 function toggleFmInfoEdit(){
   const fields=document.getElementById('fm-detail-fields');
@@ -2379,119 +2283,30 @@ function toggleFmInfoEdit(){
   fields.style.display=show?'block':'none';
   if(btn)btn.textContent=show?'▲ 閉じる':'✏ 編集';
 }
-function hideDramaSuggest(){
-  const s=document.getElementById('da-suggest');
-  if(s)s.style.display='none';
-}
+function hideDramaSuggest(){const s=document.getElementById('da-suggest');if(s)s.style.display='none';}
 function selectDramaSuggest(title){
   const inp=document.getElementById('da-title');
   if(inp)inp.value=title;
   hideDramaSuggest();
-  clearTimeout(dramaTitleTimer);
-  clearTimeout(dramaSuggestTimer);
-  dramaAutoFill();
+  // 詳細欄を表示
+  const fields=document.getElementById('da-fields');
+  if(fields)fields.style.display='block';
 }
 function dramaTitleInput(val){
   hideDramaSuggest();
-  clearTimeout(dramaTitleTimer);
-  clearTimeout(dramaSuggestTimer);
-  if(!val.trim())return;
-  dramaSuggestTimer=setTimeout(()=>fetchDramaSuggest(val.trim(),'da-suggest',null),600);
-}
-
-async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
-  const suggest=document.getElementById(suggestElId);
-  if(!suggest)return;
-  suggest.style.display='block';
-  suggest.innerHTML='<div style="padding:10px 12px;font-size:11px;color:var(--lav);display:flex;align-items:center;gap:5px"><span class="spin">✦</span>候補を検索中…</div>';
-  try{
-    const prompt=`web_searchツールを使って「${val}」を検索してください（複数クエリ可：「${val} ドラマ」「${val} 映画」「${val} anime」など）。
-検索結果をもとに、以下の条件で「${val}」に部分一致するタイトルを最大6件選んでください。
-対象：
-- 日本ドラマ・映画・アニメ（年代問わず過去作含む）
-- 韓国ドラマ・映画
-- 洋ドラ・洋画
-- Netflix / Disney+ / Prime Video / Apple TV+ / Hulu / WOWOW 等の配信オリジナル作品
-- 2025〜2026年の最新作も積極的に含める
-出力はJSONのみ（前後に何も付けない）: {"titles":["タイトル1","タイトル2",...]}`;
-    const res=await Promise.race([
-      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:400,
-          tools:[{type:'web_search_20250305',name:'web_search'}],
-          tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]
-        })
-      }),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),12000))
-    ]);
-    const data=await res.json();
-    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
-    const match=txt.match(/\{[\s\S]*?\}/);
-    if(match){
-      const titles=(JSON.parse(match[0]).titles||[]).filter(Boolean);
-      if(!titles.length){suggest.style.display='none';return;}
-      const fn=onSelect||'selectDramaSuggest';
-      suggest.innerHTML=titles.map((t,i)=>{
-        const esc=t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        return `<div onclick="${fn}('${esc}')"
-             style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px;transition:background .1s"
-             onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''">
-          <span style="font-size:14px">📺</span><span>${t}</span>
-        </div>`;
-      }).join('');
-    } else {suggest.style.display='none';}
-  }catch(e){suggest.style.display='none';}
-}
-
-async function dramaAutoFill(){
-  const title=document.getElementById('da-title')?.value.trim();
-  if(!title)return;
-  const st=document.getElementById('da-status');
-  const stTxt=document.getElementById('da-status-txt');
+  // タイトル入力したら詳細欄を表示
   const fields=document.getElementById('da-fields');
-  const btn=document.getElementById('da-search-btn');
-  if(st)st.style.display='flex';
-  if(stTxt)stTxt.textContent='「'+title+'」を検索中…';
-  if(btn){btn.disabled=true;btn.style.opacity='.5';}
-  try{
-    const prompt=`web_searchツールで「${title} ドラマ 放送局 何話 2025」「${title} 配信 TVer FOD」「${title} キャスト 出演者」をそれぞれ検索してから、以下のJSON形式のみで回答してください（前後に何も付けない）:\n{"ch":"放送局と曜日時間（例：フジテレビ 月曜21時）","eps":全話数の数値（不明は0）,"stream":"配信サービスと条件（例：TVer最新話無料／FOD見逃し／Netflix全話）","cast":"主要キャスト3〜5名（例：竹野内豊、石原さとみ、松坂桃李）","memo":"ネタバレなしのあらすじ1〜2文"}`;
-    const res=await Promise.race([
-      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:800,
-          tools:[{type:'web_search_20250305',name:'web_search'}],
-          tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]
-        })
-      }),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
-    ]);
-    const data=await res.json();
-    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
-    const match=txt.match(/\{[\s\S]*?\}/);
-    if(match){
-      const p=JSON.parse(match[0]);
-      if(p.ch)document.getElementById('da-ch').value=p.ch;
-      if(p.eps)document.getElementById('da-eps').value=p.eps;
-      if(p.stream)document.getElementById('da-stream').value=p.stream;
-      if(p.cast)document.getElementById('da-cast').value=p.cast;
-      if(p.memo)document.getElementById('da-memo').value=p.memo;
-      if(stTxt)stTxt.textContent='✓ 取得完了（内容を確認してね）';
-    } else {
-      if(stTxt)stTxt.textContent='情報が見つかりませんでした。手入力してください';
-    }
-  }catch(e){
-    if(stTxt)stTxt.textContent='取得できませんでした。手入力してください';
-  }
+  if(fields&&val.trim())fields.style.display='block';
+}
+async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
+  // AI不使用のため何もしない
+}
+async function dramaAutoFill(){
+  // AI不使用：手動入力のみ
+  const fields=document.getElementById('da-fields');
   if(fields)fields.style.display='block';
-  if(btn){btn.disabled=false;btn.style.opacity='1';}
+  const btn=document.getElementById('da-search-btn');
+  if(btn){btn.style.display='none';}
 }
 
 function openDramaEdit(id){
@@ -3705,26 +3520,45 @@ function saveMemo(){
 }
 function renderList(r){
   const items=r.items||[];
+  const all=items.length;
   const done=items.filter(i=>i.done).length;
-  const pct=items.length?Math.round(done/items.length*100):0;
+  const pct=all?Math.round(done/all*100):0;
   document.getElementById('pf').style.width=pct+'%';
-  document.getElementById('ptxt').textContent=done+'/'+items.length;
-  // チェック済みは非表示（DOMから除外してクリック誤爆を防ぐ）
-  const visible=items.filter(i=>!i.done);
-  document.getElementById('litems').innerHTML=visible.map(it=>`
-    <div class="li">
-      <input type="checkbox" ${it.done?'checked':''} onchange="togItem(${it.id},this.checked)" style="margin-top:3px;flex-shrink:0"/>
-      <div style="flex:1;min-width:0;cursor:pointer" onclick="openItemMemo(${it.id})">
+  document.getElementById('ptxt').textContent=done+'/'+all;
+  // チェック済みはDOMから除外（クリック誤爆防止）
+  const el=document.getElementById('litems');
+  el.innerHTML='';
+  items.forEach((it,idx)=>{
+    if(it.done)return; // 完了済みは描画しない
+    const div=document.createElement('div');
+    div.className='li';
+    div.innerHTML=`
+      <input type="checkbox" style="margin-top:3px;flex-shrink:0"/>
+      <div style="flex:1;min-width:0;cursor:pointer">
         <div class="li-t">${it.text}</div>
-        <div class="li-memo">${it.memo?'💬 '+it.memo:'メモを追加…'}</div>
+        <div class="li-memo">${it.memo?'💬 '+it.memo:'タップでメモ追加…'}</div>
       </div>
       <span class="li-w" style="flex-shrink:0">${it.who==='ig'?'💙':'🌸'} ${it.ts}</span>
-      <button class="li-d" onclick="delItem(${it.id})">×</button>
-    </div>`).join('');
+      <button class="li-d">×</button>`;
+    // イベントをJSで直接バインド（インデックスで操作）
+    div.querySelector('input').addEventListener('change',e=>{
+      const r2=R.find(x=>x.id===curId);if(!r2)return;
+      r2.items[idx].done=e.target.checked;
+      renderList(r2);renderRooms();lsSave();
+    });
+    div.querySelector('div[style*="cursor"]').addEventListener('click',()=>openItemMemo(idx));
+    div.querySelector('.li-d').addEventListener('click',e=>{
+      e.stopPropagation();
+      const r2=R.find(x=>x.id===curId);if(!r2)return;
+      r2.items.splice(idx,1);
+      renderList(r2);renderRooms();lsSave();
+    });
+    el.appendChild(div);
+  });
 }
-function openItemMemo(id){
+function openItemMemo(idx){
   const r=R.find(x=>x.id===curId);if(!r)return;
-  const it=r.items.find(i=>i.id===id);if(!it)return;
+  const it=r.items[idx];if(!it)return;
   const old=document.getElementById('item-memo-ui');if(old)old.remove();
   const ui=document.createElement('div');
   ui.id='item-memo-ui';
@@ -3735,25 +3569,110 @@ function openItemMemo(id){
       <div style="font-size:10px;color:var(--wg);text-align:center;margin-bottom:12px">${it.who==='ig'?'💙 井口さん':'🌸 瀧本さん'} · ${it.ts}</div>
       <textarea id="item-memo-inp" placeholder="メモを入力…" style="width:100%;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;padding:10px 13px;font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;background:#fafafa;resize:none;min-height:80px;box-sizing:border-box;line-height:1.5">${it.memo||''}</textarea>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button onclick="document.getElementById('item-memo-ui').remove()" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
-        <button onclick="saveItemMemo(${id})" style="flex:1;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#b8d9f8,#8ec4f0);cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:700;color:var(--ig-d)">保存</button>
+        <button id="item-memo-cancel" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
+        <button id="item-memo-save" style="flex:1;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#b8d9f8,#8ec4f0);cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:700;color:var(--ig-d)">保存</button>
       </div>
     </div>`;
   ui.addEventListener('click',e=>{if(e.target===ui)ui.remove();});
+  ui.querySelector('#item-memo-cancel').addEventListener('click',()=>ui.remove());
+  ui.querySelector('#item-memo-save').addEventListener('click',()=>{
+    const r2=R.find(x=>x.id===curId);if(!r2)return;
+    r2.items[idx].memo=document.getElementById('item-memo-inp')?.value.trim()||'';
+    ui.remove();renderList(r2);lsSave();
+  });
   document.body.appendChild(ui);
   setTimeout(()=>document.getElementById('item-memo-inp')?.focus(),100);
 }
-function saveItemMemo(id){
-  const r=R.find(x=>x.id===curId);if(!r)return;
-  const it=r.items.find(i=>i.id===id);if(!it)return;
-  it.memo=document.getElementById('item-memo-inp')?.value.trim()||'';
-  document.getElementById('item-memo-ui')?.remove();
-  renderList(r);lsSave();
-}
+function saveItemMemo(id){} // 後方互換のため残す（未使用）
 function togItem(id,done){const r=R.find(x=>x.id===curId);if(!r)return;const it=r.items.find(i=>i.id===id);if(it){it.done=done;renderList(r);renderRooms();lsSave();}}
 function delItem(id){const r=R.find(x=>x.id===curId);if(!r)return;r.items=r.items.filter(i=>i.id!==id);renderList(r);renderRooms();lsSave();}
 function addItem(){const inp=document.getElementById('linp');const v=inp.value.trim();if(!v)return;const r=R.find(x=>x.id===curId);if(!r)return;r.items.push({id:nIid++,text:v,done:false,who:me,ts:'たった今'});inp.value='';renderList(r);renderRooms();lsSave();}
-function clearDone(){const r=R.find(x=>x.id===curId);if(!r)return;r.items=r.items.filter(i=>!i.done);renderList(r);renderRooms();lsSave();}
+function clearDone(){
+  const r=R.find(x=>x.id===curId);if(!r)return;
+  const done=r.items.filter(i=>i.done);
+  if(!done.length){
+    const t=document.createElement('div');
+    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(40,30,28,.88);color:white;padding:9px 20px;border-radius:22px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:500;white-space:nowrap';
+    t.textContent='完了済みのアイテムはありません';
+    document.body.appendChild(t);setTimeout(()=>t.remove(),2000);
+    return;
+  }
+  const old=document.getElementById('done-confirm-ui');if(old)old.remove();
+  const ui=document.createElement('div');
+  ui.id='done-confirm-ui';
+  ui.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:flex;align-items:flex-end;justify-content:center';
+
+  // 削除対象フラグ（デフォルト全選択）
+  const toDelete=new Set(done.map((_,i)=>i));
+
+  const inner=document.createElement('div');
+  inner.style.cssText='background:white;border-radius:22px 22px 0 0;padding:20px 16px max(28px,env(safe-area-inset-bottom));width:100%;max-width:430px;box-sizing:border-box';
+
+  function renderRows(){
+    const listEl=inner.querySelector('#done-list');
+    listEl.innerHTML=done.map((it,i)=>{
+      const checked=toDelete.has(i);
+      return `<div data-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.07);cursor:pointer">
+        <input type="checkbox" ${checked?'checked':''} style="width:17px;height:17px;accent-color:#ff5a5a;flex-shrink:0;cursor:pointer"/>
+        <span style="font-size:13px;flex:1;${checked?'text-decoration:line-through;color:#aaa':''}">${it.text}</span>
+      </div>`;
+    }).join('');
+    // チェックイベント
+    listEl.querySelectorAll('div[data-idx]').forEach(row=>{
+      const idx=parseInt(row.dataset.idx);
+      const cb=row.querySelector('input');
+      const toggle=()=>{
+        if(toDelete.has(idx))toDelete.delete(idx);else toDelete.add(idx);
+        renderRows();updateBtn();
+      };
+      row.addEventListener('click',e=>{if(e.target!==cb)toggle();});
+      cb.addEventListener('change',toggle);
+    });
+  }
+
+  function updateBtn(){
+    const btn=inner.querySelector('#done-delete');
+    const n=toDelete.size;
+    btn.textContent=n?`🗑 ${n}件を削除する`:'削除するものを選んでください';
+    btn.disabled=!n;
+    btn.style.opacity=n?'1':'0.4';
+  }
+
+  inner.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700">完了済み（${done.length}件）</div>
+      <button id="done-toggle-all" style="font-size:11px;background:none;border:1px solid var(--bd);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">全解除</button>
+    </div>
+    <div style="font-size:11px;color:var(--wg);margin-bottom:10px">削除したくないものはチェックを外してください</div>
+    <div id="done-list" style="max-height:220px;overflow-y:auto;margin-bottom:14px;padding:0 2px"></div>
+    <div style="display:flex;gap:8px">
+      <button id="done-cancel" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
+      <button id="done-delete" style="flex:2;padding:11px;border-radius:12px;border:none;background:#ff5a5a;color:white;cursor:pointer;font-size:13px;font-family:'Zen Maru Gothic',serif;font-weight:700">🗑 ${done.length}件を削除する</button>
+    </div>`;
+
+  ui.appendChild(inner);
+  renderRows();
+
+  // 全選択／全解除トグル
+  inner.querySelector('#done-toggle-all').addEventListener('click',()=>{
+    if(toDelete.size===done.length){toDelete.clear();}
+    else{done.forEach((_,i)=>toDelete.add(i));}
+    inner.querySelector('#done-toggle-all').textContent=toDelete.size===done.length?'全解除':'全選択';
+    renderRows();updateBtn();
+  });
+
+  inner.querySelector('#done-cancel').addEventListener('click',()=>ui.remove());
+  inner.querySelector('#done-delete').addEventListener('click',()=>{
+    if(!toDelete.size)return;
+    const r2=R.find(x=>x.id===curId);if(!r2)return;
+    // toDeleteはdone配列のインデックス→元itemsの参照で削除
+    const toRemove=new Set(done.filter((_,i)=>toDelete.has(i)).map(it=>it));
+    r2.items=r2.items.filter(it=>!toRemove.has(it));
+    ui.remove();renderList(r2);renderRooms();lsSave();
+  });
+  ui.addEventListener('click',e=>{if(e.target===ui)ui.remove();});
+  document.body.appendChild(ui);
+}
 function openRM(){document.getElementById('rn').value='';nFmt='free';nIco='💬';document.querySelectorAll('#rf .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#ri-chips .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.getElementById('rm-ov').classList.add('on');}
 function closeRM(){document.getElementById('rm-ov').classList.remove('on');}
 function rFmt(btn,f){document.querySelectorAll('#rf .chip').forEach(b=>{b.classList.remove('on','ig-on');});btn.classList.add('on','ig-on');nFmt=f;}
@@ -3933,42 +3852,95 @@ function qAnalysis(){
 
   const igText=(S.igAns?.text||'').trim();
   const tkText=(S.tkAns?.text||'').trim();
-
-  // 回答の類似度チェック（共通ワードを探す）
-  const igWords=igText.replace(/[。、！？\s]/g,'').split('');
-  const tkWords=tkText.replace(/[。、！？\s]/g,'').split('');
-  const common=igWords.filter(c=>tkWords.includes(c)&&c.length>0);
-  const similarRatio=common.length/Math.max(igWords.length,tkWords.length,1);
-  const isSimilar=similarRatio>0.25||igText.length>0&&tkText.length>0&&(
-    igText.includes(tkText.slice(0,4))||tkText.includes(igText.slice(0,4))
-  );
-
-  // カテゴリごとのパターンコメント
+  const qText=S.curQ?.text||'';
   const cat=S.curQ?.cat||'love';
 
-  // パターン辞書（INTJ=井口さん、ENFP=瀧本さん の特性を踏まえた文章）
-  const PATTERNS={
-    similar:{
-      love:['ふたりとも同じ方向を向いてるかも。言葉にしなくても伝わってる部分が多そう 💕','答えが似てる…！無意識に価値観がそろってきてるのかもしれない 🔬','おお、かなり一致してる。ふたりの「好き」の形が近づいてきてる気がする 🌸'],
-      touch:['スキンシップの感覚、けっこう合ってそう。お互い心地よい距離感を掴んでるかも 🤝','似た答えが出た。無意識のうちにふたりのペースができてきてるのかも ✨','答えが近い！お互いの「ちょうどいい」が自然とすり合わさってきてる感じ 🌿'],
-      future:['将来のイメージ、けっこう一致してる。同じ方向を向いて歩けてるかも 🌟','ふたりの未来のビジョンが近い！これは心強い 🗺','答えが似てるということは、ふたりの「なりたい姿」が近いってことかも 💫'],
-      daily:['日常の感覚が合ってそう。一緒にいると自然に同じリズムになれるかもしれない ☀️','似た答え。生活のテンポやペースが合ってきてる証拠かも 🍀','お互いの「普通」が近い。日常を一緒に過ごすのが楽になってきてるのかも 🏡'],
-      gap:['同じように感じてたんだね。すれちがいじゃなく、ちゃんとシンクロしてるかも 💭','答えが近い。伝えにくいことも、ちゃんと分かり合えてきてるのかも 🌈','似た感覚を持ってたんだ。このふたりなら素直に話し合えそう 🔓']
-    },
-    different:{
-      love:['答えが違うのが面白い！INTJ的な「じわじわ伝わる好き」とENFP的な「ストレートな好き」の違いかも 💙🌸','ちょっと違う視点だね。でもそれがふたりの「すれちがい研究」のネタになる 🔬','アプローチが違う。でもどちらも相手を思ってるからこそ、とも言えるかも 💕'],
-      touch:['スキンシップの感覚に少し差があるかも。「もっと」派と「ちょうどいい」派の違いかな 🤝','答えが違う…！相手の「心地よい距離感」を改めて聞いてみるいいきっかけかも 💬','ここが少し違うみたい。どっちが正解じゃなく、すり合わせていくのが大事かも ✨'],
-      future:['将来のイメージに違いがある。INTJは「計画的に」、ENFPは「可能性を広げながら」かも 🌟','ちょっと違う未来図。でもそれをふたりで話し合うことで新しい青写真ができるかも 🗺','答えが違う！お互いの「なりたい姿」をもっと語り合うチャンスかも 💫'],
-      daily:['日常のスタイルに違いがあるね。INTJの「ルーティン派」とENFPの「その日の気分派」かも ☀️','答えが違う。ふたりの「普通」のすり合わせを楽しむのも関係を深めるコツかも 🍀','少し違う感覚。お互いの違いを知ることが、もっと過ごしやすくなるヒントになるかも 🏡'],
-      gap:['ここに温度差があるみたい。INTJ的「考えてから言う」とENFP的「感じたらすぐ言う」の違いかも 💭','答えが違う。伝え方・受け取り方のズレが「すれちがい」を生んでるのかもしれない 🔍','ここが違うんだね。でも違いがわかったなら、次は近づけるチャンス 🌈']
+  // ── 解析ユーティリティ ──
+  const normalize=t=>t.replace(/[。、！？\s　「」『』【】()（）]/g,'');
+  const igN=normalize(igText), tkN=normalize(tkText);
+
+  // 共通文字・共通単語の抽出
+  const igChars=new Set(igN.split(''));
+  const tkChars=new Set(tkN.split(''));
+  const commonChars=[...igChars].filter(c=>tkChars.has(c)&&c.length>0);
+  const charSim=commonChars.length/Math.max(igN.length,tkN.length,1);
+
+  // ポジティブ／ネガティブキーワード
+  const posWords=['好き','うれしい','楽しい','幸せ','ありがとう','最高','大好き','ほっこり','癒し','安心','一緒','いつも','ずっと','笑','♡','❤','💕','😊','😄','🥰'];
+  const negWords=['不安','寂しい','つらい','難しい','苦手','怖い','嫌','違う','ちがう','もやもや','すれちがい','うまく','伝わらない','😞','😢','😰'];
+  const igPos=posWords.filter(w=>igText.includes(w)).length;
+  const igNeg=negWords.filter(w=>igText.includes(w)).length;
+  const tkPos=posWords.filter(w=>tkText.includes(w)).length;
+  const tkNeg=negWords.filter(w=>tkText.includes(w)).length;
+  const igTone=igPos>igNeg?'pos':igNeg>igPos?'neg':'neu';
+  const tkTone=tkPos>tkNeg?'pos':tkNeg>tkPos?'neg':'neu';
+  const toneMatch=igTone===tkTone;
+
+  // 長さの差（一方が極端に短い＝考え方の深度差）
+  const lenDiff=Math.abs(igText.length-tkText.length);
+  const lenRatio=Math.min(igText.length,tkText.length)/Math.max(igText.length,tkText.length,1);
+  const shortOne=igText.length<tkText.length?'ig':'tk';
+
+  // 数字・時間が含まれるか（具体性チェック）
+  const hasNum=t=>/[0-9０-９年月日時間分秒回]/.test(t);
+  const igSpecific=hasNum(igText), tkSpecific=hasNum(tkText);
+
+  // 一致判定（文字一致＋感情一致の複合）
+  const isSimilar=charSim>0.22||toneMatch&&charSim>0.1;
+
+  // ── 回答の一部を引用（最初の15文字）──
+  const quote=(t,max=16)=>t.length>max?t.slice(0,max)+'…':t;
+  const igQ=quote(igText), tkQ=quote(tkText);
+
+  // ── カテゴリ別・状況別コメント生成 ──
+  const CAT_LABEL={love:'愛情表現',touch:'スキンシップ',future:'将来',daily:'日常',gap:'すれちがい'};
+  const catL=CAT_LABEL[cat]||'気持ち';
+
+  let result='';
+
+  if(isSimilar){
+    // 似ている場合 → 具体的にどこが似ているか指摘
+    if(charSim>0.35){
+      result=`「${igQ}」と「${tkQ}」、かなり近い答えだね。${catL}についてのふたりの感覚、自然と揃ってきてるのかも 🔬`;
+    } else if(toneMatch&&igTone==='pos'){
+      result=`ふたりとも前向きな答えだね。井口さんの「${igQ}」、瀧本さんの「${tkQ}」── どちらも${catL}への温度感が似てる 💕`;
+    } else if(toneMatch&&igTone==='neg'){
+      result=`ふたりとも正直に答えてくれてる。「${igQ}」「${tkQ}」── 同じように感じてたなら、それを話し合えてよかった 🌧`;
+    } else {
+      result=`表現は違っても、根っこにあるものが似てる気がする。井口さんの「${igQ}」と瀧本さんの「${tkQ}」、向いてる方向は一緒かも ✨`;
     }
+  } else {
+    // 違う場合 → どう違うか・なぜ面白いかを具体的に
+    if(lenRatio<0.4){
+      const longOne=shortOne==='ig'?'瀧本さん':'井口さん';
+      const shortOneName=shortOne==='ig'?'井口さん':'瀧本さん';
+      const longText=shortOne==='ig'?tkQ:igQ;
+      const shortText=shortOne==='ig'?igQ:tkQ;
+      result=`${longOne}は「${longText}」と詳しく、${shortOneName}は「${shortText}」とシンプルに。${catL}への向き合い方の深度が違うのかも。もう少し話してみると面白そう 💬`;
+    } else if(igSpecific!==tkSpecific){
+      const concreteName=igSpecific?'井口さん':'瀧本さん';
+      const abstractName=igSpecific?'瀧本さん':'井口さん';
+      result=`${concreteName}は具体的に、${abstractName}はふわっと答えてるね。${catL}に対する"解像度"の違いがすれちがいを生んでることもあるかも 🔍`;
+    } else if(!toneMatch){
+      const posName=igTone==='pos'?'井口さん':'瀧本さん';
+      const negName=igTone==='pos'?'瀧本さん':'井口さん';
+      result=`${posName}はポジティブに、${negName}はより慎重に答えてる。「${igQ}」と「${tkQ}」── ${catL}への温度差が少しあるかも。ここを話し合うと近づけそう 🌡`;
+    } else {
+      result=`井口さんの「${igQ}」、瀧本さんの「${tkQ}」── 違う答えが出た！${catL}についての見え方が違うからこそ、話すと発見がある 🔬`;
+    }
+  }
+
+  // 質問ジャンル別の後付けコメント
+  const suffixes={
+    love:['ふたりの「好き」の形は、話すほど育っていくものかも','言葉にするのが苦手でも、こうやって答え合わせすることが大事'],
+    touch:['スキンシップの「ちょうどいい」は人によって全然違う。だから聞いてみることに意味がある','言葉より先に体が正直かもしれない'],
+    future:['将来の話、具体的にするのが照れくさいふたりほど、実はいっぱい考えてたりする','未来の話をするたびに、ふたりのビジョンは少しずつ揃っていく'],
+    daily:['日常の小さなすれちがいが積み重なると大きくなる。でも話せばリセットできる','「普通」の感覚って意外と違う。だからこそ面白い'],
+    gap:['すれちがいに気づいてる時点で、もう半分は解決してる','違いを知ることが、一番の近道だったりする']
   };
+  const suf=suffixes[cat]||suffixes.love;
+  result+='\n\n'+suf[Math.floor(Math.random()*suf.length)];
 
-  const patternKey=isSimilar?'similar':'different';
-  const msgs=PATTERNS[patternKey][cat]||PATTERNS[patternKey].love;
-  const result=msgs[Math.floor(Math.random()*msgs.length)];
-
-  // 少し「間」を作ってから表示（自然な感じに）
   setTimeout(()=>{
     txEl.textContent=result;
     if(S.curQ)S.curQ.analysis=result;
@@ -3978,7 +3950,7 @@ function qAnalysis(){
       answersEl.style.display='block';
       setTimeout(()=>answersEl.scrollIntoView({behavior:'smooth',block:'nearest'}),300);
     }
-  },800);
+  },900);
 }
 function qBanner(){qRender();}
 function qSubmit(){
