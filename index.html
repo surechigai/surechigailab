@@ -554,139 +554,132 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 
     <!-- HOME -->
     <div class="scr on" id="sc-home">
-      <div class="top-hero" id="top-hero">
-        <div class="top-greeting" id="top-greet">おはよう 👋</div>
+      <div class="top-hero" id="top-hero" style="padding:7px 14px 5px;flex-shrink:0">
+        <div class="top-greeting" id="top-greet" style="font-size:13px">おはよう 👋</div>
         <div class="top-date" id="top-date"></div>
       </div>
-      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:10px">
-      <!-- ① きもちカード（左右配置・コンパクト） -->
-      <div style="margin:6px 12px 8px">
-        <div style="background:var(--card);border-radius:16px;border:1.5px solid var(--bd);overflow:hidden;display:flex;align-items:stretch;box-shadow:var(--shadow-sm)">
+      <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:0;padding-bottom:4px">
 
-          <!-- 左：相手のきもち（幅50%固定）→タップで全文モーダル -->
-          <div style="width:50%;flex-shrink:0;box-sizing:border-box;border-right:1px solid var(--bd);padding:8px 10px;display:flex;align-items:center;justify-content:center;gap:8px;overflow:hidden;cursor:pointer" onclick="openPartnerMoodDetail()">
-            <div style="font-size:30px;line-height:1;flex-shrink:0" id="home-p-emoji">—</div>
+      <!-- ① きもちカード：コンパクト版 -->
+      <div style="margin:4px 12px 4px">
+        <div style="background:var(--card);border-radius:14px;border:1.5px solid var(--bd);overflow:hidden;display:flex;align-items:stretch;box-shadow:var(--shadow-sm)">
+          <!-- 左：相手のきもち -->
+          <div style="width:50%;flex-shrink:0;box-sizing:border-box;border-right:1px solid var(--bd);padding:7px 10px;display:flex;align-items:center;gap:8px;overflow:hidden;cursor:pointer" onclick="openPartnerMoodDetail()">
+            <div style="font-size:24px;line-height:1;flex-shrink:0" id="home-p-emoji">—</div>
             <div style="min-width:0;overflow:hidden;flex:1">
-              <div style="font-size:8px;color:var(--wg);font-weight:500;height:12px;line-height:12px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-partner-lbl">🌸 瀧本さんの気持ち</div>
-              <div id="home-p-bubble" style="display:none;font-size:11px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-              <div id="home-p-empty" style="font-size:11px;color:#ccc;white-space:nowrap">まだ記録なし</div>
+              <div style="font-size:8px;color:var(--wg);font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-partner-lbl">🌸 瀧本さんの気持ち</div>
+              <div id="home-p-bubble" style="display:none;font-size:11px;color:var(--text);font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+              <div id="home-p-empty" style="font-size:10px;color:#ccc;white-space:nowrap">まだ記録なし</div>
             </div>
           </div>
-
-          <!-- 右：自分のきもち（幅50%固定）→タップでモーダル入力 -->
-          <div style="width:50%;flex-shrink:0;box-sizing:border-box;padding:8px 10px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;overflow:hidden" onclick="openMoodModal()">
-            <div style="font-size:30px;line-height:1;flex-shrink:0" id="home-my-emoji-disp">？</div>
+          <!-- 右：自分のきもち -->
+          <div style="width:50%;flex-shrink:0;box-sizing:border-box;padding:7px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;overflow:hidden" onclick="openMoodModal()">
+            <div style="font-size:24px;line-height:1;flex-shrink:0" id="home-my-emoji-disp">？</div>
             <div style="min-width:0;overflow:hidden;flex:1">
-              <div style="font-size:8px;color:var(--wg);font-weight:500;height:12px;line-height:12px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-my-ask">💙 井口さんの気持ち</div>
-              <!-- 送信済み -->
+              <div style="font-size:8px;color:var(--wg);font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-my-ask">💙 井口さんの気持ち</div>
               <div id="home-my-sent" style="display:none">
-                <div id="home-my-bubble" style="display:none;font-size:11px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+                <div id="home-my-bubble" style="display:none;font-size:11px;color:var(--text);font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
                 <div id="home-my-label-disp" style="display:none;font-size:11px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
               </div>
-              <!-- 未入力 -->
               <div id="home-my-prompt">
-                <div style="font-size:11px;color:#ccc;white-space:nowrap">タップして入力</div>
+                <div style="font-size:10px;color:#ccc;white-space:nowrap">タップして入力</div>
               </div>
             </div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" width="11" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" width="10" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-
         </div>
       </div>
 
-      <!-- ② ネタ帳 -->
-      <div class="spice-wrap">
-        <div class="spice-hdr" style="background:linear-gradient(135deg,#d5f0e8,#c8e8f5)">
+      <!-- ② ネタ帳：折りたたみ -->
+      <div class="spice-wrap" style="margin:0 12px 4px;flex-shrink:0">
+        <div class="spice-hdr" style="background:linear-gradient(135deg,#d5f0e8,#c8e8f5);cursor:pointer" onclick="(()=>{const b=document.getElementById('agenda-body');const arrow=document.getElementById('agenda-arrow');const open=b.style.display!=='none';b.style.display=open?'none':'block';arrow.textContent=open?'›':'⌄';})()">
           <div class="spice-title" style="color:#2a6050">📒 ネタ帳</div>
-          <button onclick="agendaClear()" style="background:rgba(255,255,255,.5);border:none;border-radius:8px;padding:4px 10px;font-size:10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:#2a6050;transition:all .15s">✓ 全部話せた</button>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button onclick="event.stopPropagation();agendaClear()" style="background:rgba(255,255,255,.5);border:none;border-radius:8px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:#2a6050">✓ 全部話せた</button>
+            <span id="agenda-arrow" style="font-size:16px;color:#2a6050;line-height:1">⌄</span>
+          </div>
         </div>
-        <div id="agenda-list" style="padding:0 13px;max-height:90px;overflow-y:auto"></div>
-        <div id="agenda-input-bar" style="display:flex;align-items:center;gap:8px;padding:8px 13px 10px;border-top:1px solid var(--bd)">
-          <input id="agenda-inp" style="flex:1;border-radius:14px;padding:6px 11px;font-size:12px;border:1.5px solid rgba(0,0,0,.1);outline:none;background:#fafafa;font-family:'Noto Sans JP',sans-serif;min-width:0" placeholder="話したいネタをメモ…" onkeydown="if(event.key==='Enter')agendaAdd()"/>
-          <button onclick="agendaAdd()" style="width:28px;height:28px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--ig),var(--tk));color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px">＋</button>
+        <div id="agenda-body">
+          <div id="agenda-list" style="padding:0 13px;max-height:72px;overflow-y:auto"></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 13px 8px;border-top:1px solid var(--bd)">
+            <input id="agenda-inp" style="flex:1;border-radius:14px;padding:5px 11px;font-size:12px;border:1.5px solid rgba(0,0,0,.1);outline:none;background:#fafafa;font-family:'Noto Sans JP',sans-serif;min-width:0" placeholder="話したいネタをメモ…" onkeydown="if(event.key==='Enter')agendaAdd()"/>
+            <button onclick="agendaAdd()" style="width:26px;height:26px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--ig),var(--tk));color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px">＋</button>
+          </div>
         </div>
       </div>
 
-      <!-- ③ これからの予定 -->
-      <div class="spice-wrap">
+      <!-- ③ これからの予定：コンパクト -->
+      <div class="spice-wrap" style="margin:0 12px 4px;flex-shrink:0">
         <div class="spice-hdr" style="background:linear-gradient(135deg,#ffecd5,#ffd5e8);cursor:pointer" onclick="go('note');switchNote('cal')">
           <div class="spice-title" style="color:#8a4020">📅 これからの予定</div>
           <svg viewBox="0 0 24 24" fill="none" stroke="#8a4020" stroke-width="2" width="13" opacity=".5"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-        <div style="padding:6px 13px 8px;min-height:56px;cursor:pointer" onclick="go('note');switchNote('cal')">
+        <div style="padding:5px 13px 7px;cursor:pointer" onclick="go('note');switchNote('cal')">
           <div id="home-evs-mini"></div>
         </div>
       </div>
 
-      <!-- ③.5 記録 -->
-      <div class="spice-wrap" id="checkin-wrap">
-        <div class="spice-hdr" style="background:linear-gradient(135deg,#ede0f7,#d5e8f7)">
+      <!-- ④ 記録：折りたたみ（デフォルト閉じ） -->
+      <div class="spice-wrap" id="checkin-wrap" style="margin:0 12px 4px;flex-shrink:0">
+        <div class="spice-hdr" style="background:linear-gradient(135deg,#ede0f7,#d5e8f7);cursor:pointer" onclick="(()=>{const b=document.getElementById('checkin-body');const arrow=document.getElementById('checkin-arrow');const open=b.style.display!=='none';b.style.display=open?'none':'block';arrow.textContent=open?'›':'⌄';})()">
           <div class="spice-title" style="color:#4a3060">📝 記録</div>
-          <button onclick="checkinLoadQ(true)" style="background:rgba(255,255,255,.5);border:none;border-radius:8px;padding:4px 10px;font-size:10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:#4a3060;transition:all .15s" id="checkin-refresh-btn">🔀 別の質問</button>
-        </div>
-        <div style="padding:8px 13px 4px">
-          <!-- 質問文 -->
-          <div id="checkin-q" style="font-size:12px;color:var(--lav);font-weight:500;margin-bottom:6px;line-height:1.5"></div>
-          <!-- 入力エリア（アイコンなし） -->
-          <textarea id="checkin-ta" style="width:100%;border:1.5px solid rgba(155,126,200,.2);border-radius:10px;padding:8px 10px;font-size:13px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.6;min-height:44px;background:var(--card);box-sizing:border-box;transition:border-color .15s" placeholder="ひとことでOK" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';checkinCharCount(this)" onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='rgba(155,126,200,.2)'"></textarea>
-          <!-- 画像プレビュー -->
-          <div id="checkin-img-preview" style="display:none;margin:5px 0;position:relative">
-            <img id="checkin-img-el" style="max-width:100%;max-height:140px;border-radius:8px;object-fit:cover;display:block"/>
-            <button onclick="checkinRemoveImg()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.5);color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
-          </div>
-          <!-- ボトムバー -->
-          <div style="display:flex;align-items:center;gap:6px;padding:5px 0 6px">
-            <input type="file" id="checkin-img-input" accept="image/*" style="display:none" onchange="checkinLoadImg(this)"/>
-            <button onclick="document.getElementById('checkin-img-input').click()" style="background:none;border:none;cursor:pointer;padding:2px 4px;display:flex;align-items:center;gap:2px;color:var(--wg);font-size:10px;font-family:'Noto Sans JP',sans-serif;opacity:.7">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>写真
-            </button>
-            <span style="flex:1"></span>
-            <span id="checkin-char" style="font-size:9px;color:#ccc">0</span>
-            <button onclick="saveCheckin()" id="checkin-post-btn" style="border:none;border-radius:12px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Zen Maru Gothic',serif;color:white;background:linear-gradient(135deg,var(--lav),var(--ig));transition:all .18s;flex-shrink:0">記録 ✓</button>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button onclick="event.stopPropagation();checkinLoadQ(true)" style="background:rgba(255,255,255,.5);border:none;border-radius:8px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:#4a3060">🔀 別の質問</button>
+            <span id="checkin-arrow" style="font-size:16px;color:#4a3060;line-height:1">›</span>
           </div>
         </div>
-        <!-- きもちボタン行 -->
-        <div id="checkin-mood-row" style="display:flex;gap:5px;flex-wrap:wrap;padding:4px 13px 8px"></div>
-      </div>
-
-      <!-- 今日の予定バナー（ダイアリーエリア直下） -->
-      <div id="checkin-today-evs" style="margin:0 12px 8px;display:none">
-        <div style="background:linear-gradient(135deg,#ffecd5,#ffd5e8);border-radius:14px;padding:9px 13px">
-          <div style="font-size:10px;font-weight:700;color:#8a4020;margin-bottom:6px;letter-spacing:.04em">📅 今日の予定</div>
-          <div id="checkin-today-evs-list"></div>
-        </div>
-      </div>
-
-
-
-      <!-- ④ すれちがい解消スパイス -->
-      <div class="spice-wrap">
-        <div class="spice-hdr">
-          <div class="spice-title">🧪 すれちがい解消スパイス</div>
-          <button class="spice-reload" id="spice-reload" onclick="spiceLoad()">🔀 シャッフル</button>
-        </div>
-        <div class="spice-tabs">
-          <button class="spice-tab on" id="stab-quote" onclick="spiceTab('quote')">💡 小ネタ</button>
-          <button class="spice-tab" id="stab-game" onclick="spiceTab('game')">🎮 ゲーム</button>
-          <button class="spice-tab" id="stab-date" onclick="spiceTab('date')">🌈 デート案</button>
-        </div>
-        <div class="spice-body" id="spice-body">
-          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--lav)" id="spice-ld"><span class="spin">✦</span> 生成中...</div>
-          <div id="spice-content" style="display:none">
-            <div class="spice-text" id="spice-text"></div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px">
-              <div style="display:flex;align-items:center;gap:6px">
-                <div class="spice-label" id="spice-label"></div>
-              </div>
-              <button id="spice-like-btn" onclick="spiceLike()" style="display:flex;align-items:center;background:none;border:1.5px solid var(--bd);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--wg);transition:all .2s">
-                <span id="spice-like-icon">👍</span>
-              </button>
+        <div id="checkin-body" style="display:none">
+          <div style="padding:8px 13px 4px">
+            <div id="checkin-q" style="font-size:12px;color:var(--lav);font-weight:500;margin-bottom:6px;line-height:1.5"></div>
+            <textarea id="checkin-ta" style="width:100%;border:1.5px solid rgba(155,126,200,.2);border-radius:10px;padding:7px 10px;font-size:13px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.6;min-height:40px;background:var(--card);box-sizing:border-box;transition:border-color .15s" placeholder="ひとことでOK" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';checkinCharCount(this)" onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='rgba(155,126,200,.2)'"></textarea>
+            <div id="checkin-img-preview" style="display:none;margin:5px 0;position:relative">
+              <img id="checkin-img-el" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover;display:block"/>
+              <button onclick="checkinRemoveImg()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.5);color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
             </div>
-            <div class="spice-learn" id="spice-learn"></div>
+            <div style="display:flex;align-items:center;gap:6px;padding:4px 0 5px">
+              <input type="file" id="checkin-img-input" accept="image/*" style="display:none" onchange="checkinLoadImg(this)"/>
+              <button onclick="document.getElementById('checkin-img-input').click()" style="background:none;border:none;cursor:pointer;padding:2px 4px;display:flex;align-items:center;gap:2px;color:var(--wg);font-size:10px;font-family:'Noto Sans JP',sans-serif;opacity:.7">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>写真
+              </button>
+              <span style="flex:1"></span>
+              <span id="checkin-char" style="font-size:9px;color:#ccc">0</span>
+              <button onclick="saveCheckin()" id="checkin-post-btn" style="border:none;border-radius:12px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Zen Maru Gothic',serif;color:white;background:linear-gradient(135deg,var(--lav),var(--ig));transition:all .18s;flex-shrink:0">記録 ✓</button>
+            </div>
+          </div>
+          <div id="checkin-mood-row" style="display:flex;gap:5px;flex-wrap:wrap;padding:4px 13px 8px"></div>
+        </div>
+      </div>
+
+      <!-- ⑤ スパイス：折りたたみ（デフォルト閉じ） -->
+      <div class="spice-wrap" style="margin:0 12px 4px;flex-shrink:0">
+        <div class="spice-hdr" style="cursor:pointer" onclick="(()=>{const b=document.getElementById('spice-body');const arrow=document.getElementById('spice-arrow');const open=b.style.display!=='none';b.style.display=open?'none':'block';arrow.textContent=open?'›':'⌄';if(open===false)spiceLoad();})()">
+          <div class="spice-title">🧪 すれちがい解消スパイス</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button onclick="event.stopPropagation();spiceLoad()" class="spice-reload" id="spice-reload">🔀</button>
+            <span id="spice-arrow" style="font-size:16px;color:#3d2758;line-height:1">›</span>
+          </div>
+        </div>
+        <div id="spice-body" style="display:none">
+          <div class="spice-tabs">
+            <button class="spice-tab on" id="stab-quote" onclick="spiceTab('quote')">💡 小ネタ</button>
+            <button class="spice-tab" id="stab-game" onclick="spiceTab('game')">🎮 ゲーム</button>
+            <button class="spice-tab" id="stab-date" onclick="spiceTab('date')">🌈 デート案</button>
+          </div>
+          <div class="spice-body" id="spice-inner-body" style="padding:9px 14px 12px">
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--lav)" id="spice-ld"><span class="spin">✦</span> 生成中...</div>
+            <div id="spice-content" style="display:none">
+              <div class="spice-text" id="spice-text"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px">
+                <div class="spice-label" id="spice-label"></div>
+                <button id="spice-like-btn" onclick="spiceLike()" style="display:flex;align-items:center;background:none;border:1.5px solid var(--bd);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--wg);transition:all .2s"><span id="spice-like-icon">👍</span></button>
+              </div>
+              <div class="spice-learn" id="spice-learn"></div>
+            </div>
           </div>
         </div>
       </div>
-      </div><!-- /home-scroll-wrap -->
+
+      </div><!-- /home-flex-wrap -->
     </div>
 
     <!-- TALK -->
