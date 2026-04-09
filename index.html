@@ -232,7 +232,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .cv-info{flex:1}.cv-nm{font-size:15px;font-weight:700;color:var(--text);letter-spacing:.01em}.cv-sub{font-size:10px;color:var(--text);opacity:.5;margin-top:1px}
 .cv-abt{background:rgba(0,0,0,.06);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:10px;color:var(--text);font-family:'Noto Sans JP',sans-serif;transition:all .18s}
 .cv-abt:active{background:rgba(0,0,0,.12)}
-.msgs{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;background:var(--cream)}
+.msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;background:var(--cream)}
 .ddiv{text-align:center;margin:6px 0;position:relative}
 .ddiv::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--bd)}
 .ddiv span{background:var(--cream);padding:0 10px;font-size:10px;color:var(--wg);position:relative;letter-spacing:.04em}
@@ -242,8 +242,8 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .mg-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .mg-av.ig{background:var(--ig-bg)}.mg-av.tk{background:var(--tk-bg)}
 .mg-nm{font-size:9px;color:var(--wg);font-weight:500}
-.brow{display:flex;align-items:flex-end;gap:4px;margin-bottom:6px;min-width:0;max-width:100%}.brow.mine{flex-direction:row-reverse}
-.bbl{max-width:75%;padding:8px 13px;font-size:13px;line-height:1.6;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;display:inline-block;box-sizing:border-box}
+.brow{display:flex;align-items:flex-end;gap:4px;margin-bottom:6px;min-width:0}.brow.mine{flex-direction:row-reverse}
+.bbl{max-width:85%;width:max-content;padding:8px 13px;font-size:13px;line-height:1.6;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;display:inline-block;box-sizing:border-box}
 .bbl.th-ig,.bbl.th-tk{background:white;border:1.5px solid var(--bd);border-radius:18px 18px 18px 5px;box-shadow:var(--shadow-sm)}
 .bbl.mn-ig{background:#c4dcf5;border-radius:18px 18px 5px 18px;box-shadow:0 2px 6px rgba(74,143,212,.15)}
 .bbl.mn-tk{background:#f5c2d4;border-radius:18px 18px 5px 18px;box-shadow:0 2px 6px rgba(224,112,144,.15)}
@@ -282,7 +282,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .litems{flex:1;padding:8px 12px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .li{background:var(--card);border-radius:12px;border:1.5px solid var(--bd);padding:10px 13px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.04)}
 .li-memo{font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
-.li.done{opacity:.45}
+.li.done{display:none}
 .li input{width:18px;height:18px;accent-color:var(--sage);cursor:pointer;flex-shrink:0}
 .li-t{font-size:13px;flex:1}.li.done .li-t{text-decoration:line-through;color:var(--wg)}
 .li-w{font-size:9px;color:var(--wg);flex-shrink:0}
@@ -1136,7 +1136,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 
 <div class="ctx-menu" id="ctx-menu">
   <div class="ctx-item" onclick="copyMsg()">📋 コピー</div>
-  <div class="ctx-item danger" onclick="recallMsg()">🗑 取り消す</div>
+  <div class="ctx-item danger" id="ctx-del" onclick="recallMsg()">🗑 削除</div>
 </div>
 <!-- きもち選択モーダル -->
 <div class="ov" id="mood-modal-ov">
@@ -3612,7 +3612,7 @@ function renderMsgs(r){
     g.msgs.forEach((m,i)=>{
       const isLast=i===g.msgs.length-1;let rm='';
       if(mine&&isLast){rm=m.read?`<span class="rdmk" style="color:var(--${me}-d)">✓✓</span>`:`<span class="rdmk" style="color:#ccc">✓</span>`;}
-      const onCtx=mine?`oncontextmenu="showCtx(event,${m.id})" ontouchstart="startLong(event,${m.id})" ontouchend="clearLong()"` :'';
+      const onCtx=`oncontextmenu="showCtx(event,${m.id},${mine})" ontouchstart="startLong(event,${m.id},${mine})" ontouchend="clearLong()"`;
       const content=m.img
         ?`<img src="${m.img}" style="max-width:200px;max-height:200px;border-radius:10px;display:block;cursor:pointer" onclick="this.style.maxWidth=this.style.maxWidth==='100%'?'200px':'100%'" />`
         :m.text;
@@ -3649,11 +3649,11 @@ function sendImage(input){
   input.value='';
 }
 let longTimer=null;
-function showCtx(e,mid){e.preventDefault();ctxMsgId=mid;const cm=document.getElementById('ctx-menu');cm.classList.add('on');cm.style.left=Math.min(e.clientX,window.innerWidth-140)+'px';cm.style.top=Math.min(e.clientY,window.innerHeight-80)+'px';}
-function startLong(e,mid){longTimer=setTimeout(()=>{const t=e.touches[0];showCtx({preventDefault:()=>{},clientX:t.clientX,clientY:t.clientY},mid);},600);}
+function showCtx(e,mid,isMine){e.preventDefault();ctxMsgId=mid;const cm=document.getElementById('ctx-menu');cm.classList.add('on');cm.style.left=Math.min(e.clientX,window.innerWidth-160)+'px';cm.style.top=Math.min(e.clientY,window.innerHeight-100)+'px';document.getElementById('ctx-del').style.display=isMine?'flex':'none';}
+function startLong(e,mid,isMine){longTimer=setTimeout(()=>{const t=e.touches[0];showCtx({preventDefault:()=>{},clientX:t.clientX,clientY:t.clientY},mid,isMine);},500);}
 function clearLong(){clearTimeout(longTimer);}
 function hideCtx(){document.getElementById('ctx-menu').classList.remove('on');ctxMsgId=null;}
-function copyMsg(){const r=R.find(x=>x.id===curId);if(!r||!ctxMsgId)return;const m=r.msgs.find(x=>x.id===ctxMsgId);if(m&&navigator.clipboard)navigator.clipboard.writeText(m.text).catch(()=>{});hideCtx();}
+function copyMsg(){const r=R.find(x=>x.id===curId);if(!r||!ctxMsgId)return;const m=r.msgs.find(x=>x.id===ctxMsgId);if(m&&navigator.clipboard)navigator.clipboard.writeText(m.text||'').catch(()=>{});hideCtx();}
 function recallMsg(){const r=R.find(x=>x.id===curId);if(!r||!ctxMsgId)return;r.msgs=r.msgs.filter(x=>x.id!==ctxMsgId);hideCtx();renderMsgs(r);renderRooms();lsSave();}
 function ins(t){const ed=document.getElementById('memo-ed');ed.focus();document.execCommand('insertText',false,t);}
 function insBold(){document.getElementById('memo-ed').focus();document.execCommand('bold');}
