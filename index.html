@@ -232,7 +232,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .cv-info{flex:1}.cv-nm{font-size:15px;font-weight:700;color:var(--text);letter-spacing:.01em}.cv-sub{font-size:10px;color:var(--text);opacity:.5;margin-top:1px}
 .cv-abt{background:rgba(0,0,0,.06);border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:10px;color:var(--text);font-family:'Noto Sans JP',sans-serif;transition:all .18s}
 .cv-abt:active{background:rgba(0,0,0,.12)}
-.msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;background:var(--cream)}
+.msgs{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;background:var(--cream)}
 .ddiv{text-align:center;margin:6px 0;position:relative}
 .ddiv::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--bd)}
 .ddiv span{background:var(--cream);padding:0 10px;font-size:10px;color:var(--wg);position:relative;letter-spacing:.04em}
@@ -242,8 +242,8 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .mg-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .mg-av.ig{background:var(--ig-bg)}.mg-av.tk{background:var(--tk-bg)}
 .mg-nm{font-size:9px;color:var(--wg);font-weight:500}
-.brow{display:flex;align-items:flex-end;gap:4px;margin-bottom:6px;min-width:0}.brow.mine{flex-direction:row-reverse}
-.bbl{max-width:85%;width:max-content;padding:8px 13px;font-size:13px;line-height:1.6;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;display:inline-block;box-sizing:border-box}
+.brow{display:flex;align-items:flex-end;gap:4px;margin-bottom:6px;min-width:0;max-width:100%}.brow.mine{flex-direction:row-reverse}
+.bbl{max-width:75%;padding:8px 13px;font-size:13px;line-height:1.6;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;display:inline-block;box-sizing:border-box}
 .bbl.th-ig,.bbl.th-tk{background:white;border:1.5px solid var(--bd);border-radius:18px 18px 18px 5px;box-shadow:var(--shadow-sm)}
 .bbl.mn-ig{background:#c4dcf5;border-radius:18px 18px 5px 18px;box-shadow:0 2px 6px rgba(74,143,212,.15)}
 .bbl.mn-tk{background:#f5c2d4;border-radius:18px 18px 5px 18px;box-shadow:0 2px 6px rgba(224,112,144,.15)}
@@ -282,7 +282,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .litems{flex:1;padding:8px 12px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .li{background:var(--card);border-radius:12px;border:1.5px solid var(--bd);padding:10px 13px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.04)}
 .li-memo{font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
-.li.done{display:none}
+.li.done{opacity:.45}
 .li input{width:18px;height:18px;accent-color:var(--sage);cursor:pointer;flex-shrink:0}
 .li-t{font-size:13px;flex:1}.li.done .li-t{text-decoration:line-through;color:var(--wg)}
 .li-w{font-size:9px;color:var(--wg);flex-shrink:0}
@@ -2019,6 +2019,30 @@ function fbSave(){
   }catch(e){console.warn('Firebase保存失敗',e);}
 }
 
+function _fixRoomIds(){
+  // ルームIDの重複修正・nRid/nIid を正しい値に設定
+  const seen=new Set();
+  R.forEach(r=>{
+    if(r.id==null||seen.has(r.id)){
+      r.id=Math.max(nRid,...R.map(x=>x.id||0))+1;
+      nRid=r.id+1;
+    }
+    seen.add(r.id);
+    // アイテムIDの重複も修正
+    if(Array.isArray(r.items)){
+      const iSeen=new Set();
+      r.items.forEach(it=>{
+        if(it.id==null||iSeen.has(it.id)){
+          it.id=Math.max(nIid,...r.items.map(x=>x.id||0))+1;
+          nIid=it.id+1;
+        }
+        iSeen.add(it.id);
+        if(it.id>=nIid)nIid=it.id+1;
+      });
+    }
+  });
+  if(R.length) nRid=Math.max(...R.map(r=>r.id||0))+1;
+}
 function fbApplyData(raw){
   try{
     const d = JSON.parse(raw);
@@ -2031,7 +2055,7 @@ function fbApplyData(raw){
         if(!arrays.includes(k)) S[k] = d.S[k];
       });
     }
-    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));}
+    if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
     // gYear/gMonthはFirebaseの値で上書きしない（各端末で独立して管理）
   }catch(e){console.warn('データ適用失敗',e);}
 }
@@ -2062,7 +2086,7 @@ function lsLoad(){
     if(raw){
       const d = JSON.parse(raw);
       if(d.S){Object.assign(S, d.S);}
-      if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));}
+      if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
       // gYear/gMonthはlocalStorageから復元しない（常に現在月を使う）
     }
     // Firebaseからデータを読み込んでからUI更新
@@ -3685,15 +3709,17 @@ function renderList(r){
   const pct=items.length?Math.round(done/items.length*100):0;
   document.getElementById('pf').style.width=pct+'%';
   document.getElementById('ptxt').textContent=done+'/'+items.length;
-  document.getElementById('litems').innerHTML=items.map(it=>`
-    <div class="li${it.done?' done':''}" onclick="openItemMemo(${it.id})">
-      <input type="checkbox" ${it.done?'checked':''} onchange="togItem(${it.id},this.checked)" onclick="event.stopPropagation()" style="margin-top:3px;flex-shrink:0"/>
-      <div style="flex:1;min-width:0">
+  // チェック済みは非表示（DOMから除外してクリック誤爆を防ぐ）
+  const visible=items.filter(i=>!i.done);
+  document.getElementById('litems').innerHTML=visible.map(it=>`
+    <div class="li">
+      <input type="checkbox" ${it.done?'checked':''} onchange="togItem(${it.id},this.checked)" style="margin-top:3px;flex-shrink:0"/>
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="openItemMemo(${it.id})">
         <div class="li-t">${it.text}</div>
         <div class="li-memo">${it.memo?'💬 '+it.memo:'メモを追加…'}</div>
       </div>
       <span class="li-w" style="flex-shrink:0">${it.who==='ig'?'💙':'🌸'} ${it.ts}</span>
-      <button class="li-d" onclick="delItem(${it.id});event.stopPropagation()">×</button>
+      <button class="li-d" onclick="delItem(${it.id})">×</button>
     </div>`).join('');
 }
 function openItemMemo(id){
