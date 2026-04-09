@@ -1221,8 +1221,10 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
       </div>
     </div>
   </div>
-  <div class="fl">感想・おすすめメニュー</div>
-  <textarea class="fi" id="gf-memo" placeholder="おいしかったメニュー、お店の雰囲気など（任意）" rows="2" style="resize:none;line-height:1.5"></textarea>
+  <div class="fl">📝 今日の感想（日記）</div>
+  <textarea class="fi" id="gf-note" placeholder="「ふたりで初めて来た」「誕生日に使った」など…" rows="2" style="resize:none;line-height:1.5"></textarea>
+  <div class="fl">🏪 お店メモ（次に活かす情報）</div>
+  <textarea class="fi" id="gf-memo" placeholder="おすすめメニュー、雰囲気、予約の可否など…" rows="2" style="resize:none;line-height:1.5"></textarea>
   <div class="mbtns"><button class="mcx" onclick="gClose()">キャンセル</button><button id="gf-del-btn" onclick="gDeleteFromModal()" style="display:none;flex:1;padding:12px;border-radius:12px;border:none;background:#fff0f0;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:#cc3333;transition:all .15s">🗑 削除</button><button class="msv" id="gf-save-btn" onclick="gSave()">記録する ✓</button></div>
   <input type="hidden" id="gf-edit-id" value=""/>
 </div></div>
@@ -2134,6 +2136,16 @@ function boot(u){
   ['quote','game','date'].forEach(k=>{if(!Array.isArray(S.spiceLikes[k]))S.spiceLikes[k]=[];});
   // 外食記録由来の投稿をS.postsから除去（過去データのクリーンアップ）
   S.posts=S.posts.filter(p=>!p.text||!p.text.startsWith('🍽'));
+  // 旧データ移行：memo のみのレコードに note/shopMemo を付与
+  S.recs.forEach(r=>{
+    if(r.note===undefined && r.shopMemo===undefined && r.memo){
+      r.note=r.memo;   // 旧memoは日記欄に引き継ぎ
+      r.shopMemo='';   // お店メモは空（ユーザーが編集時に整理）
+    } else {
+      if(r.note===undefined)r.note='';
+      if(r.shopMemo===undefined)r.shopMemo='';
+    }
+  });
   document.getElementById('sel').style.display='none';
   document.getElementById('main').style.cssText='display:flex;flex-direction:column;height:100%;overflow:hidden';
   applyTheme();renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();qInit();spiceLoad();checkinLoadQ();checkinRenderTimeline();checkinRenderTodayEvs();
@@ -4231,7 +4243,19 @@ function gChip(btn,type,val){
   else if(type==='area'){document.querySelectorAll('#gf-area .chip').forEach(b=>{b.classList.remove('on','ig-on');});btn.classList.add('on','ig-on');newGArea=val;}
   else{const isOn=btn.classList.contains('on');document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));if(!isOn){btn.classList.add('on','tk-on');newGGenre=val;}else newGGenre='';}
 }
-function gOpen(){document.getElementById('gf-date').value=new Date().toISOString().slice(0,10);['gf-shop','gf-ig','gf-tk','gf-ig-n','gf-tk-n'].forEach(id=>document.getElementById(id).value='');document.getElementById('gf-hint').classList.remove('on');newGCat='ランチ';newGGenre='';newGArea='三ノ宮';document.querySelectorAll('#gf-cat .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-area .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));document.getElementById('gf-memo').value='';document.getElementById('gf-edit-id').value='';document.getElementById('gf-save-btn').textContent='記録する ✓';document.getElementById('gf-del-btn').style.display='none';document.getElementById('g-ov').classList.add('on');}
+function gOpen(){
+  document.getElementById('gf-date').value=new Date().toISOString().slice(0,10);
+  ['gf-shop','gf-ig','gf-tk','gf-ig-n','gf-tk-n','gf-memo','gf-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('gf-hint').classList.remove('on');
+  newGCat='ランチ';newGGenre='';newGArea='三ノ宮';
+  document.querySelectorAll('#gf-cat .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});
+  document.querySelectorAll('#gf-area .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});
+  document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));
+  document.getElementById('gf-edit-id').value='';
+  document.getElementById('gf-save-btn').textContent='記録する ✓';
+  document.getElementById('gf-del-btn').style.display='none';
+  document.getElementById('g-ov').classList.add('on');
+}
 function gDelete(id){
   const r=S.recs.find(x=>x.id===id);if(!r)return;
   const old=document.getElementById('g-del-confirm');if(old)old.remove();
@@ -4270,7 +4294,11 @@ function gEdit(id){
   document.getElementById('gf-ig-n').value=r.igNote||'';
   document.getElementById('gf-tk').value=r.tkAmt||'';
   document.getElementById('gf-tk-n').value=r.tkNote||'';
-  document.getElementById('gf-memo').value=r.memo||'';
+  // 旧データ（memo のみ）は今日の感想欄に表示し、お店メモは空にして編集を促す
+  const noteEl=document.getElementById('gf-note');
+  const memoEl=document.getElementById('gf-memo');
+  if(noteEl)noteEl.value=r.note||'';
+  if(memoEl)memoEl.value=r.shopMemo!==undefined ? r.shopMemo : (r.note?'' : r.memo||'');
   document.getElementById('gf-hint').classList.remove('on');
   newGArea=r.area||'その他';
   document.querySelectorAll('#gf-area .chip').forEach(b=>{b.classList.remove('on','ig-on');if(b.textContent.trim()===newGArea)b.classList.add('on','ig-on');});
@@ -4287,8 +4315,11 @@ function gSave(){
   const shop=document.getElementById('gf-shop').value.trim();
   if(!shop){alert('お店の名前を入力してください');return;}
   const editId=document.getElementById('gf-edit-id').value;
-  const memo=document.getElementById('gf-memo').value.trim();
-  const recData={shop,date:document.getElementById('gf-date').value,area:newGArea,cat:newGCat,genre:newGGenre||'その他',igAmt:parseInt(document.getElementById('gf-ig').value)||0,igNote:document.getElementById('gf-ig-n').value,tkAmt:parseInt(document.getElementById('gf-tk').value)||0,tkNote:document.getElementById('gf-tk-n').value,memo};
+  const note=document.getElementById('gf-note')?.value.trim()||'';
+  const shopMemo=document.getElementById('gf-memo')?.value.trim()||'';
+  // memo は後方互換のため note+shopMemo を結合して残す
+  const memo=[note,shopMemo].filter(Boolean).join('\n---\n');
+  const recData={shop,date:document.getElementById('gf-date').value,area:newGArea,cat:newGCat,genre:newGGenre||'その他',igAmt:parseInt(document.getElementById('gf-ig').value)||0,igNote:document.getElementById('gf-ig-n').value,tkAmt:parseInt(document.getElementById('gf-tk').value)||0,tkNote:document.getElementById('gf-tk-n').value,memo,note,shopMemo};
   if(editId){
     const idx=S.recs.findIndex(r=>String(r.id)===editId);
     if(idx>=0)S.recs[idx]={...S.recs[idx],...recData};
@@ -4300,19 +4331,22 @@ function gSave(){
   const partner=me==='ig'?'tk':'ig';
   const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
   if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${shop}`);
-  // お店リスト自動登録（新規記録のみ）
+  // お店リスト自動登録（新規のみ・shopMemoのみ引き継ぎ）
   if(!editId){
     if(!S.shopList)S.shopList=[];
     const existing=S.shopList.find(s=>s.name===shop);
     if(!existing){
-      // 新規登録
-      addToShopList(shop,newGArea,newGCat,newGGenre||'その他',memo);
+      addToShopList(shop,newGArea,newGCat,newGGenre||'その他',shopMemo);
       setTimeout(()=>{
         const t=document.createElement('div');
         t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(60,50,40,.88);color:white;border-radius:20px;padding:8px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:500;white-space:nowrap';
         t.textContent=`🏪 「${shop}」をお店リストに追加しました`;
         document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
       },300);
+    } else if(shopMemo && !existing.memo) {
+      // 既存店舗にshopMemoが新規で入力された場合は更新
+      existing.memo=shopMemo;
+      lsSave();
     }
   }
 }
@@ -4386,7 +4420,8 @@ function gRender(){
             ${ts?`<span style="font-size:11px;font-weight:700;color:var(--tk-d)">🌸¥${r.tkAmt.toLocaleString()}</span>${r.tkNote?`<span style="font-size:9px;color:var(--wg)">🏷${r.tkNote}</span>`:''}`:'' }
             ${tot?`<span style="font-size:9px;color:var(--wg);margin-left:auto">計¥${tot.toLocaleString()}</span>`:''}
           </div>`:''}
-          ${r.memo?`<div style="font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4">💬 ${r.memo}</div>`:''}
+          ${r.note?`<div style="font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4">📝 ${r.note}</div>`:''}
+          ${r.shopMemo?`<div style="font-size:10px;color:var(--ig-d);margin-top:2px;line-height:1.4">🏪 ${r.shopMemo}</div>`:(!r.note&&r.memo?`<div style="font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4">💬 ${r.memo}</div>`:'')}
         </div>
         <div style="display:flex;gap:3px;flex-shrink:0;align-self:flex-start">
           <button onclick="gEdit(${r.id})" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:2px 7px;font-size:10px;cursor:pointer;color:var(--wg);font-family:'Noto Sans JP',sans-serif">✏</button>
