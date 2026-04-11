@@ -1364,6 +1364,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 </div></div>
 
 <script>
+(function(){
 // ═══ CONSTANTS ═══
 const CAT={love:{label:'💕 愛情',grad:'linear-gradient(135deg,#f8bbd0,#f48fb1,#ec407a)',bg:'#fce4ec',tc:'#b5495e'},touch:{label:'🤝 スキン',grad:'linear-gradient(135deg,#c8e6c9,#a5d6a7,#66bb6a)',bg:'#e8f5e9',tc:'#3d7a3d'},future:{label:'🌟 未来',grad:'linear-gradient(135deg,#e1bee7,#ce93d8,#ab47bc)',bg:'#f3e5f5',tc:'#6a4fa3'},daily:{label:'☀️ 日常',grad:'linear-gradient(135deg,#ff9a5c,#f97316,#ea580c)',bg:'#fff7ed',tc:'#9a3412'},gap:{label:'💭 すれちがい',grad:'linear-gradient(135deg,#bbdefb,#90caf9,#42a5f5)',bg:'#e3f2fd',tc:'#1565c0'}};
 const GCC={'居酒屋':'#fff3cd','ランチ':'#e8f5e9','ディナー':'#f3e5f5','カフェ':'#fce4ec','カラオケ':'#e3f0fb','その他':'#f5f5f5'};
@@ -5178,6 +5179,7 @@ if(window._bootPending){
   if(ig){ig.onclick=function(){boot('ig');};}
   if(tk){tk.onclick=function(){boot('tk');};}
 })();
+})(); // IIFE end
 </script>
 
 <!-- ドラマ追加モーダル -->
