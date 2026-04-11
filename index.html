@@ -537,8 +537,8 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 <div id="sel" style="position:relative;overflow:hidden">
   <div class="logo-big">🤝 すれちがい研究所</div>
   <div class="logo-sub">飽きる、呆れる、飽きられる。</div>
-  <button class="sel-btn ig" onclick="boot('ig')"><div class="av ig">💙</div><div style="flex:1"><div class="sn ig">出口さん</div><span class="smbti ig">INTJ・恐れ型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--ig-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
-  <button class="sel-btn tk" onclick="boot('tk')"><div class="av tk">🌸</div><div style="flex:1"><div class="sn tk">テケテケさん</div><span class="smbti tk">ENFP・不安型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--tk-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
+  <button class="sel-btn ig" id="sel-btn-ig"><div class="av ig">💙</div><div style="flex:1"><div class="sn ig">出口さん</div><span class="smbti ig">INTJ・恐れ型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--ig-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
+  <button class="sel-btn tk" id="sel-btn-tk"><div class="av tk">🌸</div><div style="flex:1"><div class="sn tk">テケテケさん</div><span class="smbti tk">ENFP・不安型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--tk-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
   <div class="sel-foot" style="margin-top:18px;font-size:10px;color:#c0b0a8;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
     <div style="font-size:9px;color:#d0b8b0;letter-spacing:.08em;opacity:.7">それでも、なぜか続いてる。</div>
     <div style="display:flex;align-items:center;gap:6px">
@@ -5159,6 +5159,21 @@ function switchDrama(pane){
  renderDataPage,buildExportData,
  tbUrl,
 ].forEach(fn=>{ if(typeof fn==='function') window[fn.name]=fn; });
+
+// セレクト画面ボタンのイベントバインド（onclick属性に依存しない）
+document.addEventListener('DOMContentLoaded',()=>{
+  const ig=document.getElementById('sel-btn-ig');
+  const tk=document.getElementById('sel-btn-tk');
+  if(ig)ig.addEventListener('click',()=>boot('ig'));
+  if(tk)tk.addEventListener('click',()=>boot('tk'));
+});
+// DOMContentLoadedが既に発火済みの場合も対応
+if(document.readyState==='interactive'||document.readyState==='complete'){
+  const ig=document.getElementById('sel-btn-ig');
+  const tk=document.getElementById('sel-btn-tk');
+  if(ig)ig.addEventListener('click',()=>boot('ig'));
+  if(tk)tk.addEventListener('click',()=>boot('tk'));
+}
 </script>
 
 <!-- ドラマ追加モーダル -->
