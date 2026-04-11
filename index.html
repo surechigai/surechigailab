@@ -96,7 +96,7 @@ window._sendNotification = async function(toUserId, title, body) {
 };
 
 // ボタンのonclick用プロキシ（本体は後のscriptで定義される）
-function boot(u){ window._bootPending=u; }
+window.boot=function(u){ window._bootPending=u; };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -5166,16 +5166,17 @@ function switchDrama(pane){
 // boot プロキシを本物に置き換え、待機中の呼び出しがあれば実行
 window.boot=boot;
 if(window._bootPending){
-  boot(window._bootPending);
+  const u=window._bootPending;
   window._bootPending=null;
+  boot(u);
 }
 
-// セレクト画面ボタンの念押しバインド
+// セレクト画面ボタンの確実なバインド
 (function(){
   const ig=document.getElementById('sel-btn-ig');
   const tk=document.getElementById('sel-btn-tk');
-  if(ig){ig.onclick=null;ig.addEventListener('click',()=>boot('ig'),{once:false});}
-  if(tk){tk.onclick=null;tk.addEventListener('click',()=>boot('tk'),{once:false});}
+  if(ig){ig.onclick=function(){boot('ig');};}
+  if(tk){tk.onclick=function(){boot('tk');};}
 })();
 </script>
 
