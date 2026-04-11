@@ -69,10 +69,7 @@ async function initNotifications(userId) {
         setTimeout(()=>toast.remove(), 3000);
       }
     });
-  } catch(e) {
-    // ServiceWorker未対応環境・GitHub Pages以外では動作しないため無視
-    if(!e.message?.includes('404')) console.warn('通知初期化失敗:', e);
-  }
+  } catch(e) { if(!String(e).includes('404'))console.warn('通知初期化失敗:', e); }
 }
 
 // 通知を送る（相手のトークンに送信・自分には送らない）
@@ -94,9 +91,6 @@ window._sendNotification = async function(toUserId, title, body) {
     });
   } catch(e) { console.warn('通知送信失敗:', e); }
 };
-
-// ボタンのonclick用プロキシ（本体は後のscriptで定義される）
-window.boot=function(u){ window._bootPending=u; };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -288,7 +282,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .litems{flex:1;padding:8px 12px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .li{background:var(--card);border-radius:12px;border:1.5px solid var(--bd);padding:10px 13px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.04)}
 .li-memo{font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
-.li.done{opacity:.45}
+.li.done{display:none}
 .li input{width:18px;height:18px;accent-color:var(--sage);cursor:pointer;flex-shrink:0}
 .li-t{font-size:13px;flex:1}.li.done .li-t{text-decoration:line-through;color:var(--wg)}
 .li-w{font-size:9px;color:var(--wg);flex-shrink:0}
@@ -540,8 +534,8 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 <div id="sel" style="position:relative;overflow:hidden">
   <div class="logo-big">🤝 すれちがい研究所</div>
   <div class="logo-sub">飽きる、呆れる、飽きられる。</div>
-  <button class="sel-btn ig" id="sel-btn-ig" onclick="boot('ig')"><div class="av ig">💙</div><div style="flex:1"><div class="sn ig">出口さん</div><span class="smbti ig">INTJ・恐れ型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--ig-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
-  <button class="sel-btn tk" id="sel-btn-tk" onclick="boot('tk')"><div class="av tk">🌸</div><div style="flex:1"><div class="sn tk">テケテケさん</div><span class="smbti tk">ENFP・不安型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--tk-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
+  <button class="sel-btn ig" onclick="boot('ig')"><div class="av ig">💙</div><div style="flex:1"><div class="sn ig">出口さん</div><span class="smbti ig">INTJ・恐れ型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--ig-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
+  <button class="sel-btn tk" onclick="boot('tk')"><div class="av tk">🌸</div><div style="flex:1"><div class="sn tk">テケテケさん</div><span class="smbti tk">ENFP・不安型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--tk-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
   <div class="sel-foot" style="margin-top:18px;font-size:10px;color:#c0b0a8;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
     <div style="font-size:9px;color:#d0b8b0;letter-spacing:.08em;opacity:.7">それでも、なぜか続いてる。</div>
     <div style="display:flex;align-items:center;gap:6px">
@@ -563,65 +557,47 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 
     <!-- HOME -->
     <div class="scr on" id="sc-home">
-      <div class="top-hero" id="top-hero" style="padding:6px 14px 5px;flex-shrink:0;display:flex;align-items:center;gap:8px">
-        <div class="top-greeting" id="top-greet" style="font-size:13px;margin:0">おはよう 👋</div>
-        <div style="font-size:10px;color:var(--wg)" id="top-date"></div>
+      <div class="top-hero" id="top-hero">
+        <div class="top-greeting" id="top-greet">おはよう 👋</div>
+        <div class="top-date" id="top-date"></div>
       </div>
-      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px">
+      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:10px">
+      <!-- ① きもちカード（左右配置・コンパクト） -->
+      <div style="margin:6px 12px 8px">
+        <div style="background:var(--card);border-radius:16px;border:1.5px solid var(--bd);overflow:hidden;display:flex;align-items:stretch;box-shadow:var(--shadow-sm)">
 
-      <!-- ① きもちカード（縦幅アップ） -->
-      <div style="margin:6px 12px 0">
-        <div style="background:var(--card);border-radius:16px 16px 0 0;border:1.5px solid var(--bd);border-bottom:none;overflow:hidden;display:flex;align-items:stretch;box-shadow:var(--shadow-sm)">
-          <!-- 左：相手のきもち -->
-          <div style="width:50%;flex-shrink:0;box-sizing:border-box;border-right:1px solid var(--bd);padding:14px 12px;display:flex;align-items:center;gap:10px;overflow:hidden;cursor:pointer" onclick="openPartnerMoodDetail()">
-            <div style="font-size:34px;line-height:1;flex-shrink:0" id="home-p-emoji">—</div>
+          <!-- 左：相手のきもち（幅50%固定）→タップで全文モーダル -->
+          <div style="width:50%;flex-shrink:0;box-sizing:border-box;border-right:1px solid var(--bd);padding:8px 10px;display:flex;align-items:center;justify-content:center;gap:8px;overflow:hidden;cursor:pointer" onclick="openPartnerMoodDetail()">
+            <div style="font-size:30px;line-height:1;flex-shrink:0" id="home-p-emoji">—</div>
             <div style="min-width:0;overflow:hidden;flex:1">
-              <div style="font-size:9px;color:var(--wg);font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-partner-lbl">🌸 テケテケさんの気持ち</div>
-              <div id="home-p-bubble" style="display:none;font-size:12px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-              <div id="home-p-empty" style="font-size:12px;color:#ccc;white-space:nowrap">まだ記録なし</div>
+              <div style="font-size:8px;color:var(--wg);font-weight:500;height:12px;line-height:12px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-partner-lbl">🌸 テケテケさんの気持ち</div>
+              <div id="home-p-bubble" style="display:none;font-size:11px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+              <div id="home-p-empty" style="font-size:11px;color:#ccc;white-space:nowrap">まだ記録なし</div>
             </div>
           </div>
-          <!-- 右：自分のきもち -->
-          <div style="width:50%;flex-shrink:0;box-sizing:border-box;padding:14px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;overflow:hidden" onclick="openMoodModal()">
-            <div style="font-size:34px;line-height:1;flex-shrink:0" id="home-my-emoji-disp">？</div>
+
+          <!-- 右：自分のきもち（幅50%固定）→タップでモーダル入力 -->
+          <div style="width:50%;flex-shrink:0;box-sizing:border-box;padding:8px 10px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;overflow:hidden" onclick="openMoodModal()">
+            <div style="font-size:30px;line-height:1;flex-shrink:0" id="home-my-emoji-disp">？</div>
             <div style="min-width:0;overflow:hidden;flex:1">
-              <div style="font-size:9px;color:var(--wg);font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-my-ask">💙 出口さんの気持ち</div>
+              <div style="font-size:8px;color:var(--wg);font-weight:500;height:12px;line-height:12px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-my-ask">💙 出口さんの気持ち</div>
+              <!-- 送信済み -->
               <div id="home-my-sent" style="display:none">
-                <div id="home-my-bubble" style="display:none;font-size:12px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-                <div id="home-my-label-disp" style="display:none;font-size:12px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+                <div id="home-my-bubble" style="display:none;font-size:11px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+                <div id="home-my-label-disp" style="display:none;font-size:11px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
               </div>
+              <!-- 未入力 -->
               <div id="home-my-prompt">
-                <div style="font-size:12px;color:#ccc;white-space:nowrap">タップして入力</div>
+                <div style="font-size:11px;color:#ccc;white-space:nowrap">タップして入力</div>
               </div>
             </div>
             <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" width="11" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-        </div>
-        <!-- きもちカード直下：記録1行入力バー -->
-        <div id="checkin-wrap" style="background:var(--card);border-radius:0 0 16px 16px;border:1.5px solid var(--bd);border-top:1px solid rgba(155,126,200,.2);box-shadow:var(--shadow-sm)">
-          <!-- 質問文 -->
-          <div style="display:flex;align-items:center;gap:6px;padding:5px 10px 4px 13px">
-            <div id="checkin-q" style="font-size:11px;color:var(--lav);font-weight:500;flex:1;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="checkinUseQ()"></div>
-            <button onclick="checkinLoadQ(true)" id="checkin-refresh-btn" style="background:none;border:none;font-size:12px;cursor:pointer;color:var(--lav);opacity:.6;padding:2px 4px;flex-shrink:0">🔀</button>
-          </div>
-          <!-- 入力バー -->
-          <div style="display:flex;align-items:center;gap:6px;padding:4px 10px 7px 13px">
-            <input type="file" id="checkin-img-input" accept="image/*" style="display:none" onchange="checkinLoadImg(this)"/>
-            <textarea id="checkin-ta" style="flex:1;min-width:0;border:1.5px solid rgba(155,126,200,.15);border-radius:20px;padding:5px 12px;font-size:12px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.4;height:30px;max-height:60px;background:#fafafa;box-sizing:border-box;transition:border-color .18s" placeholder="ひとことでOK…" oninput="this.style.height='30px';this.style.height=Math.min(this.scrollHeight,60)+'px';checkinCharCount(this)" onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='rgba(155,126,200,.15)'"></textarea>
-            <button onclick="saveCheckin()" id="checkin-post-btn" style="border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
-          </div>
-          <div id="checkin-img-preview" style="display:none;margin:0 12px 6px;position:relative">
-            <img id="checkin-img-el" style="max-width:100%;max-height:80px;border-radius:8px;object-fit:cover;display:block"/>
-            <button onclick="checkinRemoveImg()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.5);color:white;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center">✕</button>
-          </div>
-          <div id="checkin-mood-row" style="display:none"></div>
-          <span id="checkin-char" style="display:none"></span>
+
         </div>
       </div>
 
-      <!-- ② ネタ帳（常時展開） -->
+      <!-- ② ネタ帳 -->
       <div class="spice-wrap">
         <div class="spice-hdr" style="background:linear-gradient(135deg,#d5f0e8,#c8e8f5)">
           <div class="spice-title" style="color:#2a6050">📒 ネタ帳</div>
@@ -640,12 +616,43 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
           <div class="spice-title" style="color:#8a4020">📅 これからの予定</div>
           <svg viewBox="0 0 24 24" fill="none" stroke="#8a4020" stroke-width="2" width="13" opacity=".5"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-        <div style="padding:6px 13px 8px;min-height:44px;cursor:pointer" onclick="go('note');switchNote('cal')">
+        <div style="padding:6px 13px 8px;min-height:56px;cursor:pointer" onclick="go('note');switchNote('cal')">
           <div id="home-evs-mini"></div>
         </div>
       </div>
 
-      <!-- 今日の予定バナー -->
+      <!-- ③.5 記録 -->
+      <div class="spice-wrap" id="checkin-wrap">
+        <div class="spice-hdr" style="background:linear-gradient(135deg,#ede0f7,#d5e8f7)">
+          <div class="spice-title" style="color:#4a3060">📝 記録</div>
+          <button onclick="checkinLoadQ(true)" style="background:rgba(255,255,255,.5);border:none;border-radius:8px;padding:4px 10px;font-size:10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:#4a3060;transition:all .15s" id="checkin-refresh-btn">🔀 別の質問</button>
+        </div>
+        <div style="padding:8px 13px 4px">
+          <!-- 質問文 -->
+          <div id="checkin-q" style="font-size:12px;color:var(--lav);font-weight:500;margin-bottom:6px;line-height:1.5"></div>
+          <!-- 入力エリア（アイコンなし） -->
+          <textarea id="checkin-ta" style="width:100%;border:1.5px solid rgba(155,126,200,.2);border-radius:10px;padding:8px 10px;font-size:13px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.6;min-height:44px;background:var(--card);box-sizing:border-box;transition:border-color .15s" placeholder="ひとことでOK" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';checkinCharCount(this)" onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='rgba(155,126,200,.2)'"></textarea>
+          <!-- 画像プレビュー -->
+          <div id="checkin-img-preview" style="display:none;margin:5px 0;position:relative">
+            <img id="checkin-img-el" style="max-width:100%;max-height:140px;border-radius:8px;object-fit:cover;display:block"/>
+            <button onclick="checkinRemoveImg()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.5);color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+          </div>
+          <!-- ボトムバー -->
+          <div style="display:flex;align-items:center;gap:6px;padding:5px 0 6px">
+            <input type="file" id="checkin-img-input" accept="image/*" style="display:none" onchange="checkinLoadImg(this)"/>
+            <button onclick="document.getElementById('checkin-img-input').click()" style="background:none;border:none;cursor:pointer;padding:2px 4px;display:flex;align-items:center;gap:2px;color:var(--wg);font-size:10px;font-family:'Noto Sans JP',sans-serif;opacity:.7">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>写真
+            </button>
+            <span style="flex:1"></span>
+            <span id="checkin-char" style="font-size:9px;color:#ccc">0</span>
+            <button onclick="saveCheckin()" id="checkin-post-btn" style="border:none;border-radius:12px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Zen Maru Gothic',serif;color:white;background:linear-gradient(135deg,var(--lav),var(--ig));transition:all .18s;flex-shrink:0">記録 ✓</button>
+          </div>
+        </div>
+        <!-- きもちボタン行 -->
+        <div id="checkin-mood-row" style="display:flex;gap:5px;flex-wrap:wrap;padding:4px 13px 8px"></div>
+      </div>
+
+      <!-- 今日の予定バナー（ダイアリーエリア直下） -->
       <div id="checkin-today-evs" style="margin:0 12px 8px;display:none">
         <div style="background:linear-gradient(135deg,#ffecd5,#ffd5e8);border-radius:14px;padding:9px 13px">
           <div style="font-size:10px;font-weight:700;color:#8a4020;margin-bottom:6px;letter-spacing:.04em">📅 今日の予定</div>
@@ -653,18 +660,20 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
         </div>
       </div>
 
-      <!-- ⑤ スパイス（常時展開・折りたたみなし） -->
+
+
+      <!-- ④ すれちがい解消スパイス -->
       <div class="spice-wrap">
         <div class="spice-hdr">
           <div class="spice-title">🧪 すれちがい解消スパイス</div>
-          <button onclick="spiceLoad()" class="spice-reload" id="spice-reload">🔀 シャッフル</button>
+          <button class="spice-reload" id="spice-reload" onclick="spiceLoad()">🔀 シャッフル</button>
         </div>
         <div class="spice-tabs">
           <button class="spice-tab on" id="stab-quote" onclick="spiceTab('quote')">💡 小ネタ</button>
           <button class="spice-tab" id="stab-game" onclick="spiceTab('game')">🎮 ゲーム</button>
           <button class="spice-tab" id="stab-date" onclick="spiceTab('date')">🌈 デート案</button>
         </div>
-        <div class="spice-body" id="spice-body" style="padding:9px 14px 15px">
+        <div class="spice-body" id="spice-body">
           <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--lav)" id="spice-ld"><span class="spin">✦</span> 生成中...</div>
           <div id="spice-content" style="display:none">
             <div class="spice-text" id="spice-text"></div>
@@ -672,21 +681,22 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
               <div style="display:flex;align-items:center;gap:6px">
                 <div class="spice-label" id="spice-label"></div>
               </div>
-              <button id="spice-like-btn" onclick="spiceLike()" style="display:flex;align-items:center;background:none;border:1.5px solid var(--bd);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--wg);transition:all .2s"><span id="spice-like-icon">👍</span></button>
+              <button id="spice-like-btn" onclick="spiceLike()" style="display:flex;align-items:center;background:none;border:1.5px solid var(--bd);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--wg);transition:all .2s">
+                <span id="spice-like-icon">👍</span>
+              </button>
             </div>
             <div class="spice-learn" id="spice-learn"></div>
           </div>
         </div>
       </div>
-
       </div><!-- /home-scroll-wrap -->
     </div>
 
     <!-- TALK -->
     <div class="scr" id="sc-t">
-      <div id="talk-list" style="flex:1;overflow-y:auto;box-sizing:border-box;min-width:0">
-        <div style="padding:12px 14px 8px;border-bottom:1px solid var(--bd)">
-          <div style="font-family:'Zen Maru Gothic',serif;font-size:16px;font-weight:700">💬 トーク</div>
+      <div id="talk-list" style="padding:6px 12px 10px;flex:1;overflow-y:auto;box-sizing:border-box;min-width:0">
+        <div style="margin-bottom:10px">
+          <div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700">💬 トーク</div>
         </div>
         <div id="rooms"></div>
       </div>
@@ -1227,10 +1237,8 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
       </div>
     </div>
   </div>
-  <div class="fl">📝 今日の感想（日記）</div>
-  <textarea class="fi" id="gf-note" placeholder="「ふたりで初めて来た」「誕生日に使った」など…" rows="2" style="resize:none;line-height:1.5"></textarea>
-  <div class="fl">🏪 お店メモ（次に活かす情報）</div>
-  <textarea class="fi" id="gf-memo" placeholder="おすすめメニュー、雰囲気、予約の可否など…" rows="2" style="resize:none;line-height:1.5"></textarea>
+  <div class="fl">感想・おすすめメニュー</div>
+  <textarea class="fi" id="gf-memo" placeholder="おいしかったメニュー、お店の雰囲気など（任意）" rows="2" style="resize:none;line-height:1.5"></textarea>
   <div class="mbtns"><button class="mcx" onclick="gClose()">キャンセル</button><button id="gf-del-btn" onclick="gDeleteFromModal()" style="display:none;flex:1;padding:12px;border-radius:12px;border:none;background:#fff0f0;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:#cc3333;transition:all .15s">🗑 削除</button><button class="msv" id="gf-save-btn" onclick="gSave()">記録する ✓</button></div>
   <input type="hidden" id="gf-edit-id" value=""/>
 </div></div>
@@ -1364,7 +1372,6 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 </div></div>
 
 <script>
-(function(){
 // ═══ CONSTANTS ═══
 const CAT={love:{label:'💕 愛情',grad:'linear-gradient(135deg,#f8bbd0,#f48fb1,#ec407a)',bg:'#fce4ec',tc:'#b5495e'},touch:{label:'🤝 スキン',grad:'linear-gradient(135deg,#c8e6c9,#a5d6a7,#66bb6a)',bg:'#e8f5e9',tc:'#3d7a3d'},future:{label:'🌟 未来',grad:'linear-gradient(135deg,#e1bee7,#ce93d8,#ab47bc)',bg:'#f3e5f5',tc:'#6a4fa3'},daily:{label:'☀️ 日常',grad:'linear-gradient(135deg,#ff9a5c,#f97316,#ea580c)',bg:'#fff7ed',tc:'#9a3412'},gap:{label:'💭 すれちがい',grad:'linear-gradient(135deg,#bbdefb,#90caf9,#42a5f5)',bg:'#e3f2fd',tc:'#1565c0'}};
 const GCC={'居酒屋':'#fff3cd','ランチ':'#e8f5e9','ディナー':'#f3e5f5','カフェ':'#fce4ec','カラオケ':'#e3f0fb','その他':'#f5f5f5'};
@@ -2068,7 +2075,7 @@ function lsLoad(){
       if(window._fbSave && window._fbListen){
         clearInterval(fbWait);
         // Firebaseから最新データを一度読み込む
-        if(!_db){console.warn('Firebase DB未初期化');return;}
+        if(!_db){console.warn('Firebase DB未初期化');clearInterval(fbWait);return;}
         _db.ref(_DB_PATH).once('value').then(snap=>{
           const val = snap.val();
           if(val){
@@ -2144,16 +2151,6 @@ function boot(u){
   ['quote','game','date'].forEach(k=>{if(!Array.isArray(S.spiceLikes[k]))S.spiceLikes[k]=[];});
   // 外食記録由来の投稿をS.postsから除去（過去データのクリーンアップ）
   S.posts=S.posts.filter(p=>!p.text||!p.text.startsWith('🍽'));
-  // 旧データ移行：memo のみのレコードに note/shopMemo を付与
-  S.recs.forEach(r=>{
-    if(r.note===undefined && r.shopMemo===undefined && r.memo){
-      r.note=r.memo;   // 旧memoは日記欄に引き継ぎ
-      r.shopMemo='';   // お店メモは空（ユーザーが編集時に整理）
-    } else {
-      if(r.note===undefined)r.note='';
-      if(r.shopMemo===undefined)r.shopMemo='';
-    }
-  });
   document.getElementById('sel').style.display='none';
   document.getElementById('main').style.cssText='display:flex;flex-direction:column;height:100%;overflow:hidden';
   applyTheme();renderRooms();gRender();calRender();updateCnt();updateTop();agendaRender();qInit();spiceLoad();checkinLoadQ();checkinRenderTimeline();checkinRenderTodayEvs();
@@ -2268,19 +2265,91 @@ function openAddDrama(){
 }
 function closeDramaAdd(){hideDramaSuggest();document.getElementById('drama-add-ov').classList.remove('on');}
 
-// ── AI課金なし版：タイトル入力のみ、詳細は手動入力 ──
 let fmSuggestTimer=null;
 function fmTitleInput(val){
-  // サジェストなし（手動入力のみ）
-  const s=document.getElementById('fm-suggest');if(s)s.style.display='none';
-  // 詳細欄を自動表示
-  const df=document.getElementById('fm-detail-fields');
-  if(df&&val.trim())df.style.display='block';
+  hideFmSuggest();
+  clearTimeout(fmSuggestTimer);
+  if(!val.trim())return;
+  fmSuggestTimer=setTimeout(()=>fetchDramaSuggest(val.trim(),'fm-suggest','selectFmSuggest'),600);
 }
-function hideFmSuggest(){const s=document.getElementById('fm-suggest');if(s)s.style.display='none';}
-function selectFmSuggest(title){}
+function hideFmSuggest(){
+  const s=document.getElementById('fm-suggest');
+  if(s)s.style.display='none';
+}
+function selectFmSuggest(title){
+  const inp=document.getElementById('fm-title-inp');
+  if(inp)inp.value=title;
+  hideFmSuggest();
+  clearTimeout(fmSuggestTimer);
+  fmAutoFill(title);
+}
+
 let fmAutoFillData={};
-function fmAutoFill(title){}
+async function fmAutoFill(title){
+  fmAutoFillData={};
+  const st=document.getElementById('fm-info-status');
+  const stTxt=document.getElementById('fm-info-status-txt');
+  const infoArea=document.getElementById('fm-info-area');
+  const infoHtml=document.getElementById('fm-info-html');
+  if(st)st.style.display='flex';
+  if(stTxt)stTxt.textContent='「'+title+'」の情報を検索中…';
+  if(infoArea)infoArea.style.display='none';
+  try{
+    const prompt=`web_searchツールで「${title} 映画 OR ドラマ 出演 あらすじ」「${title} 配信 Netflix OR Disney OR Prime OR TVer」を検索し、以下のJSON形式のみで回答してください（前後に何も付けない）:
+{"ch":"放送局または公開年（例：2022年 / フジテレビ月曜21時）","stream":"配信サービス（例：Netflix / Prime Video / TVer）","cast":"主要キャスト3〜5名","memo":"ネタバレなしのあらすじ1〜2文","type":"movie か drama か anime のいずれか"}`;
+    const res=await Promise.race([
+      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',max_tokens:800,
+          tools:[{type:'web_search_20250305',name:'web_search'}],
+          tool_choice:{type:'any'},
+          messages:[{role:'user',content:prompt}]
+        })
+      }),
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
+    ]);
+    const data=await res.json();
+    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+    const match=txt.match(/\{[\s\S]*?\}/);
+    if(match){
+      const p=JSON.parse(match[0]);
+      fmAutoFillData=p;
+      // 種別チップを自動選択
+      if(p.type){
+        const typeMap={movie:'movie',drama:'drama',anime:'drama'};
+        const typeVal=typeMap[p.type]||'movie';
+        filmarkTypeSel=typeVal;
+        document.querySelectorAll('#fm-type-chips .chip').forEach(b=>{
+          b.classList.remove('on','lav-on');
+          if(b.getAttribute('onclick').includes("'"+typeVal+"'"))b.classList.add('on','lav-on');
+        });
+      }
+      // 詳細欄に反映
+      if(p.ch)document.getElementById('fm-ch-inp').value=p.ch;
+      if(p.stream)document.getElementById('fm-stream-inp').value=p.stream;
+      if(p.cast)document.getElementById('fm-cast-inp').value=p.cast;
+      // プレビュー表示
+      if(infoHtml){
+        let rows='';
+        if(p.ch)rows+=`<div><span style="color:var(--wg);margin-right:4px">📺</span>${p.ch}</div>`;
+        if(p.stream)rows+=`<div><span style="color:var(--wg);margin-right:4px">▶</span>${p.stream}</div>`;
+        if(p.cast)rows+=`<div><span style="color:var(--wg);margin-right:4px">👤</span>${p.cast}</div>`;
+        if(p.memo)rows+=`<div style="margin-top:4px;color:var(--wg);font-size:11px;line-height:1.6">${p.memo}</div>`;
+        infoHtml.innerHTML=rows;
+      }
+      if(infoArea)infoArea.style.display='block';
+      if(stTxt)stTxt.textContent='✓ 情報を取得しました';
+      setTimeout(()=>{if(st)st.style.display='none';},2000);
+    } else {
+      if(stTxt)stTxt.textContent='情報が見つかりませんでした';
+      setTimeout(()=>{if(st)st.style.display='none';},2000);
+    }
+  }catch(e){
+    if(stTxt)stTxt.textContent='取得できませんでした';
+    setTimeout(()=>{if(st)st.style.display='none';},2000);
+  }
+}
 
 function toggleFmInfoEdit(){
   const fields=document.getElementById('fm-detail-fields');
@@ -2290,30 +2359,119 @@ function toggleFmInfoEdit(){
   fields.style.display=show?'block':'none';
   if(btn)btn.textContent=show?'▲ 閉じる':'✏ 編集';
 }
-function hideDramaSuggest(){const s=document.getElementById('da-suggest');if(s)s.style.display='none';}
+function hideDramaSuggest(){
+  const s=document.getElementById('da-suggest');
+  if(s)s.style.display='none';
+}
 function selectDramaSuggest(title){
   const inp=document.getElementById('da-title');
   if(inp)inp.value=title;
   hideDramaSuggest();
-  // 詳細欄を表示
-  const fields=document.getElementById('da-fields');
-  if(fields)fields.style.display='block';
+  clearTimeout(dramaTitleTimer);
+  clearTimeout(dramaSuggestTimer);
+  dramaAutoFill();
 }
 function dramaTitleInput(val){
   hideDramaSuggest();
-  // タイトル入力したら詳細欄を表示
-  const fields=document.getElementById('da-fields');
-  if(fields&&val.trim())fields.style.display='block';
+  clearTimeout(dramaTitleTimer);
+  clearTimeout(dramaSuggestTimer);
+  if(!val.trim())return;
+  dramaSuggestTimer=setTimeout(()=>fetchDramaSuggest(val.trim(),'da-suggest',null),600);
 }
+
 async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
-  // AI不使用のため何もしない
+  const suggest=document.getElementById(suggestElId);
+  if(!suggest)return;
+  suggest.style.display='block';
+  suggest.innerHTML='<div style="padding:10px 12px;font-size:11px;color:var(--lav);display:flex;align-items:center;gap:5px"><span class="spin">✦</span>候補を検索中…</div>';
+  try{
+    const prompt=`web_searchツールを使って「${val}」を検索してください（複数クエリ可：「${val} ドラマ」「${val} 映画」「${val} anime」など）。
+検索結果をもとに、以下の条件で「${val}」に部分一致するタイトルを最大6件選んでください。
+対象：
+- 日本ドラマ・映画・アニメ（年代問わず過去作含む）
+- 韓国ドラマ・映画
+- 洋ドラ・洋画
+- Netflix / Disney+ / Prime Video / Apple TV+ / Hulu / WOWOW 等の配信オリジナル作品
+- 2025〜2026年の最新作も積極的に含める
+出力はJSONのみ（前後に何も付けない）: {"titles":["タイトル1","タイトル2",...]}`;
+    const res=await Promise.race([
+      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:400,
+          tools:[{type:'web_search_20250305',name:'web_search'}],
+          tool_choice:{type:'any'},
+          messages:[{role:'user',content:prompt}]
+        })
+      }),
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),12000))
+    ]);
+    const data=await res.json();
+    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+    const match=txt.match(/\{[\s\S]*?\}/);
+    if(match){
+      const titles=(JSON.parse(match[0]).titles||[]).filter(Boolean);
+      if(!titles.length){suggest.style.display='none';return;}
+      const fn=onSelect||'selectDramaSuggest';
+      suggest.innerHTML=titles.map((t,i)=>{
+        const esc=t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        return `<div onclick="${fn}('${esc}')"
+             style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px;transition:background .1s"
+             onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''">
+          <span style="font-size:14px">📺</span><span>${t}</span>
+        </div>`;
+      }).join('');
+    } else {suggest.style.display='none';}
+  }catch(e){suggest.style.display='none';}
 }
+
 async function dramaAutoFill(){
-  // AI不使用：手動入力のみ
+  const title=document.getElementById('da-title')?.value.trim();
+  if(!title)return;
+  const st=document.getElementById('da-status');
+  const stTxt=document.getElementById('da-status-txt');
   const fields=document.getElementById('da-fields');
-  if(fields)fields.style.display='block';
   const btn=document.getElementById('da-search-btn');
-  if(btn){btn.style.display='none';}
+  if(st)st.style.display='flex';
+  if(stTxt)stTxt.textContent='「'+title+'」を検索中…';
+  if(btn){btn.disabled=true;btn.style.opacity='.5';}
+  try{
+    const prompt=`web_searchツールで「${title} ドラマ 放送局 何話 2025」「${title} 配信 TVer FOD」「${title} キャスト 出演者」をそれぞれ検索してから、以下のJSON形式のみで回答してください（前後に何も付けない）:\n{"ch":"放送局と曜日時間（例：フジテレビ 月曜21時）","eps":全話数の数値（不明は0）,"stream":"配信サービスと条件（例：TVer最新話無料／FOD見逃し／Netflix全話）","cast":"主要キャスト3〜5名（例：竹野内豊、石原さとみ、松坂桃李）","memo":"ネタバレなしのあらすじ1〜2文"}`;
+    const res=await Promise.race([
+      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:800,
+          tools:[{type:'web_search_20250305',name:'web_search'}],
+          tool_choice:{type:'any'},
+          messages:[{role:'user',content:prompt}]
+        })
+      }),
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
+    ]);
+    const data=await res.json();
+    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+    const match=txt.match(/\{[\s\S]*?\}/);
+    if(match){
+      const p=JSON.parse(match[0]);
+      if(p.ch)document.getElementById('da-ch').value=p.ch;
+      if(p.eps)document.getElementById('da-eps').value=p.eps;
+      if(p.stream)document.getElementById('da-stream').value=p.stream;
+      if(p.cast)document.getElementById('da-cast').value=p.cast;
+      if(p.memo)document.getElementById('da-memo').value=p.memo;
+      if(stTxt)stTxt.textContent='✓ 取得完了（内容を確認してね）';
+    } else {
+      if(stTxt)stTxt.textContent='情報が見つかりませんでした。手入力してください';
+    }
+  }catch(e){
+    if(stTxt)stTxt.textContent='取得できませんでした。手入力してください';
+  }
+  if(fields)fields.style.display='block';
+  if(btn){btn.disabled=false;btn.style.opacity='1';}
 }
 
 function openDramaEdit(id){
@@ -2944,15 +3102,12 @@ function agendaRender(){
     list.innerHTML='<div style="font-size:12px;color:#ccc;padding:7px 0;text-align:center">まだ何もありません</div>';
     return;
   }
-  list.innerHTML=[...S.agenda].reverse().map((a,i)=>{
-    const realIdx=S.agenda.length-1-i;
-    return `
+  list.innerHTML=S.agenda.map((a,i)=>`
     <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--bd)">
       <span style="font-size:12px;flex-shrink:0">${a.who==='ig'?'💙':'🌸'}</span>
       <span style="font-size:12px;font-weight:500;flex:1;line-height:1.4;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.text}</span>
-      <button onclick="agendaDone(${realIdx})" style="border:none;background:none;cursor:pointer;font-size:14px;color:#ddd;padding:1px 0;flex-shrink:0;line-height:1;transition:color .15s" onmouseover="this.style.color='var(--tk)'" onmouseout="this.style.color='#ddd'">×</button>
-    </div>`;
-  }).join('');
+      <button onclick="agendaDone(${i})" style="border:none;background:none;cursor:pointer;font-size:14px;color:#ddd;padding:1px 0;flex-shrink:0;line-height:1;transition:color .15s" onmouseover="this.style.color='var(--tk)'" onmouseout="this.style.color='#ddd'">×</button>
+    </div>`).join('');
 }
 function agendaAdd(){
   const inp=document.getElementById('agenda-inp');
@@ -3432,7 +3587,7 @@ function openRoom(id){
   ['pane-free','pane-memo','pane-list'].forEach(id=>document.getElementById(id).style.display='none');
   if(r.fmt==='free'){document.getElementById('pane-free').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';renderMsgs(r);}
   else if(r.fmt==='memo'){document.getElementById('pane-memo').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';document.getElementById('memo-ed').innerText=r.memo||'';}
-  else{document.getElementById('pane-list').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';document.getElementById('cv-act').innerHTML=`<button class="cv-abt" onclick="showDoneItems()" style="margin-right:4px">完了済みを見る</button><button class="cv-abt" onclick="clearDone()">削除</button>`;renderList(r);}
+  else{document.getElementById('pane-list').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';document.getElementById('cv-act').innerHTML=`<button class="cv-abt" onclick="clearDone()">完了済みを削除</button>`;renderList(r);}
 }
 function closeChat(){
   // 全paneを非表示
@@ -3461,7 +3616,7 @@ function renderMsgs(r){
     g.msgs.forEach((m,i)=>{
       const isLast=i===g.msgs.length-1;let rm='';
       if(mine&&isLast){rm=m.read?`<span class="rdmk" style="color:var(--${me}-d)">✓✓</span>`:`<span class="rdmk" style="color:#ccc">✓</span>`;}
-      const onCtx=`oncontextmenu="showCtx(event,${m.id},${mine})" ontouchstart="startLong(event,${m.id},${mine})" ontouchend="clearLong()"`;
+      const onCtx=`oncontextmenu="showCtx(event,${m.id},${mine})" ontouchstart="startLong(event,${m.id},${mine})" ontouchend="clearLong()"` ;
       const content=m.img
         ?`<img src="${m.img}" style="max-width:200px;max-height:200px;border-radius:10px;display:block;cursor:pointer" onclick="this.style.maxWidth=this.style.maxWidth==='100%'?'200px':'100%'" />`
         :m.text;
@@ -3498,7 +3653,7 @@ function sendImage(input){
   input.value='';
 }
 let longTimer=null;
-function showCtx(e,mid,isMine){e.preventDefault();ctxMsgId=mid;const cm=document.getElementById('ctx-menu');cm.classList.add('on');cm.style.left=Math.min(e.clientX,window.innerWidth-160)+'px';cm.style.top=Math.min(e.clientY,window.innerHeight-100)+'px';document.getElementById('ctx-del').style.display=isMine?'flex':'none';}
+function showCtx(e,mid,isMine){e.preventDefault();ctxMsgId=mid;const cm=document.getElementById('ctx-menu');cm.classList.add('on');cm.style.left=Math.min(e.clientX,window.innerWidth-160)+'px';cm.style.top=Math.min(e.clientY,window.innerHeight-100)+'px';const del=document.getElementById('ctx-del');if(del)del.style.display=isMine?'flex':'none';}
 function startLong(e,mid,isMine){longTimer=setTimeout(()=>{const t=e.touches[0];showCtx({preventDefault:()=>{},clientX:t.clientX,clientY:t.clientY},mid,isMine);},500);}
 function clearLong(){clearTimeout(longTimer);}
 function hideCtx(){document.getElementById('ctx-menu').classList.remove('on');ctxMsgId=null;}
@@ -3530,45 +3685,24 @@ function saveMemo(){
 }
 function renderList(r){
   const items=r.items||[];
-  const all=items.length;
   const done=items.filter(i=>i.done).length;
-  const pct=all?Math.round(done/all*100):0;
+  const pct=items.length?Math.round(done/items.length*100):0;
   document.getElementById('pf').style.width=pct+'%';
-  document.getElementById('ptxt').textContent=done+'/'+all;
-  // チェック済みはDOMから除外（クリック誤爆防止）
-  const el=document.getElementById('litems');
-  el.innerHTML='';
-  items.forEach((it,idx)=>{
-    if(it.done)return; // 完了済みは描画しない
-    const div=document.createElement('div');
-    div.className='li';
-    div.innerHTML=`
-      <input type="checkbox" style="margin-top:3px;flex-shrink:0"/>
-      <div style="flex:1;min-width:0;cursor:pointer">
+  document.getElementById('ptxt').textContent=done+'/'+items.length;
+  document.getElementById('litems').innerHTML=items.map(it=>`
+    <div class="li${it.done?' done':''}" onclick="openItemMemo(${it.id})">
+      <input type="checkbox" ${it.done?'checked':''} onchange="togItem(${it.id},this.checked)" onclick="event.stopPropagation()" style="margin-top:3px;flex-shrink:0"/>
+      <div style="flex:1;min-width:0">
         <div class="li-t">${it.text}</div>
-        <div class="li-memo">${it.memo?'💬 '+it.memo:'タップでメモ追加…'}</div>
+        <div class="li-memo">${it.memo?'💬 '+it.memo:'メモを追加…'}</div>
       </div>
       <span class="li-w" style="flex-shrink:0">${it.who==='ig'?'💙':'🌸'} ${it.ts}</span>
-      <button class="li-d">×</button>`;
-    // イベントをJSで直接バインド（インデックスで操作）
-    div.querySelector('input').addEventListener('change',e=>{
-      const r2=R.find(x=>x.id===curId);if(!r2)return;
-      r2.items[idx].done=e.target.checked;
-      renderList(r2);renderRooms();lsSave();
-    });
-    div.querySelector('div[style*="cursor"]').addEventListener('click',()=>openItemMemo(idx));
-    div.querySelector('.li-d').addEventListener('click',e=>{
-      e.stopPropagation();
-      const r2=R.find(x=>x.id===curId);if(!r2)return;
-      r2.items.splice(idx,1);
-      renderList(r2);renderRooms();lsSave();
-    });
-    el.appendChild(div);
-  });
+      <button class="li-d" onclick="delItem(${it.id});event.stopPropagation()">×</button>
+    </div>`).join('');
 }
-function openItemMemo(idx){
+function openItemMemo(id){
   const r=R.find(x=>x.id===curId);if(!r)return;
-  const it=r.items[idx];if(!it)return;
+  const it=r.items.find(i=>i.id===id);if(!it)return;
   const old=document.getElementById('item-memo-ui');if(old)old.remove();
   const ui=document.createElement('div');
   ui.id='item-memo-ui';
@@ -3579,182 +3713,25 @@ function openItemMemo(idx){
       <div style="font-size:10px;color:var(--wg);text-align:center;margin-bottom:12px">${it.who==='ig'?'💙 出口さん':'🌸 テケテケさん'} · ${it.ts}</div>
       <textarea id="item-memo-inp" placeholder="メモを入力…" style="width:100%;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;padding:10px 13px;font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;background:#fafafa;resize:none;min-height:80px;box-sizing:border-box;line-height:1.5">${it.memo||''}</textarea>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button id="item-memo-cancel" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
-        <button id="item-memo-save" style="flex:1;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#b8d9f8,#8ec4f0);cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:700;color:var(--ig-d)">保存</button>
+        <button onclick="document.getElementById('item-memo-ui').remove()" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
+        <button onclick="saveItemMemo(${id})" style="flex:1;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#b8d9f8,#8ec4f0);cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:700;color:var(--ig-d)">保存</button>
       </div>
     </div>`;
   ui.addEventListener('click',e=>{if(e.target===ui)ui.remove();});
-  ui.querySelector('#item-memo-cancel').addEventListener('click',()=>ui.remove());
-  ui.querySelector('#item-memo-save').addEventListener('click',()=>{
-    const r2=R.find(x=>x.id===curId);if(!r2)return;
-    r2.items[idx].memo=document.getElementById('item-memo-inp')?.value.trim()||'';
-    ui.remove();renderList(r2);lsSave();
-  });
   document.body.appendChild(ui);
   setTimeout(()=>document.getElementById('item-memo-inp')?.focus(),100);
 }
-function saveItemMemo(id){} // 後方互換のため残す（未使用）
+function saveItemMemo(id){
+  const r=R.find(x=>x.id===curId);if(!r)return;
+  const it=r.items.find(i=>i.id===id);if(!it)return;
+  it.memo=document.getElementById('item-memo-inp')?.value.trim()||'';
+  document.getElementById('item-memo-ui')?.remove();
+  renderList(r);lsSave();
+}
 function togItem(id,done){const r=R.find(x=>x.id===curId);if(!r)return;const it=r.items.find(i=>i.id===id);if(it){it.done=done;renderList(r);renderRooms();lsSave();}}
 function delItem(id){const r=R.find(x=>x.id===curId);if(!r)return;r.items=r.items.filter(i=>i.id!==id);renderList(r);renderRooms();lsSave();}
-function addItem(){
-  const inp=document.getElementById('linp');
-  const v=inp.value.trim();if(!v)return;
-  const r=R.find(x=>x.id===curId);if(!r)return;
-  const now=new Date();
-  const ts=(now.getMonth()+1)+'/'+now.getDate();
-  r.items.push({id:nIid++,text:v,done:false,who:me,ts});
-  inp.value='';renderList(r);renderRooms();lsSave();
-}
-function showDoneItems(){
-  const r=R.find(x=>x.id===curId);if(!r)return;
-  const done=r.items.filter(i=>i.done);
-  const old=document.getElementById('done-view-ui');if(old)old.remove();
-  const ui=document.createElement('div');
-  ui.id='done-view-ui';
-  ui.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:flex;align-items:flex-end;justify-content:center';
-
-  function buildContent(){
-    const r2=R.find(x=>x.id===curId);if(!r2)return;
-    const doneItems=r2.items.filter(i=>i.done);
-    const inner=ui.querySelector('#done-view-inner');
-    if(!doneItems.length){
-      inner.innerHTML=`<div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700;margin-bottom:16px">完了済み</div>
-        <div style="text-align:center;padding:20px 0;font-size:13px;color:#ccc">完了済みのアイテムはありません</div>
-        <button onclick="document.getElementById('done-view-ui').remove()" style="width:100%;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg);margin-top:8px">閉じる</button>`;
-      return;
-    }
-    const listHtml=doneItems.map((it,i)=>{
-      const realIdx=r2.items.indexOf(it);
-      return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd)">
-        <span style="font-size:14px;color:#aaa;flex-shrink:0">☑</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;color:#888;text-decoration:line-through;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.text}</div>
-          <div style="font-size:9px;color:#bbb;margin-top:1px">${it.who==='ig'?'💙':'🌸'} ${it.ts}</div>
-        </div>
-        <button data-idx="${realIdx}" class="done-uncheck" style="font-size:10px;background:var(--sage-bg);color:var(--sage);border:none;border-radius:8px;padding:3px 8px;cursor:pointer;flex-shrink:0;font-family:'Noto Sans JP',sans-serif">戻す</button>
-        <button data-idx="${realIdx}" class="done-del" style="font-size:10px;background:#fff0f0;color:#cc3333;border:none;border-radius:8px;padding:3px 8px;cursor:pointer;flex-shrink:0;font-family:'Noto Sans JP',sans-serif">削除</button>
-      </div>`;
-    }).join('');
-    inner.innerHTML=`
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700">完了済み（${doneItems.length}件）</div>
-        <button onclick="clearDone();document.getElementById('done-view-ui').remove();" style="font-size:11px;background:#fff0f0;color:#cc3333;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif">全削除</button>
-      </div>
-      <div style="max-height:280px;overflow-y:auto;margin-bottom:12px">${listHtml}</div>
-      <button onclick="document.getElementById('done-view-ui').remove()" style="width:100%;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">閉じる</button>`;
-    // 戻すボタン
-    inner.querySelectorAll('.done-uncheck').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        const idx=parseInt(btn.dataset.idx);
-        const r3=R.find(x=>x.id===curId);if(!r3)return;
-        r3.items[idx].done=false;
-        renderList(r3);renderRooms();lsSave();
-        buildContent();
-      });
-    });
-    // 削除ボタン
-    inner.querySelectorAll('.done-del').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        const idx=parseInt(btn.dataset.idx);
-        const r3=R.find(x=>x.id===curId);if(!r3)return;
-        r3.items.splice(idx,1);
-        renderList(r3);renderRooms();lsSave();
-        buildContent();
-      });
-    });
-  }
-
-  ui.innerHTML=`<div id="done-view-inner" style="background:white;border-radius:22px 22px 0 0;padding:20px 16px max(28px,env(safe-area-inset-bottom));width:100%;max-width:430px;box-sizing:border-box"></div>`;
-  ui.addEventListener('click',e=>{if(e.target===ui)ui.remove();});
-  document.body.appendChild(ui);
-  buildContent();
-}
-function clearDone(){
-  const r=R.find(x=>x.id===curId);if(!r)return;
-  const done=r.items.filter(i=>i.done);
-  if(!done.length){
-    const t=document.createElement('div');
-    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(40,30,28,.88);color:white;padding:9px 20px;border-radius:22px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:500;white-space:nowrap';
-    t.textContent='完了済みのアイテムはありません';
-    document.body.appendChild(t);setTimeout(()=>t.remove(),2000);
-    return;
-  }
-  const old=document.getElementById('done-confirm-ui');if(old)old.remove();
-  const ui=document.createElement('div');
-  ui.id='done-confirm-ui';
-  ui.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:flex;align-items:flex-end;justify-content:center';
-
-  // 削除対象フラグ（デフォルト全選択）
-  const toDelete=new Set(done.map((_,i)=>i));
-
-  const inner=document.createElement('div');
-  inner.style.cssText='background:white;border-radius:22px 22px 0 0;padding:20px 16px max(28px,env(safe-area-inset-bottom));width:100%;max-width:430px;box-sizing:border-box';
-
-  function renderRows(){
-    const listEl=inner.querySelector('#done-list');
-    listEl.innerHTML=done.map((it,i)=>{
-      const checked=toDelete.has(i);
-      return `<div data-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.07);cursor:pointer">
-        <input type="checkbox" ${checked?'checked':''} style="width:17px;height:17px;accent-color:#ff5a5a;flex-shrink:0;cursor:pointer"/>
-        <span style="font-size:13px;flex:1;${checked?'text-decoration:line-through;color:#aaa':''}">${it.text}</span>
-      </div>`;
-    }).join('');
-    // チェックイベント
-    listEl.querySelectorAll('div[data-idx]').forEach(row=>{
-      const idx=parseInt(row.dataset.idx);
-      const cb=row.querySelector('input');
-      const toggle=()=>{
-        if(toDelete.has(idx))toDelete.delete(idx);else toDelete.add(idx);
-        renderRows();updateBtn();
-      };
-      row.addEventListener('click',e=>{if(e.target!==cb)toggle();});
-      cb.addEventListener('change',toggle);
-    });
-  }
-
-  function updateBtn(){
-    const btn=inner.querySelector('#done-delete');
-    const n=toDelete.size;
-    btn.textContent=n?`🗑 ${n}件を削除する`:'削除するものを選んでください';
-    btn.disabled=!n;
-    btn.style.opacity=n?'1':'0.4';
-  }
-
-  inner.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700">完了済み（${done.length}件）</div>
-      <button id="done-toggle-all" style="font-size:11px;background:none;border:1px solid var(--bd);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">全解除</button>
-    </div>
-    <div style="font-size:11px;color:var(--wg);margin-bottom:10px">削除したくないものはチェックを外してください</div>
-    <div id="done-list" style="max-height:220px;overflow-y:auto;margin-bottom:14px;padding:0 2px"></div>
-    <div style="display:flex;gap:8px">
-      <button id="done-cancel" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
-      <button id="done-delete" style="flex:2;padding:11px;border-radius:12px;border:none;background:#ff5a5a;color:white;cursor:pointer;font-size:13px;font-family:'Zen Maru Gothic',serif;font-weight:700">🗑 ${done.length}件を削除する</button>
-    </div>`;
-
-  ui.appendChild(inner);
-  renderRows();
-
-  // 全選択／全解除トグル
-  inner.querySelector('#done-toggle-all').addEventListener('click',()=>{
-    if(toDelete.size===done.length){toDelete.clear();}
-    else{done.forEach((_,i)=>toDelete.add(i));}
-    inner.querySelector('#done-toggle-all').textContent=toDelete.size===done.length?'全解除':'全選択';
-    renderRows();updateBtn();
-  });
-
-  inner.querySelector('#done-cancel').addEventListener('click',()=>ui.remove());
-  inner.querySelector('#done-delete').addEventListener('click',()=>{
-    if(!toDelete.size)return;
-    const r2=R.find(x=>x.id===curId);if(!r2)return;
-    // toDeleteはdone配列のインデックス→元itemsの参照で削除
-    const toRemove=new Set(done.filter((_,i)=>toDelete.has(i)).map(it=>it));
-    r2.items=r2.items.filter(it=>!toRemove.has(it));
-    ui.remove();renderList(r2);renderRooms();lsSave();
-  });
-  ui.addEventListener('click',e=>{if(e.target===ui)ui.remove();});
-  document.body.appendChild(ui);
-}
+function addItem(){const inp=document.getElementById('linp');const v=inp.value.trim();if(!v)return;const r=R.find(x=>x.id===curId);if(!r)return;const _now=new Date();const _ts=(_now.getMonth()+1)+'/'+_now.getDate();r.items.push({id:nIid++,text:v,done:false,who:me,ts:_ts});inp.value='';renderList(r);renderRooms();lsSave();}
+function clearDone(){const r=R.find(x=>x.id===curId);if(!r)return;r.items=r.items.filter(i=>!i.done);renderList(r);renderRooms();lsSave();}
 function openRM(){document.getElementById('rn').value='';nFmt='free';nIco='💬';document.querySelectorAll('#rf .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#ri-chips .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.getElementById('rm-ov').classList.add('on');}
 function closeRM(){document.getElementById('rm-ov').classList.remove('on');}
 function rFmt(btn,f){document.querySelectorAll('#rf .chip').forEach(b=>{b.classList.remove('on','ig-on');});btn.classList.add('on','ig-on');nFmt=f;}
@@ -3934,95 +3911,42 @@ function qAnalysis(){
 
   const igText=(S.igAns?.text||'').trim();
   const tkText=(S.tkAns?.text||'').trim();
-  const qText=S.curQ?.text||'';
+
+  // 回答の類似度チェック（共通ワードを探す）
+  const igWords=igText.replace(/[。、！？\s]/g,'').split('');
+  const tkWords=tkText.replace(/[。、！？\s]/g,'').split('');
+  const common=igWords.filter(c=>tkWords.includes(c)&&c.length>0);
+  const similarRatio=common.length/Math.max(igWords.length,tkWords.length,1);
+  const isSimilar=similarRatio>0.25||igText.length>0&&tkText.length>0&&(
+    igText.includes(tkText.slice(0,4))||tkText.includes(igText.slice(0,4))
+  );
+
+  // カテゴリごとのパターンコメント
   const cat=S.curQ?.cat||'love';
 
-  // ── 解析ユーティリティ ──
-  const normalize=t=>t.replace(/[。、！？\s　「」『』【】()（）]/g,'');
-  const igN=normalize(igText), tkN=normalize(tkText);
-
-  // 共通文字・共通単語の抽出
-  const igChars=new Set(igN.split(''));
-  const tkChars=new Set(tkN.split(''));
-  const commonChars=[...igChars].filter(c=>tkChars.has(c)&&c.length>0);
-  const charSim=commonChars.length/Math.max(igN.length,tkN.length,1);
-
-  // ポジティブ／ネガティブキーワード
-  const posWords=['好き','うれしい','楽しい','幸せ','ありがとう','最高','大好き','ほっこり','癒し','安心','一緒','いつも','ずっと','笑','♡','❤','💕','😊','😄','🥰'];
-  const negWords=['不安','寂しい','つらい','難しい','苦手','怖い','嫌','違う','ちがう','もやもや','すれちがい','うまく','伝わらない','😞','😢','😰'];
-  const igPos=posWords.filter(w=>igText.includes(w)).length;
-  const igNeg=negWords.filter(w=>igText.includes(w)).length;
-  const tkPos=posWords.filter(w=>tkText.includes(w)).length;
-  const tkNeg=negWords.filter(w=>tkText.includes(w)).length;
-  const igTone=igPos>igNeg?'pos':igNeg>igPos?'neg':'neu';
-  const tkTone=tkPos>tkNeg?'pos':tkNeg>tkPos?'neg':'neu';
-  const toneMatch=igTone===tkTone;
-
-  // 長さの差（一方が極端に短い＝考え方の深度差）
-  const lenDiff=Math.abs(igText.length-tkText.length);
-  const lenRatio=Math.min(igText.length,tkText.length)/Math.max(igText.length,tkText.length,1);
-  const shortOne=igText.length<tkText.length?'ig':'tk';
-
-  // 数字・時間が含まれるか（具体性チェック）
-  const hasNum=t=>/[0-9０-９年月日時間分秒回]/.test(t);
-  const igSpecific=hasNum(igText), tkSpecific=hasNum(tkText);
-
-  // 一致判定（文字一致＋感情一致の複合）
-  const isSimilar=charSim>0.22||toneMatch&&charSim>0.1;
-
-  // ── 回答の一部を引用（最初の15文字）──
-  const quote=(t,max=16)=>t.length>max?t.slice(0,max)+'…':t;
-  const igQ=quote(igText), tkQ=quote(tkText);
-
-  // ── カテゴリ別・状況別コメント生成 ──
-  const CAT_LABEL={love:'愛情表現',touch:'スキンシップ',future:'将来',daily:'日常',gap:'すれちがい'};
-  const catL=CAT_LABEL[cat]||'気持ち';
-
-  let result='';
-
-  if(isSimilar){
-    // 似ている場合 → 具体的にどこが似ているか指摘
-    if(charSim>0.35){
-      result=`「${igQ}」と「${tkQ}」、かなり近い答えだね。${catL}についてのふたりの感覚、自然と揃ってきてるのかも 🔬`;
-    } else if(toneMatch&&igTone==='pos'){
-      result=`ふたりとも前向きな答えだね。出口さんの「${igQ}」、テケテケさんの「${tkQ}」── どちらも${catL}への温度感が似てる 💕`;
-    } else if(toneMatch&&igTone==='neg'){
-      result=`ふたりとも正直に答えてくれてる。「${igQ}」「${tkQ}」── 同じように感じてたなら、それを話し合えてよかった 🌧`;
-    } else {
-      result=`表現は違っても、根っこにあるものが似てる気がする。出口さんの「${igQ}」とテケテケさんの「${tkQ}」、向いてる方向は一緒かも ✨`;
+  // パターン辞書（INTJ=出口さん、ENFP=テケテケさん の特性を踏まえた文章）
+  const PATTERNS={
+    similar:{
+      love:['ふたりとも同じ方向を向いてるかも。言葉にしなくても伝わってる部分が多そう 💕','答えが似てる…！無意識に価値観がそろってきてるのかもしれない 🔬','おお、かなり一致してる。ふたりの「好き」の形が近づいてきてる気がする 🌸'],
+      touch:['スキンシップの感覚、けっこう合ってそう。お互い心地よい距離感を掴んでるかも 🤝','似た答えが出た。無意識のうちにふたりのペースができてきてるのかも ✨','答えが近い！お互いの「ちょうどいい」が自然とすり合わさってきてる感じ 🌿'],
+      future:['将来のイメージ、けっこう一致してる。同じ方向を向いて歩けてるかも 🌟','ふたりの未来のビジョンが近い！これは心強い 🗺','答えが似てるということは、ふたりの「なりたい姿」が近いってことかも 💫'],
+      daily:['日常の感覚が合ってそう。一緒にいると自然に同じリズムになれるかもしれない ☀️','似た答え。生活のテンポやペースが合ってきてる証拠かも 🍀','お互いの「普通」が近い。日常を一緒に過ごすのが楽になってきてるのかも 🏡'],
+      gap:['同じように感じてたんだね。すれちがいじゃなく、ちゃんとシンクロしてるかも 💭','答えが近い。伝えにくいことも、ちゃんと分かり合えてきてるのかも 🌈','似た感覚を持ってたんだ。このふたりなら素直に話し合えそう 🔓']
+    },
+    different:{
+      love:['答えが違うのが面白い！INTJ的な「じわじわ伝わる好き」とENFP的な「ストレートな好き」の違いかも 💙🌸','ちょっと違う視点だね。でもそれがふたりの「すれちがい研究」のネタになる 🔬','アプローチが違う。でもどちらも相手を思ってるからこそ、とも言えるかも 💕'],
+      touch:['スキンシップの感覚に少し差があるかも。「もっと」派と「ちょうどいい」派の違いかな 🤝','答えが違う…！相手の「心地よい距離感」を改めて聞いてみるいいきっかけかも 💬','ここが少し違うみたい。どっちが正解じゃなく、すり合わせていくのが大事かも ✨'],
+      future:['将来のイメージに違いがある。INTJは「計画的に」、ENFPは「可能性を広げながら」かも 🌟','ちょっと違う未来図。でもそれをふたりで話し合うことで新しい青写真ができるかも 🗺','答えが違う！お互いの「なりたい姿」をもっと語り合うチャンスかも 💫'],
+      daily:['日常のスタイルに違いがあるね。INTJの「ルーティン派」とENFPの「その日の気分派」かも ☀️','答えが違う。ふたりの「普通」のすり合わせを楽しむのも関係を深めるコツかも 🍀','少し違う感覚。お互いの違いを知ることが、もっと過ごしやすくなるヒントになるかも 🏡'],
+      gap:['ここに温度差があるみたい。INTJ的「考えてから言う」とENFP的「感じたらすぐ言う」の違いかも 💭','答えが違う。伝え方・受け取り方のズレが「すれちがい」を生んでるのかもしれない 🔍','ここが違うんだね。でも違いがわかったなら、次は近づけるチャンス 🌈']
     }
-  } else {
-    // 違う場合 → どう違うか・なぜ面白いかを具体的に
-    if(lenRatio<0.4){
-      const longOne=shortOne==='ig'?'テケテケさん':'出口さん';
-      const shortOneName=shortOne==='ig'?'出口さん':'テケテケさん';
-      const longText=shortOne==='ig'?tkQ:igQ;
-      const shortText=shortOne==='ig'?igQ:tkQ;
-      result=`${longOne}は「${longText}」と詳しく、${shortOneName}は「${shortText}」とシンプルに。${catL}への向き合い方の深度が違うのかも。もう少し話してみると面白そう 💬`;
-    } else if(igSpecific!==tkSpecific){
-      const concreteName=igSpecific?'出口さん':'テケテケさん';
-      const abstractName=igSpecific?'テケテケさん':'出口さん';
-      result=`${concreteName}は具体的に、${abstractName}はふわっと答えてるね。${catL}に対する"解像度"の違いがすれちがいを生んでることもあるかも 🔍`;
-    } else if(!toneMatch){
-      const posName=igTone==='pos'?'出口さん':'テケテケさん';
-      const negName=igTone==='pos'?'テケテケさん':'出口さん';
-      result=`${posName}はポジティブに、${negName}はより慎重に答えてる。「${igQ}」と「${tkQ}」── ${catL}への温度差が少しあるかも。ここを話し合うと近づけそう 🌡`;
-    } else {
-      result=`出口さんの「${igQ}」、テケテケさんの「${tkQ}」── 違う答えが出た！${catL}についての見え方が違うからこそ、話すと発見がある 🔬`;
-    }
-  }
-
-  // 質問ジャンル別の後付けコメント
-  const suffixes={
-    love:['ふたりの「好き」の形は、話すほど育っていくものかも','言葉にするのが苦手でも、こうやって答え合わせすることが大事'],
-    touch:['スキンシップの「ちょうどいい」は人によって全然違う。だから聞いてみることに意味がある','言葉より先に体が正直かもしれない'],
-    future:['将来の話、具体的にするのが照れくさいふたりほど、実はいっぱい考えてたりする','未来の話をするたびに、ふたりのビジョンは少しずつ揃っていく'],
-    daily:['日常の小さなすれちがいが積み重なると大きくなる。でも話せばリセットできる','「普通」の感覚って意外と違う。だからこそ面白い'],
-    gap:['すれちがいに気づいてる時点で、もう半分は解決してる','違いを知ることが、一番の近道だったりする']
   };
-  const suf=suffixes[cat]||suffixes.love;
-  result+='\n\n'+suf[Math.floor(Math.random()*suf.length)];
 
+  const patternKey=isSimilar?'similar':'different';
+  const msgs=PATTERNS[patternKey][cat]||PATTERNS[patternKey].love;
+  const result=msgs[Math.floor(Math.random()*msgs.length)];
+
+  // 少し「間」を作ってから表示（自然な感じに）
   setTimeout(()=>{
     txEl.textContent=result;
     if(S.curQ)S.curQ.analysis=result;
@@ -4032,7 +3956,7 @@ function qAnalysis(){
       answersEl.style.display='block';
       setTimeout(()=>answersEl.scrollIntoView({behavior:'smooth',block:'nearest'}),300);
     }
-  },900);
+  },800);
 }
 function qBanner(){qRender();}
 function qSubmit(){
@@ -4323,19 +4247,7 @@ function gChip(btn,type,val){
   else if(type==='area'){document.querySelectorAll('#gf-area .chip').forEach(b=>{b.classList.remove('on','ig-on');});btn.classList.add('on','ig-on');newGArea=val;}
   else{const isOn=btn.classList.contains('on');document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));if(!isOn){btn.classList.add('on','tk-on');newGGenre=val;}else newGGenre='';}
 }
-function gOpen(){
-  document.getElementById('gf-date').value=new Date().toISOString().slice(0,10);
-  ['gf-shop','gf-ig','gf-tk','gf-ig-n','gf-tk-n','gf-memo','gf-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('gf-hint').classList.remove('on');
-  newGCat='ランチ';newGGenre='';newGArea='三ノ宮';
-  document.querySelectorAll('#gf-cat .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});
-  document.querySelectorAll('#gf-area .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});
-  document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));
-  document.getElementById('gf-edit-id').value='';
-  document.getElementById('gf-save-btn').textContent='記録する ✓';
-  document.getElementById('gf-del-btn').style.display='none';
-  document.getElementById('g-ov').classList.add('on');
-}
+function gOpen(){document.getElementById('gf-date').value=new Date().toISOString().slice(0,10);['gf-shop','gf-ig','gf-tk','gf-ig-n','gf-tk-n'].forEach(id=>document.getElementById(id).value='');document.getElementById('gf-hint').classList.remove('on');newGCat='ランチ';newGGenre='';newGArea='三ノ宮';document.querySelectorAll('#gf-cat .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-area .chip').forEach((b,i)=>{b.classList.remove('on','ig-on');if(i===0)b.classList.add('on','ig-on');});document.querySelectorAll('#gf-genre .chip').forEach(b=>b.classList.remove('on','tk-on'));document.getElementById('gf-memo').value='';document.getElementById('gf-edit-id').value='';document.getElementById('gf-save-btn').textContent='記録する ✓';document.getElementById('gf-del-btn').style.display='none';document.getElementById('g-ov').classList.add('on');}
 function gDelete(id){
   const r=S.recs.find(x=>x.id===id);if(!r)return;
   const old=document.getElementById('g-del-confirm');if(old)old.remove();
@@ -4374,11 +4286,7 @@ function gEdit(id){
   document.getElementById('gf-ig-n').value=r.igNote||'';
   document.getElementById('gf-tk').value=r.tkAmt||'';
   document.getElementById('gf-tk-n').value=r.tkNote||'';
-  // 旧データ（memo のみ）は今日の感想欄に表示し、お店メモは空にして編集を促す
-  const noteEl=document.getElementById('gf-note');
-  const memoEl=document.getElementById('gf-memo');
-  if(noteEl)noteEl.value=r.note||'';
-  if(memoEl)memoEl.value=r.shopMemo!==undefined ? r.shopMemo : (r.note?'' : r.memo||'');
+  document.getElementById('gf-memo').value=r.memo||'';
   document.getElementById('gf-hint').classList.remove('on');
   newGArea=r.area||'その他';
   document.querySelectorAll('#gf-area .chip').forEach(b=>{b.classList.remove('on','ig-on');if(b.textContent.trim()===newGArea)b.classList.add('on','ig-on');});
@@ -4395,10 +4303,8 @@ function gSave(){
   const shop=document.getElementById('gf-shop').value.trim();
   if(!shop){alert('お店の名前を入力してください');return;}
   const editId=document.getElementById('gf-edit-id').value;
-  const note=document.getElementById('gf-note')?.value.trim()||'';
-  const shopMemo=document.getElementById('gf-memo')?.value.trim()||'';
-  const memo=note||shopMemo; // 後方互換：どちらかを代表値として保持
-  const recData={shop,date:document.getElementById('gf-date').value,area:newGArea,cat:newGCat,genre:newGGenre||'その他',igAmt:parseInt(document.getElementById('gf-ig').value)||0,igNote:document.getElementById('gf-ig-n').value,tkAmt:parseInt(document.getElementById('gf-tk').value)||0,tkNote:document.getElementById('gf-tk-n').value,memo,note,shopMemo};
+  const memo=document.getElementById('gf-memo').value.trim();
+  const recData={shop,date:document.getElementById('gf-date').value,area:newGArea,cat:newGCat,genre:newGGenre||'その他',igAmt:parseInt(document.getElementById('gf-ig').value)||0,igNote:document.getElementById('gf-ig-n').value,tkAmt:parseInt(document.getElementById('gf-tk').value)||0,tkNote:document.getElementById('gf-tk-n').value,memo};
   if(editId){
     const idx=S.recs.findIndex(r=>String(r.id)===editId);
     if(idx>=0)S.recs[idx]={...S.recs[idx],...recData};
@@ -4410,22 +4316,19 @@ function gSave(){
   const partner=me==='ig'?'tk':'ig';
   const myName=me==='ig'?'💙 出口さん':'🌸 テケテケさん';
   if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${shop}`);
-  // お店リスト自動登録（新規のみ・shopMemoのみ引き継ぎ）
+  // お店リスト自動登録（新規記録のみ）
   if(!editId){
     if(!S.shopList)S.shopList=[];
     const existing=S.shopList.find(s=>s.name===shop);
     if(!existing){
-      addToShopList(shop,newGArea,newGCat,newGGenre||'その他',shopMemo);
+      // 新規登録
+      addToShopList(shop,newGArea,newGCat,newGGenre||'その他',memo);
       setTimeout(()=>{
         const t=document.createElement('div');
         t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(60,50,40,.88);color:white;border-radius:20px;padding:8px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:500;white-space:nowrap';
         t.textContent=`🏪 「${shop}」をお店リストに追加しました`;
         document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
       },300);
-    } else if(shopMemo && !existing.memo) {
-      // 既存店舗にshopMemoが新規で入力された場合は更新
-      existing.memo=shopMemo;
-      lsSave();
     }
   }
 }
@@ -4499,8 +4402,7 @@ function gRender(){
             ${ts?`<span style="font-size:11px;font-weight:700;color:var(--tk-d)">🌸¥${r.tkAmt.toLocaleString()}</span>${r.tkNote?`<span style="font-size:9px;color:var(--wg)">🏷${r.tkNote}</span>`:''}`:'' }
             ${tot?`<span style="font-size:9px;color:var(--wg);margin-left:auto">計¥${tot.toLocaleString()}</span>`:''}
           </div>`:''}
-          ${r.note?`<div style="font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4">📝 ${r.note}</div>`:''}
-          ${r.shopMemo?`<div style="font-size:10px;color:var(--ig-d);margin-top:2px;line-height:1.4">🏪 ${r.shopMemo}</div>`:(!r.note&&r.memo?`<div style="font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4">💬 ${r.memo}</div>`:'')}
+          ${r.memo?`<div style="font-size:10px;color:var(--wg);margin-top:3px;line-height:1.4">💬 ${r.memo}</div>`:''}
         </div>
         <div style="display:flex;gap:3px;flex-shrink:0;align-self:flex-start">
           <button onclick="gEdit(${r.id})" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:2px 7px;font-size:10px;cursor:pointer;color:var(--wg);font-family:'Noto Sans JP',sans-serif">✏</button>
@@ -4575,13 +4477,8 @@ function checkinUseQ(){
   ta.focus();ta.select();
 }
 
-function resetCheckin(){
-  const ta=document.getElementById('checkin-ta');
-  if(ta){ta.value='';ta.style.height='30px';}
-  checkinMoodE='';checkinMoodL='';
-  checkinRemoveImg();
-  checkinLoadQ(false);
-}
+function resetCheckin(){const ta=document.getElementById('checkin-ta');if(ta){ta.value='';ta.style.height='auto';}checkinMoodE='';checkinMoodL='';checkinRemoveImg();checkinLoadQ(false);}
+function checkinCharCount(ta){
   const el=document.getElementById('checkin-char');
   if(!el)return;
   const n=ta.value.length;
@@ -5135,7 +5032,7 @@ function switchDrama(pane){
  openRoom,openRoomRename,saveRoomName,setRoomsEditMode,confirmDeleteEv,
  insBold,insUnder,insCheck,ins,copyMemo,saveMemo,
  openEpModal,saveEp,closeEpModal,setEpStar,deleteEpReview,
- rFmt,rIco,rCat,addItem,delItem,togItem,openItemMemo,saveItemMemo,clearDone,showDoneItems,
+ rFmt,rIco,rCat,addItem,delItem,togItem,openItemMemo,saveItemMemo,clearDone,
  switchNote,calMove,calRender,calSelectDate,calRenderEvs,renderCalDaylog,
  openAddEv,closeAddEv,openEditEv,saveEv,deleteEv,evType,evRep,openAddEvWithDate,expandEvs,
  switchFilm,
@@ -5163,23 +5060,6 @@ function switchDrama(pane){
  renderDataPage,buildExportData,
  tbUrl,
 ].forEach(fn=>{ if(typeof fn==='function') window[fn.name]=fn; });
-
-// boot プロキシを本物に置き換え、待機中の呼び出しがあれば実行
-window.boot=boot;
-if(window._bootPending){
-  const u=window._bootPending;
-  window._bootPending=null;
-  boot(u);
-}
-
-// セレクト画面ボタンの確実なバインド
-(function(){
-  const ig=document.getElementById('sel-btn-ig');
-  const tk=document.getElementById('sel-btn-tk');
-  if(ig){ig.onclick=function(){boot('ig');};}
-  if(tk){tk.onclick=function(){boot('tk');};}
-})();
-})(); // IIFE end
 </script>
 
 <!-- ドラマ追加モーダル -->
