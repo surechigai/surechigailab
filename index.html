@@ -69,7 +69,10 @@ async function initNotifications(userId) {
         setTimeout(()=>toast.remove(), 3000);
       }
     });
-  } catch(e) { console.warn('通知初期化失敗:', e); }
+  } catch(e) {
+    // ServiceWorker未対応環境・GitHub Pages以外では動作しないため無視
+    if(!e.message?.includes('404')) console.warn('通知初期化失敗:', e);
+  }
 }
 
 // 通知を送る（相手のトークンに送信・自分には送らない）
@@ -534,8 +537,8 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 <div id="sel" style="position:relative;overflow:hidden">
   <div class="logo-big">🤝 すれちがい研究所</div>
   <div class="logo-sub">飽きる、呆れる、飽きられる。</div>
-  <button class="sel-btn ig" onclick="boot('ig')"><div class="av ig">💙</div><div style="flex:1"><div class="sn ig">井口さん</div><span class="smbti ig">INTJ・恐れ型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--ig-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
-  <button class="sel-btn tk" onclick="boot('tk')"><div class="av tk">🌸</div><div style="flex:1"><div class="sn tk">瀧本さん</div><span class="smbti tk">ENFP・不安型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--tk-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
+  <button class="sel-btn ig" onclick="boot('ig')"><div class="av ig">💙</div><div style="flex:1"><div class="sn ig">出口さん</div><span class="smbti ig">INTJ・恐れ型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--ig-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
+  <button class="sel-btn tk" onclick="boot('tk')"><div class="av tk">🌸</div><div style="flex:1"><div class="sn tk">テケテケさん</div><span class="smbti tk">ENFP・不安型</span></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--tk-d)" stroke-width="2" width="14"><polyline points="9 18 15 12 9 6"/></svg></button>
   <div class="sel-foot" style="margin-top:18px;font-size:10px;color:#c0b0a8;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
     <div style="font-size:9px;color:#d0b8b0;letter-spacing:.08em;opacity:.7">それでも、なぜか続いてる。</div>
     <div style="display:flex;align-items:center;gap:6px">
@@ -550,7 +553,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
     <button class="hdr-logo" onclick="goTop()">🤝 すれちがい研究所</button>
     <div style="display:flex;align-items:center;gap:6px">
       <button onclick="openData()" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--wg);padding:3px 6px;border-radius:7px;font-family:'Noto Sans JP',sans-serif;transition:all .15s" id="data-link">📊</button>
-      <button class="upill" id="upill" onclick="goSel()">💙 井口さん ▾</button>
+      <button class="upill" id="upill" onclick="goSel()">💙 出口さん ▾</button>
     </div>
   </div>
   <div class="screens">
@@ -570,7 +573,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
           <div style="width:50%;flex-shrink:0;box-sizing:border-box;border-right:1px solid var(--bd);padding:14px 12px;display:flex;align-items:center;gap:10px;overflow:hidden;cursor:pointer" onclick="openPartnerMoodDetail()">
             <div style="font-size:34px;line-height:1;flex-shrink:0" id="home-p-emoji">—</div>
             <div style="min-width:0;overflow:hidden;flex:1">
-              <div style="font-size:9px;color:var(--wg);font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-partner-lbl">🌸 瀧本さんの気持ち</div>
+              <div style="font-size:9px;color:var(--wg);font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-partner-lbl">🌸 テケテケさんの気持ち</div>
               <div id="home-p-bubble" style="display:none;font-size:12px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
               <div id="home-p-empty" style="font-size:12px;color:#ccc;white-space:nowrap">まだ記録なし</div>
             </div>
@@ -579,7 +582,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
           <div style="width:50%;flex-shrink:0;box-sizing:border-box;padding:14px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;overflow:hidden" onclick="openMoodModal()">
             <div style="font-size:34px;line-height:1;flex-shrink:0" id="home-my-emoji-disp">？</div>
             <div style="min-width:0;overflow:hidden;flex:1">
-              <div style="font-size:9px;color:var(--wg);font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-my-ask">💙 井口さんの気持ち</div>
+              <div style="font-size:9px;color:var(--wg);font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="home-my-ask">💙 出口さんの気持ち</div>
               <div id="home-my-sent" style="display:none">
                 <div id="home-my-bubble" style="display:none;font-size:12px;color:var(--text);font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
                 <div id="home-my-label-disp" style="display:none;font-size:12px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
@@ -748,7 +751,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
               <button class="mood-btn" onclick="selMood(this,'🥺','かまって','ちょっとさみしいよ')"><span class="mood-emoji">🥺</span><span class="mood-name">かまって</span></button>
               <button class="mood-btn" onclick="selMood(this,'🥂','のみたい','今日は一杯やりたい！')"><span class="mood-emoji">🥂</span><span class="mood-name">のみたい</span></button>
             </div>
-            <button class="send-mood-btn" id="send-mood-btn" onclick="doSendMood()">🌸 瀧本さんに伝える ✓</button>
+            <button class="send-mood-btn" id="send-mood-btn" onclick="doSendMood()">🌸 テケテケさんに伝える ✓</button>
           </div>
         </div>
         <div class="mood-sent" id="mood-sent">
@@ -760,7 +763,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 
         <!-- ── パートナーのきもち ── -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 2px 5px">
-          <div class="slbl" id="p-mood-lbl" style="margin:0;flex:1">🌸 瀧本さんの気持ち</div>
+          <div class="slbl" id="p-mood-lbl" style="margin:0;flex:1">🌸 テケテケさんの気持ち</div>
           <button id="p-mood-edit-btn" onclick="togglePartnerMoodEdit()"
             style="font-size:10px;background:none;border:1.5px solid var(--bd);border-radius:8px;padding:3px 9px;cursor:pointer;color:var(--wg);font-family:'Noto Sans JP',sans-serif;transition:all .15s;margin-left:8px">
             ✏ 代わりに入力
@@ -775,7 +778,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
         <!-- パートナーのきもち入力フォーム（初期非表示） -->
         <div id="partner-mood-form" style="display:none;margin-bottom:10px">
           <div style="background:linear-gradient(135deg,var(--ig-bg),var(--tk-bg));border-radius:14px;padding:13px">
-            <div style="font-size:11px;color:var(--wg);margin-bottom:8px;text-align:center" id="partner-form-note">🌸 瀧本さんの気持ちを入力</div>
+            <div style="font-size:11px;color:var(--wg);margin-bottom:8px;text-align:center" id="partner-form-note">🌸 テケテケさんの気持ちを入力</div>
             <div class="mood-grid-2" id="partner-mood-grid">
               <button class="mood-btn" onclick="selPartnerMood(this,'😊','ごきげん')"><span class="mood-emoji">😊</span>ごきげん</button>
               <button class="mood-btn" onclick="selPartnerMood(this,'😄','うれしい')"><span class="mood-emoji">😄</span>うれしい</button>
@@ -796,7 +799,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
             <textarea class="msg-ta" id="partner-mood-msg" placeholder="一言メッセージ（任意）" style="margin-top:8px"></textarea>
             <div style="display:flex;gap:7px;margin-top:8px">
               <button onclick="togglePartnerMoodEdit()" style="flex:1;padding:9px;border-radius:10px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;color:var(--wg);transition:all .15s">キャンセル</button>
-              <button id="partner-send-btn" onclick="doSendPartnerMood()" style="flex:2;padding:9px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-family:'Zen Maru Gothic',serif;font-weight:700;color:white;transition:all .15s">💙 井口さんとして保存 ✓</button>
+              <button id="partner-send-btn" onclick="doSendPartnerMood()" style="flex:2;padding:9px;border-radius:10px;border:none;cursor:pointer;font-size:12px;font-family:'Zen Maru Gothic',serif;font-weight:700;color:white;transition:all .15s">💙 出口さんとして保存 ✓</button>
             </div>
           </div>
         </div>
@@ -827,7 +830,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
             <!-- 状態A: 未回答 -->
             <div id="q-state-a" style="display:none">
               <div class="ans-block" id="q-ab">
-                <div class="ans-who" id="q-aw">井口さんの回答</div>
+                <div class="ans-who" id="q-aw">出口さんの回答</div>
                 <textarea class="ans-ta" id="q-ta" placeholder="ここに答えを書いてね..."></textarea>
               </div>
               <div style="margin-top:10px">
@@ -862,11 +865,11 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
               <div id="q-answers" style="display:none">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
                   <div style="background:var(--ig-bg);border-radius:10px;padding:10px 11px">
-                    <div style="font-size:9px;color:var(--ig-d);font-weight:700;margin-bottom:5px">💙 井口さん</div>
+                    <div style="font-size:9px;color:var(--ig-d);font-weight:700;margin-bottom:5px">💙 出口さん</div>
                     <div style="font-size:13px;color:var(--text);line-height:1.5" id="rv-ig"></div>
                   </div>
                   <div style="background:var(--tk-bg);border-radius:10px;padding:10px 11px">
-                    <div style="font-size:9px;color:var(--tk-d);font-weight:700;margin-bottom:5px">🌸 瀧本さん</div>
+                    <div style="font-size:9px;color:var(--tk-d);font-weight:700;margin-bottom:5px">🌸 テケテケさん</div>
                     <div style="font-size:13px;color:var(--text);line-height:1.5" id="rv-tk"></div>
                   </div>
                 </div>
@@ -910,14 +913,14 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
           <button class="month-arr" onclick="gMove(1)">›</button>
         </div>
         <div class="sum-grid">
-          <div class="sum-c"><div class="sum-l">💙 井口さん</div><div class="sum-v ig" id="g-ig">—</div><div class="sum-s" id="g-ig-s">0件</div></div>
+          <div class="sum-c"><div class="sum-l">💙 出口さん</div><div class="sum-v ig" id="g-ig">—</div><div class="sum-s" id="g-ig-s">0件</div></div>
           <div class="sum-c"><div class="sum-l">月合計</div><div class="sum-v" id="g-tot">—</div><div class="sum-s" id="g-tot-s">0軒</div></div>
-          <div class="sum-c"><div class="sum-l">🌸 瀧本さん</div><div class="sum-v tk" id="g-tk">—</div><div class="sum-s" id="g-tk-s">0件</div></div>
+          <div class="sum-c"><div class="sum-l">🌸 テケテケさん</div><div class="sum-v tk" id="g-tk">—</div><div class="sum-s" id="g-tk-s">0件</div></div>
         </div>
         <div style="margin-bottom:8px">
           <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--wg);margin-bottom:3px"><span>月次負担比率</span><span id="g-pct">—</span></div>
           <div class="bal-track"><div class="bal-fill" id="g-bar" style="width:50%"></div></div>
-          <div style="display:flex;justify-content:space-between;margin-top:2px"><span style="font-size:9px;color:var(--wg)">💙 井口</span><span style="font-size:9px;color:var(--wg)">瀧本 🌸</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:2px"><span style="font-size:9px;color:var(--wg)">💙 出口</span><span style="font-size:9px;color:var(--wg)">テケテケ 🌸</span></div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:7px">
           <button id="g-add-btn" style="background:linear-gradient(135deg,var(--ig),var(--tk));color:white;border:none;border-radius:18px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-weight:500;transition:all .15s;box-shadow:0 3px 8px rgba(91,155,213,.3)" onclick="gOpen()">＋ 記録する</button>
@@ -1160,7 +1163,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
       <div style="font-size:44px;line-height:1" id="pd-emoji">😊</div>
       <div>
-        <div style="font-size:9px;color:var(--wg);margin-bottom:3px" id="pd-who">🌸 瀧本さんの気持ち</div>
+        <div style="font-size:9px;color:var(--wg);margin-bottom:3px" id="pd-who">🌸 テケテケさんの気持ち</div>
         <div style="font-family:'Zen Maru Gothic',serif;font-size:16px;font-weight:700" id="pd-label">ごきげん</div>
       </div>
     </div>
@@ -1207,14 +1210,14 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
   <div class="fl">支払い</div>
   <div class="pay-sect">
     <div class="pay-row">
-      <div class="pay-av ig">💙</div><span class="pay-nm ig">井口さん</span>
+      <div class="pay-av ig">💙</div><span class="pay-nm ig">出口さん</span>
       <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
         <input class="pay-inp" id="gf-ig" type="number" placeholder="¥" style="width:100%"/>
         <input class="pay-ni" id="gf-ig-n" placeholder="クーポン・割引など（任意）" style="width:100%;box-sizing:border-box"/>
       </div>
     </div>
     <div class="pay-row">
-      <div class="pay-av tk">🌸</div><span class="pay-nm tk">瀧本さん</span>
+      <div class="pay-av tk">🌸</div><span class="pay-nm tk">テケテケさん</span>
       <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
         <input class="pay-inp" id="gf-tk" type="number" placeholder="¥" style="width:100%"/>
         <input class="pay-ni" id="gf-tk-n" placeholder="クーポン・割引など（任意）" style="width:100%;box-sizing:border-box"/>
@@ -2061,6 +2064,7 @@ function lsLoad(){
       if(window._fbSave && window._fbListen){
         clearInterval(fbWait);
         // Firebaseから最新データを一度読み込む
+        if(!_db){console.warn('Firebase DB未初期化');return;}
         _db.ref(_DB_PATH).once('value').then(snap=>{
           const val = snap.val();
           if(val){
@@ -2162,7 +2166,7 @@ function goSel(){
 function goTop(){closeChat();go('home');}
 
 function buildCtx(){
-  const qa=S.qHist.slice(0,5).map(h=>`Q:${h.text}|井口:${h.igA}/瀧本:${h.tkA}`).join('/');
+  const qa=S.qHist.slice(0,5).map(h=>`Q:${h.text}|出口:${h.igA}/テケテケ:${h.tkA}`).join('/');
   const food=S.recs.slice(0,3).map(r=>`${r.shop}(${r.cat})`).join('・');
   const mood=S.moodLog.slice(-3).map(m=>`${m.who}:${m.emoji}${m.label}`).join('/');
   return `【記録】Q:${qa||'なし'}/外食:${food||'なし'}/きもち:${mood||'なし'}`;
@@ -2172,32 +2176,32 @@ function applyTheme(){
   const ig=me==='ig';
   document.getElementById('hdr').style.background=ig?'linear-gradient(135deg,#dbeeff,#b8d9f8)':'linear-gradient(135deg,#fce4ec,#f8bbd0)';
   document.getElementById('top-hero').style.background=ig?'linear-gradient(135deg,#b8d9f8,#8ec4f0)':'linear-gradient(135deg,#f8bbd0,#f4a8c0)';
-  const up=document.getElementById('upill');up.className='upill '+me;up.textContent=(ig?'💙 井口さん':'🌸 瀧本さん')+' ▾';
+  const up=document.getElementById('upill');up.className='upill '+me;up.textContent=(ig?'💙 出口さん':'🌸 テケテケさん')+' ▾';
   document.getElementById('sbtn').className='sbtn '+me;
   document.getElementById('q-ab').className='ans-block '+me;
-  document.getElementById('q-aw').className='ans-who '+me;document.getElementById('q-aw').textContent=ig?'💙 井口さん':'🌸 瀧本さん';
+  document.getElementById('q-aw').className='ans-who '+me;document.getElementById('q-aw').textContent=ig?'💙 出口さん':'🌸 テケテケさん';
   document.getElementById('q-sub').className='sub-btn '+me;
   const dc=ig?'var(--ig)':'var(--tk)';['d1','d2','d3'].forEach(id=>document.getElementById(id).style.background=dc);
   const sr=document.getElementById('q-sr');
   if(sr){const stamps=ig?IST:TST;sr.innerHTML=stamps.map(s=>`<span class="st" onclick="qPick(this)">${s}</span>`).join('');sr.className='strow '+(ig?'ig-ctx':'tk-ctx');}
-  const partner=ig?'瀧本さん':'井口さん',pe=ig?'🌸':'💙';
+  const partner=ig?'テケテケさん':'出口さん',pe=ig?'🌸':'💙';
   const smb=document.getElementById('send-mood-btn');
   smb.textContent=`${pe} ${partner}に伝える ✓`;
   smb.style.background=ig?'linear-gradient(135deg,var(--ig),#9b7ec8)':'linear-gradient(135deg,var(--tk),#9b7ec8)';
   smb.style.boxShadow=ig?'0 3px 10px rgba(91,155,213,.35)':'0 3px 10px rgba(232,135,154,.35)';
-  document.getElementById('p-mood-lbl').textContent=ig?'🌸 瀧本さんの今日の気持ち':'💙 井口さんの今日の気持ち';
-  document.getElementById('home-partner-lbl').textContent=ig?'🌸 瀧本さんの気持ち':'💙 井口さんの気持ち';
-  document.getElementById('k-my-lbl').textContent='今日の'+(ig?'井口さん':'瀧本さん')+'の気持ち';
+  document.getElementById('p-mood-lbl').textContent=ig?'🌸 テケテケさんの今日の気持ち':'💙 出口さんの今日の気持ち';
+  document.getElementById('home-partner-lbl').textContent=ig?'🌸 テケテケさんの気持ち':'💙 出口さんの気持ち';
+  document.getElementById('k-my-lbl').textContent='今日の'+(ig?'出口さん':'テケテケさん')+'の気持ち';
   document.getElementById('ms-title').textContent=`${pe} ${partner}に伝えました ✓`;
   // パートナーフォームのラベル・ボタン色
-  const partnerE=ig?'🌸':'💙';const partnerN=ig?'瀧本さん':'井口さん';
+  const partnerE=ig?'🌸':'💙';const partnerN=ig?'テケテケさん':'出口さん';
   document.getElementById('partner-form-note').textContent=`${partnerE} ${partnerN}の気持ちを入力`;
   const psb=document.getElementById('partner-send-btn');
   psb.textContent=`${ig?'🌸':'💙'} ${partnerN}として保存 ✓`;
   psb.style.background=ig?'linear-gradient(135deg,var(--tk),#c86080)':'linear-gradient(135deg,var(--ig),#4a8ec4)';
   const hour=new Date().getHours();
   const g=hour<12?'おはよう':hour<18?'こんにちは':'おつかれさま';
-  document.getElementById('top-greet').textContent=`${g}、${ig?'井口さん':'瀧本さん'} 👋`;
+  document.getElementById('top-greet').textContent=`${g}、${ig?'出口さん':'テケテケさん'} 👋`;
   const now=new Date();const days=['日','月','火','水','木','金','土'];
   document.getElementById('top-date').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${days[now.getDay()]}）`;
   updateHomeEvs();updateHomeMood();renderPartnerMood();
@@ -2207,7 +2211,7 @@ function applyTheme(){
   // ホームの自分の気持ちエリア更新
   homeUpdateMyMood();
   const ask=document.getElementById('home-my-ask');
-  if(ask)ask.textContent=(ig?'💙 井口さんの気持ち':'🌸 瀧本さんの気持ち');
+  if(ask)ask.textContent=(ig?'💙 出口さんの気持ち':'🌸 テケテケさんの気持ち');
   // ユーザー切替時：質問が既にあればそのまま表示状態を更新するだけ
   if(S.curQ)qRender();
 }
@@ -2500,8 +2504,8 @@ function renderDramaDetailEps(d){
     const myHasInput=(myStar>0)||myMemo.length>0;
     const pHasInput=(pStar>0)||pMemo.length>0;
     const hasBoth=myHasInput&&pHasInput;
-    const pName=me==='ig'?'🌸 瀧本さん':'💙 井口さん';
-    const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
+    const pName=me==='ig'?'🌸 テケテケさん':'💙 出口さん';
+    const myName=me==='ig'?'💙 出口さん':'🌸 テケテケさん';
     const myCol=me==='ig'?'var(--ig-d)':'var(--tk-d)';
     const pCol=me==='ig'?'var(--tk-d)':'var(--ig-d)';
     const myBg=me==='ig'?'var(--ig-bg)':'var(--tk-bg)';
@@ -2676,11 +2680,11 @@ function completeDramaMove(dramaId){
 
   if(!S.filmarks)S.filmarks=[];
 
-  // 井口さんに記録があれば登録
+  // 出口さんに記録があれば登録
   if(igAvg>0||igMemoLines.length>0){
     S.filmarks.unshift({...baseData, id:filmarkId++, who:'ig', star:igAvg, memo:igMemo});
   }
-  // 瀧本さんに記録があれば登録
+  // テケテケさんに記録があれば登録
   if(tkAvg>0||tkMemoLines.length>0){
     S.filmarks.unshift({...baseData, id:filmarkId++, who:'tk', star:tkAvg, memo:tkMemo});
   }
@@ -2796,7 +2800,7 @@ function saveFilmark(){
   closeAddFilmark();renderFilmarks();omoideRender();lsSave(true);
   // 通知送信
   const partner=me==='ig'?'tk':'ig';
-  const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
+  const myName=me==='ig'?'💙 出口さん':'🌸 テケテケさん';
   const typeLabel=filmarkTypeSel==='movie'?'🎬 映画':'📺 ドラマ';
   if(window._sendNotification) window._sendNotification(partner, `${myName}が鑑賞記録を追加`, `${typeLabel}「${title}」`);
 }
@@ -2968,7 +2972,7 @@ function openPartnerMoodDetail(){
   const partner=me==='ig'?'tk':'ig';
   const log=[...S.moodLog].reverse().find(m=>m.who===partner);
   if(!log)return; // まだ記録なしの場合は何もしない
-  const pName=partner==='tk'?'🌸 瀧本さんの気持ち':'💙 井口さんの気持ち';
+  const pName=partner==='tk'?'🌸 テケテケさんの気持ち':'💙 出口さんの気持ち';
   document.getElementById('pd-emoji').textContent=log.emoji;
   document.getElementById('pd-who').textContent=pName;
   document.getElementById('pd-label').textContent=log.label;
@@ -3022,7 +3026,7 @@ function modalSendMood(){
   lsSave();
   // 通知送信
   const partner=me==='ig'?'tk':'ig';
-  const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
+  const myName=me==='ig'?'💙 出口さん':'🌸 テケテケさん';
   if(window._sendNotification) window._sendNotification(partner, `${myName}の気持ち`, `${modalMoodE} ${modalMoodL}${txt?' 「'+txt+'」':''}`);
 }
 
@@ -3424,7 +3428,7 @@ function openRoom(id){
   ['pane-free','pane-memo','pane-list'].forEach(id=>document.getElementById(id).style.display='none');
   if(r.fmt==='free'){document.getElementById('pane-free').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';renderMsgs(r);}
   else if(r.fmt==='memo'){document.getElementById('pane-memo').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';document.getElementById('memo-ed').innerText=r.memo||'';}
-  else{document.getElementById('pane-list').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';document.getElementById('cv-act').innerHTML=`<button class="cv-abt" onclick="clearDone()">完了済みを削除</button>`;renderList(r);}
+  else{document.getElementById('pane-list').style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';document.getElementById('cv-act').innerHTML=`<button class="cv-abt" onclick="showDoneItems()" style="margin-right:4px">完了済みを見る</button><button class="cv-abt" onclick="clearDone()">削除</button>`;renderList(r);}
 }
 function closeChat(){
   // 全paneを非表示
@@ -3449,7 +3453,7 @@ function renderMsgs(r){
     const mine=(me==='ig'&&g.who==='ig')||(me==='tk'&&g.who==='tk');
     const cls=mine?'mine':'theirs';const bCls=mine?(me==='ig'?'mn-ig':'mn-tk'):('th-'+g.who);
     let h=`<div class="mg ${cls}">`;
-    if(!mine)h+=`<div class="mg-top ${cls}"><div class="mg-av ${g.who}">${g.who==='ig'?'💙':'🌸'}</div><div class="mg-nm">${g.who==='ig'?'💙 井口さん':'🌸 瀧本さん'}</div></div>`;
+    if(!mine)h+=`<div class="mg-top ${cls}"><div class="mg-av ${g.who}">${g.who==='ig'?'💙':'🌸'}</div><div class="mg-nm">${g.who==='ig'?'💙 出口さん':'🌸 テケテケさん'}</div></div>`;
     g.msgs.forEach((m,i)=>{
       const isLast=i===g.msgs.length-1;let rm='';
       if(mine&&isLast){rm=m.read?`<span class="rdmk" style="color:var(--${me}-d)">✓✓</span>`:`<span class="rdmk" style="color:#ccc">✓</span>`;}
@@ -3473,7 +3477,7 @@ function sendMsg(){
   renderMsgs(r);renderRooms();lsSave();
   // 通知送信（送信者のみ）
   const partner=me==='ig'?'tk':'ig';
-  const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
+  const myName=me==='ig'?'💙 出口さん':'🌸 テケテケさん';
   if(window._sendNotification) window._sendNotification(partner, `${myName}からメッセージ`, v.length>30?v.slice(0,30)+'…':v);
 }
 function sendImage(input){
@@ -3568,7 +3572,7 @@ function openItemMemo(idx){
   ui.innerHTML=`
     <div style="background:white;border-radius:22px 22px 0 0;padding:20px 16px max(28px,env(safe-area-inset-bottom));width:100%;max-width:430px;box-sizing:border-box">
       <div style="font-family:'Zen Maru Gothic',serif;font-size:14px;font-weight:700;margin-bottom:4px;text-align:center">${it.text}</div>
-      <div style="font-size:10px;color:var(--wg);text-align:center;margin-bottom:12px">${it.who==='ig'?'💙 井口さん':'🌸 瀧本さん'} · ${it.ts}</div>
+      <div style="font-size:10px;color:var(--wg);text-align:center;margin-bottom:12px">${it.who==='ig'?'💙 出口さん':'🌸 テケテケさん'} · ${it.ts}</div>
       <textarea id="item-memo-inp" placeholder="メモを入力…" style="width:100%;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;padding:10px 13px;font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;background:#fafafa;resize:none;min-height:80px;box-sizing:border-box;line-height:1.5">${it.memo||''}</textarea>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button id="item-memo-cancel" style="flex:1;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
@@ -3588,7 +3592,79 @@ function openItemMemo(idx){
 function saveItemMemo(id){} // 後方互換のため残す（未使用）
 function togItem(id,done){const r=R.find(x=>x.id===curId);if(!r)return;const it=r.items.find(i=>i.id===id);if(it){it.done=done;renderList(r);renderRooms();lsSave();}}
 function delItem(id){const r=R.find(x=>x.id===curId);if(!r)return;r.items=r.items.filter(i=>i.id!==id);renderList(r);renderRooms();lsSave();}
-function addItem(){const inp=document.getElementById('linp');const v=inp.value.trim();if(!v)return;const r=R.find(x=>x.id===curId);if(!r)return;r.items.push({id:nIid++,text:v,done:false,who:me,ts:'たった今'});inp.value='';renderList(r);renderRooms();lsSave();}
+function addItem(){
+  const inp=document.getElementById('linp');
+  const v=inp.value.trim();if(!v)return;
+  const r=R.find(x=>x.id===curId);if(!r)return;
+  const now=new Date();
+  const ts=(now.getMonth()+1)+'/'+now.getDate();
+  r.items.push({id:nIid++,text:v,done:false,who:me,ts});
+  inp.value='';renderList(r);renderRooms();lsSave();
+}
+function showDoneItems(){
+  const r=R.find(x=>x.id===curId);if(!r)return;
+  const done=r.items.filter(i=>i.done);
+  const old=document.getElementById('done-view-ui');if(old)old.remove();
+  const ui=document.createElement('div');
+  ui.id='done-view-ui';
+  ui.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:flex;align-items:flex-end;justify-content:center';
+
+  function buildContent(){
+    const r2=R.find(x=>x.id===curId);if(!r2)return;
+    const doneItems=r2.items.filter(i=>i.done);
+    const inner=ui.querySelector('#done-view-inner');
+    if(!doneItems.length){
+      inner.innerHTML=`<div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700;margin-bottom:16px">完了済み</div>
+        <div style="text-align:center;padding:20px 0;font-size:13px;color:#ccc">完了済みのアイテムはありません</div>
+        <button onclick="document.getElementById('done-view-ui').remove()" style="width:100%;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg);margin-top:8px">閉じる</button>`;
+      return;
+    }
+    const listHtml=doneItems.map((it,i)=>{
+      const realIdx=r2.items.indexOf(it);
+      return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd)">
+        <span style="font-size:14px;color:#aaa;flex-shrink:0">☑</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;color:#888;text-decoration:line-through;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.text}</div>
+          <div style="font-size:9px;color:#bbb;margin-top:1px">${it.who==='ig'?'💙':'🌸'} ${it.ts}</div>
+        </div>
+        <button data-idx="${realIdx}" class="done-uncheck" style="font-size:10px;background:var(--sage-bg);color:var(--sage);border:none;border-radius:8px;padding:3px 8px;cursor:pointer;flex-shrink:0;font-family:'Noto Sans JP',sans-serif">戻す</button>
+        <button data-idx="${realIdx}" class="done-del" style="font-size:10px;background:#fff0f0;color:#cc3333;border:none;border-radius:8px;padding:3px 8px;cursor:pointer;flex-shrink:0;font-family:'Noto Sans JP',sans-serif">削除</button>
+      </div>`;
+    }).join('');
+    inner.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700">完了済み（${doneItems.length}件）</div>
+        <button onclick="clearDone();document.getElementById('done-view-ui').remove();" style="font-size:11px;background:#fff0f0;color:#cc3333;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'Noto Sans JP',sans-serif">全削除</button>
+      </div>
+      <div style="max-height:280px;overflow-y:auto;margin-bottom:12px">${listHtml}</div>
+      <button onclick="document.getElementById('done-view-ui').remove()" style="width:100%;padding:11px;border-radius:12px;border:2px solid var(--bd);background:none;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">閉じる</button>`;
+    // 戻すボタン
+    inner.querySelectorAll('.done-uncheck').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const idx=parseInt(btn.dataset.idx);
+        const r3=R.find(x=>x.id===curId);if(!r3)return;
+        r3.items[idx].done=false;
+        renderList(r3);renderRooms();lsSave();
+        buildContent();
+      });
+    });
+    // 削除ボタン
+    inner.querySelectorAll('.done-del').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const idx=parseInt(btn.dataset.idx);
+        const r3=R.find(x=>x.id===curId);if(!r3)return;
+        r3.items.splice(idx,1);
+        renderList(r3);renderRooms();lsSave();
+        buildContent();
+      });
+    });
+  }
+
+  ui.innerHTML=`<div id="done-view-inner" style="background:white;border-radius:22px 22px 0 0;padding:20px 16px max(28px,env(safe-area-inset-bottom));width:100%;max-width:430px;box-sizing:border-box"></div>`;
+  ui.addEventListener('click',e=>{if(e.target===ui)ui.remove();});
+  document.body.appendChild(ui);
+  buildContent();
+}
 function clearDone(){
   const r=R.find(x=>x.id===curId);if(!r)return;
   const done=r.items.filter(i=>i.done);
@@ -3723,7 +3799,7 @@ function doRoomExport(){
   const lines=['【'+r.icon+' '+r.name+'】トーク履歴','出力: '+new Date().toLocaleString('ja-JP'),''];
   if(r.fmt==='free'&&r.msgs?.length){
     r.msgs.filter(m=>!m.recalled).forEach(m=>{
-      lines.push('['+m.ts+'] '+(m.who==='ig'?'💙 井口さん':'🌸 瀧本さん'));
+      lines.push('['+m.ts+'] '+(m.who==='ig'?'💙 出口さん':'🌸 テケテケさん'));
       lines.push(m.text);
       lines.push('');
     });
@@ -3782,8 +3858,8 @@ function qRender(){
   if(!S.curQ)return;
   const igD=!!S.igAns, tkD=!!S.tkAns;
   const myD=me==='ig'?igD:tkD, pD=me==='ig'?tkD:igD;
-  const pName=me==='ig'?'瀧本さん':'井口さん';
-  const myName=me==='ig'?'井口さん':'瀧本さん';
+  const pName=me==='ig'?'テケテケさん':'出口さん';
+  const myName=me==='ig'?'出口さん':'テケテケさん';
   const sa=document.getElementById('q-state-a');
   const sb=document.getElementById('q-state-b');
   const sc=document.getElementById('q-state-c');
@@ -3905,30 +3981,30 @@ function qAnalysis(){
     if(charSim>0.35){
       result=`「${igQ}」と「${tkQ}」、かなり近い答えだね。${catL}についてのふたりの感覚、自然と揃ってきてるのかも 🔬`;
     } else if(toneMatch&&igTone==='pos'){
-      result=`ふたりとも前向きな答えだね。井口さんの「${igQ}」、瀧本さんの「${tkQ}」── どちらも${catL}への温度感が似てる 💕`;
+      result=`ふたりとも前向きな答えだね。出口さんの「${igQ}」、テケテケさんの「${tkQ}」── どちらも${catL}への温度感が似てる 💕`;
     } else if(toneMatch&&igTone==='neg'){
       result=`ふたりとも正直に答えてくれてる。「${igQ}」「${tkQ}」── 同じように感じてたなら、それを話し合えてよかった 🌧`;
     } else {
-      result=`表現は違っても、根っこにあるものが似てる気がする。井口さんの「${igQ}」と瀧本さんの「${tkQ}」、向いてる方向は一緒かも ✨`;
+      result=`表現は違っても、根っこにあるものが似てる気がする。出口さんの「${igQ}」とテケテケさんの「${tkQ}」、向いてる方向は一緒かも ✨`;
     }
   } else {
     // 違う場合 → どう違うか・なぜ面白いかを具体的に
     if(lenRatio<0.4){
-      const longOne=shortOne==='ig'?'瀧本さん':'井口さん';
-      const shortOneName=shortOne==='ig'?'井口さん':'瀧本さん';
+      const longOne=shortOne==='ig'?'テケテケさん':'出口さん';
+      const shortOneName=shortOne==='ig'?'出口さん':'テケテケさん';
       const longText=shortOne==='ig'?tkQ:igQ;
       const shortText=shortOne==='ig'?igQ:tkQ;
       result=`${longOne}は「${longText}」と詳しく、${shortOneName}は「${shortText}」とシンプルに。${catL}への向き合い方の深度が違うのかも。もう少し話してみると面白そう 💬`;
     } else if(igSpecific!==tkSpecific){
-      const concreteName=igSpecific?'井口さん':'瀧本さん';
-      const abstractName=igSpecific?'瀧本さん':'井口さん';
+      const concreteName=igSpecific?'出口さん':'テケテケさん';
+      const abstractName=igSpecific?'テケテケさん':'出口さん';
       result=`${concreteName}は具体的に、${abstractName}はふわっと答えてるね。${catL}に対する"解像度"の違いがすれちがいを生んでることもあるかも 🔍`;
     } else if(!toneMatch){
-      const posName=igTone==='pos'?'井口さん':'瀧本さん';
-      const negName=igTone==='pos'?'瀧本さん':'井口さん';
+      const posName=igTone==='pos'?'出口さん':'テケテケさん';
+      const negName=igTone==='pos'?'テケテケさん':'出口さん';
       result=`${posName}はポジティブに、${negName}はより慎重に答えてる。「${igQ}」と「${tkQ}」── ${catL}への温度差が少しあるかも。ここを話し合うと近づけそう 🌡`;
     } else {
-      result=`井口さんの「${igQ}」、瀧本さんの「${tkQ}」── 違う答えが出た！${catL}についての見え方が違うからこそ、話すと発見がある 🔬`;
+      result=`出口さんの「${igQ}」、テケテケさんの「${tkQ}」── 違う答えが出た！${catL}についての見え方が違うからこそ、話すと発見がある 🔬`;
     }
   }
 
@@ -3960,8 +4036,8 @@ function qSubmit(){
   if(!text){alert('回答を入力してください');return;}
   if(me==='ig')S.igAns={text};else S.tkAns={text};
   // 相手への状況連携：フリートークルームに自動投稿
-  const myName=me==='ig'?'井口さん':'瀧本さん';
-  const pName=me==='ig'?'瀧本さん':'井口さん';
+  const myName=me==='ig'?'出口さん':'テケテケさん';
+  const pName=me==='ig'?'テケテケさん':'出口さん';
   // フリートークルームを探す（名前に「すれちがい」があれば優先）
   const room=R.find(r=>r.fmt==='free'&&r.name.includes('すれちがい'))
     ||R.find(r=>r.fmt==='free');
@@ -4024,11 +4100,11 @@ function qlogRender(){
       <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:9px">${h.text}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
         <div style="background:var(--ig-bg);border-radius:8px;padding:8px 9px">
-          <div style="font-size:9px;color:var(--ig-d);font-weight:700;margin-bottom:3px">💙 井口さん</div>
+          <div style="font-size:9px;color:var(--ig-d);font-weight:700;margin-bottom:3px">💙 出口さん</div>
           <div style="font-size:12px;color:var(--text);line-height:1.5">${h.igA||'—'}</div>
         </div>
         <div style="background:var(--tk-bg);border-radius:8px;padding:8px 9px">
-          <div style="font-size:9px;color:var(--tk-d);font-weight:700;margin-bottom:3px">🌸 瀧本さん</div>
+          <div style="font-size:9px;color:var(--tk-d);font-weight:700;margin-bottom:3px">🌸 テケテケさん</div>
           <div style="font-size:12px;color:var(--text);line-height:1.5">${h.tkA||'—'}</div>
         </div>
       </div>
@@ -4048,8 +4124,8 @@ function qRH(){
       </div>
       <div style="font-size:13px;font-weight:500;line-height:1.5;margin-bottom:6px;color:var(--text)">${h.text}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-        <div style="background:var(--ig-bg);border-radius:7px;padding:6px 7px;font-size:11px"><div style="font-size:9px;color:var(--ig-d);font-weight:500;margin-bottom:1px">💙 井口さん</div>${h.igA||''}</div>
-        <div style="background:var(--tk-bg);border-radius:7px;padding:6px 7px;font-size:11px"><div style="font-size:9px;color:var(--tk-d);font-weight:500;margin-bottom:1px">🌸 瀧本さん</div>${h.tkA||''}</div>
+        <div style="background:var(--ig-bg);border-radius:7px;padding:6px 7px;font-size:11px"><div style="font-size:9px;color:var(--ig-d);font-weight:500;margin-bottom:1px">💙 出口さん</div>${h.igA||''}</div>
+        <div style="background:var(--tk-bg);border-radius:7px;padding:6px 7px;font-size:11px"><div style="font-size:9px;color:var(--tk-d);font-weight:500;margin-bottom:1px">🌸 テケテケさん</div>${h.tkA||''}</div>
       </div>
     </div>`;
   }).join('');
@@ -4317,8 +4393,7 @@ function gSave(){
   const editId=document.getElementById('gf-edit-id').value;
   const note=document.getElementById('gf-note')?.value.trim()||'';
   const shopMemo=document.getElementById('gf-memo')?.value.trim()||'';
-  // memo は後方互換のため note+shopMemo を結合して残す
-  const memo=[note,shopMemo].filter(Boolean).join('\n---\n');
+  const memo=note||shopMemo; // 後方互換：どちらかを代表値として保持
   const recData={shop,date:document.getElementById('gf-date').value,area:newGArea,cat:newGCat,genre:newGGenre||'その他',igAmt:parseInt(document.getElementById('gf-ig').value)||0,igNote:document.getElementById('gf-ig-n').value,tkAmt:parseInt(document.getElementById('gf-tk').value)||0,tkNote:document.getElementById('gf-tk-n').value,memo,note,shopMemo};
   if(editId){
     const idx=S.recs.findIndex(r=>String(r.id)===editId);
@@ -4329,7 +4404,7 @@ function gSave(){
   gClose();gRender();calRender();updateTop();lsSave(true);
   // 通知送信
   const partner=me==='ig'?'tk':'ig';
-  const myName=me==='ig'?'💙 井口さん':'🌸 瀧本さん';
+  const myName=me==='ig'?'💙 出口さん':'🌸 テケテケさん';
   if(!editId && window._sendNotification) window._sendNotification(partner, `${myName}がごはんを記録`, `🍽 ${shop}`);
   // お店リスト自動登録（新規のみ・shopMemoのみ引き継ぎ）
   if(!editId){
@@ -4393,7 +4468,7 @@ function gRender(){
   document.getElementById('g-ig-s').textContent='計'+mr.filter(r=>r.igAmt>0).length+'件';
   document.getElementById('g-tk-s').textContent='計'+mr.filter(r=>r.tkAmt>0).length+'件';
   document.getElementById('g-tot-s').textContent=mr.length+'軒';
-  if(tot>0){const p=Math.round(igT/tot*100);const bar=document.getElementById('g-bar');if(bar)bar.style.width=p+'%';const pct=document.getElementById('g-pct');if(pct)pct.textContent='井口 '+p+'% : 瀧本 '+(100-p)+'%';}
+  if(tot>0){const p=Math.round(igT/tot*100);const bar=document.getElementById('g-bar');if(bar)bar.style.width=p+'%';const pct=document.getElementById('g-pct');if(pct)pct.textContent='出口 '+p+'% : テケテケ '+(100-p)+'%';}
   else{const bar=document.getElementById('g-bar');if(bar)bar.style.width='50%';const pct=document.getElementById('g-pct');if(pct)pct.textContent='—';}
   const list=document.getElementById('g-list');
   if(!mr.length){list.innerHTML=`<div style="text-align:center;padding:14px;font-size:12px;color:#ccc">${gMonth}月の記録はありません</div>`;return;}
@@ -4496,7 +4571,13 @@ function checkinUseQ(){
   ta.focus();ta.select();
 }
 
-function checkinCharCount(ta){
+function resetCheckin(){
+  const ta=document.getElementById('checkin-ta');
+  if(ta){ta.value='';ta.style.height='30px';}
+  checkinMoodE='';checkinMoodL='';
+  checkinRemoveImg();
+  checkinLoadQ(false);
+}
   const el=document.getElementById('checkin-char');
   if(!el)return;
   const n=ta.value.length;
@@ -4616,7 +4697,7 @@ function checkinRenderTimeline(){
     const avatar=p.who==='ig'?'💙':'🌸';
     const avBg=p.who==='ig'?'var(--ig-bg)':'var(--tk-bg)';
     const nameCol=p.who==='ig'?'var(--ig-d)':'var(--tk-d)';
-    const name=p.who==='ig'?'井口さん':'瀧本さん';
+    const name=p.who==='ig'?'出口さん':'テケテケさん';
     let dateStr=p.ts?.split(' ')[1]||'';
     if(p.date===today)dateStr='今日 '+dateStr;
     else if(p.date===yesterday)dateStr='昨日 '+dateStr;
@@ -4843,7 +4924,7 @@ function renderCalDaylog(date,vis){
   });
   const renderUp=(ups,who)=>{
     if(!ups.length)return '';
-    const name=who==='ig'?'💙 井口さん':'🌸 瀧本さん';
+    const name=who==='ig'?'💙 出口さん':'🌸 テケテケさん';
     const col=who==='ig'?'var(--ig-d)':'var(--tk-d)';
     const bg=who==='ig'?'var(--ig-bg)':'var(--tk-bg)';
     const uid=`dp-${who}-${date.replace(/-/g,'')}`;
@@ -4945,7 +5026,7 @@ function renderRecords(){
   if(!list)return;
   const fl=recFilterCat==='all'?S.records:S.records.filter(r=>r.cat===recFilterCat);
   if(!fl.length){list.innerHTML='<div style="text-align:center;padding:22px;font-size:12px;color:#ccc">まだ記録がありません</div>';return;}
-  list.innerHTML=fl.map(r=>{const bc=RCC[r.cat]||'#f5f5f5';const tc=RCT[r.cat]||'#666';return `<div class="rec-entry"><div class="rec-date-row"><span>${r.date}</span><span class="rec-cat-tag" style="background:${bc};color:${tc}">${r.cat}</span><span style="font-size:10px;color:var(--wg)">${r.who==='ig'?'💙 井口さん':'🌸 瀧本さん'}</span></div><div class="rec-text">${r.text}</div></div>`;}).join('');
+  list.innerHTML=fl.map(r=>{const bc=RCC[r.cat]||'#f5f5f5';const tc=RCT[r.cat]||'#666';return `<div class="rec-entry"><div class="rec-date-row"><span>${r.date}</span><span class="rec-cat-tag" style="background:${bc};color:${tc}">${r.cat}</span><span style="font-size:10px;color:var(--wg)">${r.who==='ig'?'💙 出口さん':'🌸 テケテケさん'}</span></div><div class="rec-text">${r.text}</div></div>`;}).join('');
 }
 
 // KIMOCHI
@@ -4963,7 +5044,7 @@ function selMood(btn,e,l,d){
 }
 function doSendMood(){
   if(!selMoodE){alert('気持ちを選んでください');return;}
-  const partner=me==='ig'?'瀧本さん':'井口さん';const pe=me==='ig'?'🌸':'💙';
+  const partner=me==='ig'?'テケテケさん':'出口さん';const pe=me==='ig'?'🌸':'💙';
   const msg='';
   const now=new Date();const ts=fmtNow();
   S.moodLog.push({who:me,emoji:selMoodE,label:selMoodL,desc:selMoodD,msg,ts,date:now.toISOString().slice(0,10)});
@@ -5050,10 +5131,9 @@ function switchDrama(pane){
  openRoom,openRoomRename,saveRoomName,setRoomsEditMode,confirmDeleteEv,
  insBold,insUnder,insCheck,ins,copyMemo,saveMemo,
  openEpModal,saveEp,closeEpModal,setEpStar,deleteEpReview,
- rFmt,rIco,rCat,addItem,delItem,togItem,openItemMemo,saveItemMemo,clearDone,
+ rFmt,rIco,rCat,addItem,delItem,togItem,openItemMemo,saveItemMemo,clearDone,showDoneItems,
  switchNote,calMove,calRender,calSelectDate,calRenderEvs,renderCalDaylog,
  openAddEv,closeAddEv,openEditEv,saveEv,deleteEv,evType,evRep,openAddEvWithDate,expandEvs,
- saveDiaryFromCal,toggleDiaryEdit,
  switchFilm,
  openAddDrama,closeDramaAdd,saveDramaAdd,dramaTitleInput,fetchDramaSuggest,hideDramaSuggest,selectDramaSuggest,dramaAutoFill,dramaSub,
  openDramaDetail,closeDramaDetail,revealSpoil,addEpisodeToAiring,
