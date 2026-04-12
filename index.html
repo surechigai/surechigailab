@@ -1275,7 +1275,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
   <div class="fl">タイトル</div>
   <div style="position:relative">
     <div style="display:flex;gap:6px;align-items:center">
-      <input class="fi" id="da-title" placeholder="例：アンメット、光る君へ…" style="flex:1;margin-bottom:0" oninput="dramaTitleInput(this.value)" onblur="setTimeout(()=>hideDramaSuggest(),200)" autocomplete="off"/>
+      <input class="fi" id="da-title" placeholder="例：アンメット、光る君へ…" style="flex:1;margin-bottom:0" oninput="dramaTitleInput(this.value)" onblur="setTimeout(()=>hideDramaSuggest(),300)" autocomplete="off"/>
       <button id="da-search-btn" onclick="dramaAutoFill()" style="flex-shrink:0;border:none;border-radius:10px;padding:9px 12px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;transition:all .15s;white-space:nowrap">🔍 検索</button>
     </div>
     <div id="da-suggest" style="display:none;position:fixed;background:white;border:1.5px solid var(--bd);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:600;overflow:hidden;max-height:220px;overflow-y:auto"></div>
@@ -2485,11 +2485,13 @@ async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
     const data=await res.json();
     const titles=data[1]||[];
     if(!titles.length){suggest.style.display='none';return;}
-    const fn=onSelect||'selectDramaSuggest';
     suggest.innerHTML=titles.map((t,i)=>{
       const esc=t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return `<div onclick="${fn}('${esc}')"
-           style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px;transition:background .1s"
+      const fn=onSelect||'selectDramaSuggest';
+      return `<div
+           onmousedown="event.preventDefault();${fn}('${esc}')"
+           ontouchstart="event.preventDefault();${fn}('${esc}')"
+           style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px;transition:background .1s;-webkit-tap-highlight-color:transparent"
            onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''">
         <span style="font-size:14px">📺</span><span>${t}</span>
       </div>`;
@@ -2876,12 +2878,24 @@ function toggleDramaEps(id){
   // 詳細画面に移行したため不要（後方互換のためstub）
 }
 function openEpModal(dramaId,ep){
-  epEditCtx={dramaId,ep};epStarSel=0;
   const d=S.dramaAiring.find(x=>x.id===dramaId);
-  const e=d?.episodes.find(x=>x.ep===ep);
+  if(!d)return;
+  // ep=0 → 未レビューの最初の話を自動選択
+  if(ep===0){
+    const next=d.episodes.find(x=>me==='ig'?!x.igStar:!x.tkStar);
+    ep=next?next.ep:(d.episodes.length?d.episodes[d.episodes.length-1].ep:1);
+  }
+  // episodesにない話（話数未設定ドラマ）→ 新規追加
+  let e=d.episodes.find(x=>x.ep===ep);
+  if(!e){
+    e={ep,igStar:0,igMemo:'',tkStar:0,tkMemo:''};
+    d.episodes.push(e);
+    d.episodes.sort((a,b)=>a.ep-b.ep);
+  }
+  epEditCtx={dramaId,ep};epStarSel=0;
   const myStar=me==='ig'?e.igStar:e.tkStar;
   const myMemo=me==='ig'?e.igMemo:e.tkMemo;
-  epStarSel=myStar;
+  epStarSel=myStar||0;
   document.getElementById('ep-modal-title').textContent=`📺 ${d.title} 第${ep}話`;
   document.getElementById('ep-memo').value=myMemo||'';
   renderEpStars();
