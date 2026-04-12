@@ -1278,18 +1278,51 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
       <input class="fi" id="da-title" placeholder="例：アンメット、光る君へ…" style="flex:1;margin-bottom:0" oninput="dramaTitleInput(this.value)" onblur="setTimeout(()=>hideDramaSuggest(),200)" autocomplete="off"/>
       <button id="da-search-btn" onclick="dramaAutoFill()" style="flex-shrink:0;border:none;border-radius:10px;padding:9px 12px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;transition:all .15s;white-space:nowrap">🔍 検索</button>
     </div>
-    <!-- サジェストドロップダウン -->
-    <div id="da-suggest" style="display:none;position:absolute;top:100%;left:0;right:44px;background:white;border:1.5px solid var(--bd);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:100;overflow:hidden;margin-top:2px"></div>
+    <div id="da-suggest" style="display:none;position:fixed;background:white;border:1.5px solid var(--bd);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:600;overflow:hidden;max-height:220px;overflow-y:auto"></div>
   </div>
-  <!-- 情報取得状態表示 -->
   <div id="da-status" style="display:none;font-size:11px;color:var(--lav);padding:6px 0;align-items:center;gap:5px">
     <span class="spin">✦</span><span id="da-status-txt">情報を取得中…</span>
   </div>
-  <!-- 自動入力フィールド -->
   <div id="da-fields" style="display:none">
-    <div class="fl" style="margin-top:8px">全何話（未定でもOK）</div>
-    <input class="fi" id="da-eps" type="number" placeholder="未定の場合は空欄でOK" min="1" max="99"/>
-    <div class="fl">メモ（あらすじ・キャストなど）</div>
+    <div class="fl" style="margin-top:8px">放送局・曜日</div>
+    <div class="chip-row" id="da-ch-chips" style="flex-wrap:wrap;gap:5px">
+      <button class="chip" onclick="dChip(this,'ch','フジテレビ')">フジ</button>
+      <button class="chip" onclick="dChip(this,'ch','TBS')">TBS</button>
+      <button class="chip" onclick="dChip(this,'ch','日本テレビ')">日テレ</button>
+      <button class="chip" onclick="dChip(this,'ch','テレビ朝日')">テレ朝</button>
+      <button class="chip" onclick="dChip(this,'ch','テレビ東京')">テレ東</button>
+      <button class="chip" onclick="dChip(this,'ch','NHK')">NHK</button>
+      <button class="chip" onclick="dChip(this,'ch','Netflix')">Netflix</button>
+      <button class="chip" onclick="dChip(this,'ch','Disney+')">Disney+</button>
+      <button class="chip" onclick="dChip(this,'ch','Prime Video')">Prime</button>
+      <button class="chip" onclick="dChip(this,'ch','U-NEXT')">U-NEXT</button>
+      <button class="chip" onclick="dChip(this,'ch','FOD')">FOD</button>
+      <button class="chip" onclick="dChip(this,'ch','その他')">その他</button>
+    </div>
+    <div class="chip-row" id="da-day-chips" style="flex-wrap:wrap;gap:5px;margin-top:5px">
+      <button class="chip" onclick="dChip(this,'day','月曜')">月</button>
+      <button class="chip" onclick="dChip(this,'day','火曜')">火</button>
+      <button class="chip" onclick="dChip(this,'day','水曜')">水</button>
+      <button class="chip" onclick="dChip(this,'day','木曜')">木</button>
+      <button class="chip" onclick="dChip(this,'day','金曜')">金</button>
+      <button class="chip" onclick="dChip(this,'day','土曜')">土</button>
+      <button class="chip" onclick="dChip(this,'day','日曜')">日</button>
+    </div>
+    <div class="fl" style="margin-top:10px">全何話</div>
+    <div class="chip-row" id="da-eps-chips" style="flex-wrap:wrap;gap:5px">
+      <button class="chip" onclick="dChip(this,'eps','4')">4話</button>
+      <button class="chip" onclick="dChip(this,'eps','6')">6話</button>
+      <button class="chip" onclick="dChip(this,'eps','8')">8話</button>
+      <button class="chip" onclick="dChip(this,'eps','9')">9話</button>
+      <button class="chip" onclick="dChip(this,'eps','10')">10話</button>
+      <button class="chip" onclick="dChip(this,'eps','11')">11話</button>
+      <button class="chip" onclick="dChip(this,'eps','12')">12話</button>
+      <button class="chip" onclick="dChip(this,'eps','16')">16話</button>
+      <button class="chip" onclick="dChip(this,'eps','20')">20話以上</button>
+      <button class="chip" onclick="dChip(this,'eps','0')">未定</button>
+    </div>
+    <input type="hidden" id="da-eps"/>
+    <div class="fl" style="margin-top:10px">メモ（あらすじなど）</div>
     <textarea class="fi" id="da-memo" rows="3" style="resize:none;line-height:1.6;font-size:12px" placeholder="Wikipediaから取得した情報が入ります…"></textarea>
   </div>
   <div class="mbtns" style="margin-top:10px">
@@ -1305,14 +1338,44 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
   <div class="fl">タイトル</div>
   <input class="fi" id="de-title" placeholder="タイトル"/>
   <div class="fl">放送局・曜日</div>
-  <input class="fi" id="de-ch" placeholder="例：フジテレビ 月曜21時"/>
-  <div class="fl">全何話（未定でもOK）</div>
-  <input class="fi" id="de-eps" type="number" placeholder="未定の場合は空欄でOK" min="1" max="99"/>
-  <div class="fl">配信情報</div>
-  <input class="fi" id="de-stream" placeholder="例：TVer最新話 / FOD見逃し"/>
-  <div class="fl">キャスト</div>
-  <input class="fi" id="de-cast" placeholder="例：竹野内豊、石原さとみ…"/>
-  <div class="fl">メモ</div>
+  <div class="chip-row" id="de-ch-chips" style="flex-wrap:wrap;gap:5px">
+    <button class="chip" onclick="dChip(this,'de-ch','フジテレビ')">フジ</button>
+    <button class="chip" onclick="dChip(this,'de-ch','TBS')">TBS</button>
+    <button class="chip" onclick="dChip(this,'de-ch','日本テレビ')">日テレ</button>
+    <button class="chip" onclick="dChip(this,'de-ch','テレビ朝日')">テレ朝</button>
+    <button class="chip" onclick="dChip(this,'de-ch','テレビ東京')">テレ東</button>
+    <button class="chip" onclick="dChip(this,'de-ch','NHK')">NHK</button>
+    <button class="chip" onclick="dChip(this,'de-ch','Netflix')">Netflix</button>
+    <button class="chip" onclick="dChip(this,'de-ch','Disney+')">Disney+</button>
+    <button class="chip" onclick="dChip(this,'de-ch','Prime Video')">Prime</button>
+    <button class="chip" onclick="dChip(this,'de-ch','U-NEXT')">U-NEXT</button>
+    <button class="chip" onclick="dChip(this,'de-ch','FOD')">FOD</button>
+    <button class="chip" onclick="dChip(this,'de-ch','その他')">その他</button>
+  </div>
+  <div class="chip-row" id="de-day-chips" style="flex-wrap:wrap;gap:5px;margin-top:5px">
+    <button class="chip" onclick="dChip(this,'de-day','月曜')">月</button>
+    <button class="chip" onclick="dChip(this,'de-day','火曜')">火</button>
+    <button class="chip" onclick="dChip(this,'de-day','水曜')">水</button>
+    <button class="chip" onclick="dChip(this,'de-day','木曜')">木</button>
+    <button class="chip" onclick="dChip(this,'de-day','金曜')">金</button>
+    <button class="chip" onclick="dChip(this,'de-day','土曜')">土</button>
+    <button class="chip" onclick="dChip(this,'de-day','日曜')">日</button>
+  </div>
+  <div class="fl" style="margin-top:10px">全何話</div>
+  <div class="chip-row" id="de-eps-chips" style="flex-wrap:wrap;gap:5px">
+    <button class="chip" onclick="dChip(this,'de-eps','4')">4話</button>
+    <button class="chip" onclick="dChip(this,'de-eps','6')">6話</button>
+    <button class="chip" onclick="dChip(this,'de-eps','8')">8話</button>
+    <button class="chip" onclick="dChip(this,'de-eps','9')">9話</button>
+    <button class="chip" onclick="dChip(this,'de-eps','10')">10話</button>
+    <button class="chip" onclick="dChip(this,'de-eps','11')">11話</button>
+    <button class="chip" onclick="dChip(this,'de-eps','12')">12話</button>
+    <button class="chip" onclick="dChip(this,'de-eps','16')">16話</button>
+    <button class="chip" onclick="dChip(this,'de-eps','20')">20話以上</button>
+    <button class="chip" onclick="dChip(this,'de-eps','0')">未定</button>
+  </div>
+  <input type="hidden" id="de-eps"/>
+  <div class="fl" style="margin-top:10px">メモ</div>
   <textarea class="fi" id="de-memo" rows="2" style="resize:none;line-height:1.6;font-size:12px" placeholder="あらすじなど…"></textarea>
   <div class="mbtns" style="margin-top:10px">
     <button class="mcx" onclick="closeDramaEdit()">キャンセル</button>
@@ -2263,10 +2326,45 @@ function dramaSub(sub){
 
 // ── 鑑賞中 ──
 let dramaTitleTimer=null, dramaSuggestTimer=null;
+// ドラマフォーム チップ選択用グローバル
+let dSelCh='', dSelDay='', dSelDeCh='', dSelDeDay='';
+
+function dChip(btn, group, val){
+  // グループ名でどの行かを判定
+  const groupMap={
+    'ch':'da-ch-chips','day':'da-day-chips',
+    'de-ch':'de-ch-chips','de-day':'de-day-chips',
+    'eps':'da-eps-chips','de-eps':'de-eps-chips'
+  };
+  const rowId=groupMap[group];
+  if(!rowId)return;
+  const row=document.getElementById(rowId);
+  if(!row)return;
+  const isOn=btn.classList.contains('on');
+  row.querySelectorAll('.chip').forEach(b=>b.classList.remove('on','ig-on'));
+  if(!isOn){btn.classList.add('on','ig-on');}
+  // 値を保持
+  if(group==='ch')dSelCh=isOn?'':val;
+  else if(group==='day')dSelDay=isOn?'':val;
+  else if(group==='de-ch')dSelDeCh=isOn?'':val;
+  else if(group==='de-day')dSelDeDay=isOn?'':val;
+  else if(group==='eps'||group==='de-eps'){
+    const hidId=group==='eps'?'da-eps':'de-eps';
+    const el=document.getElementById(hidId);
+    if(el)el.value=isOn?'':val;
+  }
+}
+
 function openAddDrama(){
-  ['da-title','da-eps','da-memo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  ['da-title','da-eps','da-memo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // チップリセット
+  ['da-ch-chips','da-day-chips','da-eps-chips'].forEach(id=>{
+    document.getElementById(id)?.querySelectorAll('.chip').forEach(b=>b.classList.remove('on','ig-on'));
+  });
+  dSelCh='';dSelDay='';
   const fields=document.getElementById('da-fields');if(fields)fields.style.display='none';
   const st=document.getElementById('da-status');if(st)st.style.display='none';
+  const gBtn=document.getElementById('da-google-btn');if(gBtn)gBtn.remove();
   hideDramaSuggest();
   document.getElementById('drama-add-ov').classList.add('on');
 }
@@ -2363,6 +2461,15 @@ function dramaTitleInput(val){
   clearTimeout(dramaTitleTimer);
   clearTimeout(dramaSuggestTimer);
   if(!val.trim())return;
+  // サジェストの位置を入力欄に合わせる
+  const inp=document.getElementById('da-title');
+  const sug=document.getElementById('da-suggest');
+  if(inp&&sug){
+    const rect=inp.getBoundingClientRect();
+    sug.style.top=(rect.bottom+4)+'px';
+    sug.style.left=rect.left+'px';
+    sug.style.width=rect.width+'px';
+  }
   dramaSuggestTimer=setTimeout(()=>fetchDramaSuggest(val.trim(),'da-suggest',null),600);
 }
 
@@ -2473,11 +2580,31 @@ function openDramaEdit(id){
   const d=S.dramaAiring.find(x=>x.id===id);if(!d)return;
   document.getElementById('de-id').value=id;
   document.getElementById('de-title').value=d.title||'';
-  document.getElementById('de-ch').value=d.ch||'';
-  document.getElementById('de-eps').value=d.eps||'';
-  document.getElementById('de-stream').value=d.stream||'';
-  document.getElementById('de-cast').value=d.cast||'';
   document.getElementById('de-memo').value=d.memo||'';
+  // チップ状態をリセットして復元
+  ['de-ch-chips','de-day-chips','de-eps-chips'].forEach(rid=>{
+    document.getElementById(rid)?.querySelectorAll('.chip').forEach(b=>b.classList.remove('on','ig-on'));
+  });
+  dSelDeCh='';dSelDeDay='';
+  // ch復元
+  if(d.ch){
+    const chParts=d.ch.split(' ');
+    const ch=chParts[0]||'';
+    const day=chParts[1]||'';
+    document.getElementById('de-ch-chips')?.querySelectorAll('.chip').forEach(b=>{
+      if(b.textContent.trim()&&d.ch.includes(b.getAttribute('onclick').match(/'([^']+)'\)$/)?.[1]||'')){
+        b.classList.add('on','ig-on');
+      }
+    });
+    dSelDeCh=ch;dSelDeDay=day;
+  }
+  // eps復元
+  const epsVal=String(d.eps||0);
+  document.getElementById('de-eps').value=epsVal;
+  document.getElementById('de-eps-chips')?.querySelectorAll('.chip').forEach(b=>{
+    const v=b.getAttribute('onclick').match(/'(\d+)'\)$/)?.[1];
+    if(v===epsVal){b.classList.add('on','ig-on');}
+  });
   document.getElementById('drama-edit-ov').classList.add('on');
 }
 function closeDramaEdit(){document.getElementById('drama-edit-ov').classList.remove('on');}
@@ -2486,9 +2613,7 @@ function saveDramaEdit(){
   const d=S.dramaAiring.find(x=>x.id===id);if(!d)return;
   const newEps=parseInt(document.getElementById('de-eps').value)||0;
   d.title=document.getElementById('de-title').value.trim();
-  d.ch=document.getElementById('de-ch').value.trim();
-  d.stream=document.getElementById('de-stream').value.trim();
-  d.cast=document.getElementById('de-cast').value.trim();
+  d.ch=[dSelDeCh,dSelDeDay].filter(Boolean).join(' ');
   d.memo=document.getElementById('de-memo').value.trim();
   if(newEps>d.eps){for(let i=d.eps+1;i<=newEps;i++)d.episodes.push({ep:i,igStar:0,igMemo:'',tkStar:0,tkMemo:''});}
   else if(newEps<d.eps&&newEps>0){d.episodes=d.episodes.slice(0,newEps);}
@@ -2522,10 +2647,11 @@ function saveDramaAdd(){
   const title=document.getElementById('da-title').value.trim();
   if(!title){alert('タイトルを入力してください');return;}
   const eps=parseInt(document.getElementById('da-eps').value)||0;
+  const ch=[dSelCh,dSelDay].filter(Boolean).join(' ');
   const memo=document.getElementById('da-memo')?.value.trim()||'';
   const episodes=[];
   for(let i=1;i<=eps;i++)episodes.push({ep:i,igStar:0,igMemo:'',tkStar:0,tkMemo:''});
-  S.dramaAiring.unshift({id:dramaIdCnt++,title,eps,memo,episodes,epsFixed:eps>0});
+  S.dramaAiring.unshift({id:dramaIdCnt++,title,ch,eps,memo,episodes,epsFixed:eps>0});
   closeDramaAdd();renderDramaAiring();lsSave(true);
 }
 function renderDramaNow(){
@@ -5104,7 +5230,7 @@ function switchDrama(pane){
  switchNote,calMove,calRender,calSelectDate,calRenderEvs,renderCalDaylog,
  openAddEv,closeAddEv,openEditEv,saveEv,deleteEv,evType,evRep,openAddEvWithDate,expandEvs,
  switchFilm,
- openAddDrama,closeDramaAdd,saveDramaAdd,dramaTitleInput,fetchDramaSuggest,hideDramaSuggest,selectDramaSuggest,dramaAutoFill,dramaSub,
+ openAddDrama,closeDramaAdd,saveDramaAdd,dramaTitleInput,fetchDramaSuggest,hideDramaSuggest,selectDramaSuggest,dramaAutoFill,dramaSub,dChip,
  openDramaDetail,closeDramaDetail,revealSpoil,addEpisodeToAiring,
  openDramaEdit,closeDramaEdit,saveDramaEdit,
  promptCompleteDrama,completeDramaMove,deleteDramaAiring,
