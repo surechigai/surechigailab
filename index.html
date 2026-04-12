@@ -1287,16 +1287,10 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
   </div>
   <!-- 自動入力フィールド -->
   <div id="da-fields" style="display:none">
-    <div class="fl" style="margin-top:8px">放送局・曜日</div>
-    <input class="fi" id="da-ch" placeholder="例：フジテレビ 月曜21時…"/>
-    <div class="fl">全何話（未定でもOK）</div>
+    <div class="fl" style="margin-top:8px">全何話（未定でもOK）</div>
     <input class="fi" id="da-eps" type="number" placeholder="未定の場合は空欄でOK" min="1" max="99"/>
-    <div class="fl">配信情報</div>
-    <input class="fi" id="da-stream" placeholder="例：TVer（最新話）/ FOD（見逃し）"/>
-    <div class="fl">キャスト</div>
-    <input class="fi" id="da-cast" placeholder="例：竹野内豊、石原さとみ…"/>
-    <div class="fl">メモ（あらすじ等）</div>
-    <textarea class="fi" id="da-memo" rows="2" style="resize:none;line-height:1.6;font-size:12px" placeholder="あらすじなど…"></textarea>
+    <div class="fl">メモ（あらすじ・キャストなど）</div>
+    <textarea class="fi" id="da-memo" rows="3" style="resize:none;line-height:1.6;font-size:12px" placeholder="Wikipediaから取得した情報が入ります…"></textarea>
   </div>
   <div class="mbtns" style="margin-top:10px">
     <button class="mcx" onclick="closeDramaAdd()">キャンセル</button>
@@ -2270,7 +2264,7 @@ function dramaSub(sub){
 // ── 鑑賞中 ──
 let dramaTitleTimer=null, dramaSuggestTimer=null;
 function openAddDrama(){
-  ['da-title','da-ch','da-eps','da-stream','da-cast','da-memo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  ['da-title','da-eps','da-memo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
   const fields=document.getElementById('da-fields');if(fields)fields.style.display='none';
   const st=document.getElementById('da-status');if(st)st.style.display='none';
   hideDramaSuggest();
@@ -2421,16 +2415,19 @@ async function dramaAutoFill(){
       return;
     }
     const text=page.extract||'';
-    // ② テキストから簡易パース
-    const ch=_extractPattern(text,[/放送局[：:]\s*([^\n。、]{2,20})/,/([^\s]{2,10}テレビ[^\n。、]{0,10})/,/([^\s]{2,6}TV[^\n。、]{0,6})/]);
-    const eps=_extractPattern(text,[/全(\d+)話/,/(\d+)話完結/]);
+    // 話数
+    const eps=_extractPattern(text,[/全(\d+)話/,/(\d+)話完結/,/全(\d+)回/]);
+    // キャスト
     const cast=_extractCast(text);
-    const memo=text.slice(0,120).replace(/\n+/g,' ').trim();
-    // ③ フォームに入れる
-    if(ch && document.getElementById('da-ch'))document.getElementById('da-ch').value=ch;
+    // あらすじ（最初の意味ある段落、200字まで）
+    const synopsis=(text.split('\n').find(l=>l.trim().length>30)||'').slice(0,200).trim();
+    // メモにまとめる
+    let memo='';
+    if(synopsis)memo+=synopsis+(synopsis.length>=200?'…':'');
+    if(cast)memo+='\n\n【キャスト】'+cast;
+    // フォームに入れる
     if(eps && document.getElementById('da-eps'))document.getElementById('da-eps').value=eps;
-    if(cast && document.getElementById('da-cast'))document.getElementById('da-cast').value=cast;
-    if(memo && document.getElementById('da-memo'))document.getElementById('da-memo').value=memo+'…';
+    if(memo && document.getElementById('da-memo'))document.getElementById('da-memo').value=memo;
     if(fields)fields.style.display='block';
     if(stTxt)stTxt.textContent='✓ Wikipedia から取得しました（内容を確認してね）';
     _showGoogleBtn(title);
@@ -2525,13 +2522,10 @@ function saveDramaAdd(){
   const title=document.getElementById('da-title').value.trim();
   if(!title){alert('タイトルを入力してください');return;}
   const eps=parseInt(document.getElementById('da-eps').value)||0;
-  const ch=document.getElementById('da-ch')?.value.trim()||'';
-  const stream=document.getElementById('da-stream')?.value.trim()||'';
-  const cast=document.getElementById('da-cast')?.value.trim()||'';
   const memo=document.getElementById('da-memo')?.value.trim()||'';
   const episodes=[];
   for(let i=1;i<=eps;i++)episodes.push({ep:i,igStar:0,igMemo:'',tkStar:0,tkMemo:''});
-  S.dramaAiring.unshift({id:dramaIdCnt++,title,ch,eps,stream,cast,memo,episodes,epsFixed:eps>0});
+  S.dramaAiring.unshift({id:dramaIdCnt++,title,eps,memo,episodes,epsFixed:eps>0});
   closeDramaAdd();renderDramaAiring();lsSave(true);
 }
 function renderDramaNow(){
