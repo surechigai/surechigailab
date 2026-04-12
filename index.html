@@ -2471,14 +2471,6 @@ function _showGoogleBtn(title){
   btn.innerHTML='🔍 Googleで詳しく調べる';
   st.appendChild(btn);
 }
-      if(stTxt)stTxt.textContent='情報が見つかりませんでした。手入力してください';
-    }
-  }catch(e){
-    if(stTxt)stTxt.textContent='取得できませんでした。手入力してください';
-  }
-  if(fields)fields.style.display='block';
-  if(btn){btn.disabled=false;btn.style.opacity='1';}
-}
 
 function openDramaEdit(id){
   const d=S.dramaAiring.find(x=>x.id===id);if(!d)return;
