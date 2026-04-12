@@ -2305,59 +2305,39 @@ async function fmAutoFill(title){
   const infoArea=document.getElementById('fm-info-area');
   const infoHtml=document.getElementById('fm-info-html');
   if(st)st.style.display='flex';
-  if(stTxt)stTxt.textContent='「'+title+'」の情報を検索中…';
+  if(stTxt)stTxt.textContent='「'+title+'」をWikipediaで検索中…';
   if(infoArea)infoArea.style.display='none';
   try{
-    const prompt=`web_searchツールで「${title} 映画 OR ドラマ 出演 あらすじ」「${title} 配信 Netflix OR Disney OR Prime OR TVer」を検索し、以下のJSON形式のみで回答してください（前後に何も付けない）:
-{"ch":"放送局または公開年（例：2022年 / フジテレビ月曜21時）","stream":"配信サービス（例：Netflix / Prime Video / TVer）","cast":"主要キャスト3〜5名","memo":"ネタバレなしのあらすじ1〜2文","type":"movie か drama か anime のいずれか"}`;
-    const res=await Promise.race([
-      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',max_tokens:800,
-          tools:[{type:'web_search_20250305',name:'web_search'}],
-          tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]
-        })
-      }),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
-    ]);
+    const url=`https://ja.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=extracts&exintro=1&explaintext=1&format=json&origin=*`;
+    const res=await fetch(url);
     const data=await res.json();
-    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
-    const match=txt.match(/\{[\s\S]*?\}/);
-    if(match){
-      const p=JSON.parse(match[0]);
-      fmAutoFillData=p;
-      // 種別チップを自動選択
-      if(p.type){
-        const typeMap={movie:'movie',drama:'drama',anime:'drama'};
-        const typeVal=typeMap[p.type]||'movie';
-        filmarkTypeSel=typeVal;
-        document.querySelectorAll('#fm-type-chips .chip').forEach(b=>{
-          b.classList.remove('on','lav-on');
-          if(b.getAttribute('onclick').includes("'"+typeVal+"'"))b.classList.add('on','lav-on');
-        });
-      }
-      // 詳細欄に反映
-      if(p.ch)document.getElementById('fm-ch-inp').value=p.ch;
-      if(p.stream)document.getElementById('fm-stream-inp').value=p.stream;
-      if(p.cast)document.getElementById('fm-cast-inp').value=p.cast;
-      // プレビュー表示
-      if(infoHtml){
-        let rows='';
-        if(p.ch)rows+=`<div><span style="color:var(--wg);margin-right:4px">📺</span>${p.ch}</div>`;
-        if(p.stream)rows+=`<div><span style="color:var(--wg);margin-right:4px">▶</span>${p.stream}</div>`;
-        if(p.cast)rows+=`<div><span style="color:var(--wg);margin-right:4px">👤</span>${p.cast}</div>`;
-        if(p.memo)rows+=`<div style="margin-top:4px;color:var(--wg);font-size:11px;line-height:1.6">${p.memo}</div>`;
-        infoHtml.innerHTML=rows;
-      }
-      if(infoArea)infoArea.style.display='block';
-      if(stTxt)stTxt.textContent='✓ 情報を取得しました';
-      setTimeout(()=>{if(st)st.style.display='none';},2000);
-    } else {
-      if(stTxt)stTxt.textContent='情報が見つかりませんでした';
-      setTimeout(()=>{if(st)st.style.display='none';},2000);
+    const pages=data.query?.pages||{};
+    const page=Object.values(pages)[0];
+    if(!page||page.missing||!page.extract){
+      if(stTxt)stTxt.textContent='⚠️ Wikipediaに情報がありませんでした';
+      setTimeout(()=>{if(st)st.style.display='none';},3000);
+      return;
     }
+    const text=page.extract||'';
+    const ch=_extractPattern(text,[/放送局[：:]\s*([^\n。、]{2,20})/,/([^\s]{2,10}テレビ[^\n。、]{0,10})/,/公開[：:]?\s*(\d{4}年[^\n。、]{0,10})/]);
+    const stream=_extractPattern(text,[/配信[：:]\s*([^\n。、]{2,30})/,/(Netflix|Prime\s*Video|Disney\+|Hulu|TVer)[^\n。、]{0,15}/]);
+    const cast=_extractCast(text);
+    const memo=text.slice(0,120).replace(/\n+/g,' ').trim();
+    fmAutoFillData={ch,stream,cast,memo};
+    if(ch && document.getElementById('fm-ch-inp'))document.getElementById('fm-ch-inp').value=ch;
+    if(stream && document.getElementById('fm-stream-inp'))document.getElementById('fm-stream-inp').value=stream;
+    if(cast && document.getElementById('fm-cast-inp'))document.getElementById('fm-cast-inp').value=cast;
+    if(infoHtml){
+      let rows='';
+      if(ch)rows+=`<div><span style="color:var(--wg);margin-right:4px">📺</span>${ch}</div>`;
+      if(stream)rows+=`<div><span style="color:var(--wg);margin-right:4px">▶</span>${stream}</div>`;
+      if(cast)rows+=`<div><span style="color:var(--wg);margin-right:4px">👤</span>${cast}</div>`;
+      if(memo)rows+=`<div style="margin-top:4px;color:var(--wg);font-size:11px;line-height:1.6">${memo}…</div>`;
+      infoHtml.innerHTML=rows||'<div style="color:#ccc;font-size:11px">情報を取得できませんでした</div>';
+    }
+    if(infoArea)infoArea.style.display='block';
+    if(stTxt)stTxt.textContent='✓ Wikipedia から取得しました';
+    setTimeout(()=>{if(st)st.style.display='none';},2500);
   }catch(e){
     if(stTxt)stTxt.textContent='取得できませんでした';
     setTimeout(()=>{if(st)st.style.display='none';},2000);
@@ -2398,45 +2378,21 @@ async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
   suggest.style.display='block';
   suggest.innerHTML='<div style="padding:10px 12px;font-size:11px;color:var(--lav);display:flex;align-items:center;gap:5px"><span class="spin">✦</span>候補を検索中…</div>';
   try{
-    const prompt=`web_searchツールを使って「${val}」を検索してください（複数クエリ可：「${val} ドラマ」「${val} 映画」「${val} anime」など）。
-検索結果をもとに、以下の条件で「${val}」に部分一致するタイトルを最大6件選んでください。
-対象：
-- 日本ドラマ・映画・アニメ（年代問わず過去作含む）
-- 韓国ドラマ・映画
-- 洋ドラ・洋画
-- Netflix / Disney+ / Prime Video / Apple TV+ / Hulu / WOWOW 等の配信オリジナル作品
-- 2025〜2026年の最新作も積極的に含める
-出力はJSONのみ（前後に何も付けない）: {"titles":["タイトル1","タイトル2",...]}`;
-    const res=await Promise.race([
-      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:400,
-          tools:[{type:'web_search_20250305',name:'web_search'}],
-          tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]
-        })
-      }),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),12000))
-    ]);
+    // Wikipedia日本語サイト内検索
+    const url=`https://ja.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(val)}&limit=6&namespace=0&format=json&origin=*`;
+    const res=await fetch(url);
     const data=await res.json();
-    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
-    const match=txt.match(/\{[\s\S]*?\}/);
-    if(match){
-      const titles=(JSON.parse(match[0]).titles||[]).filter(Boolean);
-      if(!titles.length){suggest.style.display='none';return;}
-      const fn=onSelect||'selectDramaSuggest';
-      suggest.innerHTML=titles.map((t,i)=>{
-        const esc=t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        return `<div onclick="${fn}('${esc}')"
-             style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px;transition:background .1s"
-             onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''">
-          <span style="font-size:14px">📺</span><span>${t}</span>
-        </div>`;
-      }).join('');
-    } else {suggest.style.display='none';}
+    const titles=data[1]||[];
+    if(!titles.length){suggest.style.display='none';return;}
+    const fn=onSelect||'selectDramaSuggest';
+    suggest.innerHTML=titles.map((t,i)=>{
+      const esc=t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return `<div onclick="${fn}('${esc}')"
+           style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px;transition:background .1s"
+           onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''">
+        <span style="font-size:14px">📺</span><span>${t}</span>
+      </div>`;
+    }).join('');
   }catch(e){suggest.style.display='none';}
 }
 
@@ -2448,36 +2404,73 @@ async function dramaAutoFill(){
   const fields=document.getElementById('da-fields');
   const btn=document.getElementById('da-search-btn');
   if(st)st.style.display='flex';
-  if(stTxt)stTxt.textContent='「'+title+'」を検索中…';
+  if(stTxt)stTxt.textContent='「'+title+'」をWikipediaで検索中…';
   if(btn){btn.disabled=true;btn.style.opacity='.5';}
   try{
-    const prompt=`web_searchツールで「${title} ドラマ 放送局 何話 2025」「${title} 配信 TVer FOD」「${title} キャスト 出演者」をそれぞれ検索してから、以下のJSON形式のみで回答してください（前後に何も付けない）:\n{"ch":"放送局と曜日時間（例：フジテレビ 月曜21時）","eps":全話数の数値（不明は0）,"stream":"配信サービスと条件（例：TVer最新話無料／FOD見逃し／Netflix全話）","cast":"主要キャスト3〜5名（例：竹野内豊、石原さとみ、松坂桃李）","memo":"ネタバレなしのあらすじ1〜2文"}`;
-    const res=await Promise.race([
-      fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:800,
-          tools:[{type:'web_search_20250305',name:'web_search'}],
-          tool_choice:{type:'any'},
-          messages:[{role:'user',content:prompt}]
-        })
-      }),
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),25000))
-    ]);
+    // ① Wikipedia 記事の概要を取得
+    const url=`https://ja.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=extracts&exintro=1&explaintext=1&format=json&origin=*`;
+    const res=await fetch(url);
     const data=await res.json();
-    const txt=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
-    const match=txt.match(/\{[\s\S]*?\}/);
-    if(match){
-      const p=JSON.parse(match[0]);
-      if(p.ch)document.getElementById('da-ch').value=p.ch;
-      if(p.eps)document.getElementById('da-eps').value=p.eps;
-      if(p.stream)document.getElementById('da-stream').value=p.stream;
-      if(p.cast)document.getElementById('da-cast').value=p.cast;
-      if(p.memo)document.getElementById('da-memo').value=p.memo;
-      if(stTxt)stTxt.textContent='✓ 取得完了（内容を確認してね）';
-    } else {
+    const pages=data.query?.pages||{};
+    const page=Object.values(pages)[0];
+    if(!page||page.missing||!page.extract){
+      // 見つからない場合
+      if(stTxt)stTxt.textContent='⚠️ Wikipediaに情報がありませんでした';
+      if(fields)fields.style.display='block';
+      _showGoogleBtn(title);
+      return;
+    }
+    const text=page.extract||'';
+    // ② テキストから簡易パース
+    const ch=_extractPattern(text,[/放送局[：:]\s*([^\n。、]{2,20})/,/([^\s]{2,10}テレビ[^\n。、]{0,10})/,/([^\s]{2,6}TV[^\n。、]{0,6})/]);
+    const eps=_extractPattern(text,[/全(\d+)話/,/(\d+)話完結/]);
+    const cast=_extractCast(text);
+    const memo=text.slice(0,120).replace(/\n+/g,' ').trim();
+    // ③ フォームに入れる
+    if(ch && document.getElementById('da-ch'))document.getElementById('da-ch').value=ch;
+    if(eps && document.getElementById('da-eps'))document.getElementById('da-eps').value=eps;
+    if(cast && document.getElementById('da-cast'))document.getElementById('da-cast').value=cast;
+    if(memo && document.getElementById('da-memo'))document.getElementById('da-memo').value=memo+'…';
+    if(fields)fields.style.display='block';
+    if(stTxt)stTxt.textContent='✓ Wikipedia から取得しました（内容を確認してね）';
+    _showGoogleBtn(title);
+  }catch(e){
+    if(stTxt)stTxt.textContent='⚠️ 取得失敗。手動で入力してください';
+    if(fields)fields.style.display='block';
+    _showGoogleBtn(title);
+  }finally{
+    if(btn){btn.disabled=false;btn.style.opacity='1';}
+  }
+}
+
+function _extractPattern(text, patterns){
+  for(const re of patterns){
+    const m=text.match(re);
+    if(m)return m[1]?.trim()||null;
+  }
+  return null;
+}
+
+function _extractCast(text){
+  // 「主演」「出演」の後に来る人名リストを抽出
+  const m=text.match(/(?:主演|出演)[：:\s]*([^\n。]{4,60})/);
+  if(m)return m[1].replace(/[（(][^）)]*[）)]/g,'').replace(/\s+/g,'').slice(0,40);
+  return null;
+}
+
+function _showGoogleBtn(title){
+  const st=document.getElementById('da-status');
+  if(!st)return;
+  const existBtn=document.getElementById('da-google-btn');
+  if(existBtn)return;
+  const btn=document.createElement('a');
+  btn.id='da-google-btn';
+  btn.href=`https://www.google.com/search?q=${encodeURIComponent(title+' ドラマ 情報')}`;
+  btn.target='_blank';
+  btn.style.cssText='display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ig-d);background:var(--ig-bg);border-radius:8px;padding:4px 10px;text-decoration:none;margin-left:8px;flex-shrink:0';
+  btn.innerHTML='🔍 Googleで詳しく調べる';
+  st.appendChild(btn);
+}
       if(stTxt)stTxt.textContent='情報が見つかりませんでした。手入力してください';
     }
   }catch(e){
