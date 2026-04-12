@@ -1270,15 +1270,15 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 </div></div>
 
 <!-- 鑑賞中ドラマ追加モーダル -->
-<div class="ov" id="drama-add-ov"><div class="modal">
+<div class="ov" id="drama-add-ov"><div class="modal" style="overflow:visible">
   <div class="mt">📺 鑑賞中ドラマを追加</div>
   <div class="fl">タイトル</div>
   <div style="position:relative">
     <div style="display:flex;gap:6px;align-items:center">
-      <input class="fi" id="da-title" placeholder="例：アンメット、光る君へ…" style="flex:1;margin-bottom:0" oninput="dramaTitleInput(this.value)" onblur="setTimeout(()=>hideDramaSuggest(),300)" autocomplete="off"/>
+      <input class="fi" id="da-title" placeholder="例：アンメット、光る君へ…" style="flex:1;margin-bottom:0" oninput="dramaTitleInput(this.value)" autocomplete="off"/>
       <button id="da-search-btn" onclick="dramaAutoFill()" style="flex-shrink:0;border:none;border-radius:10px;padding:9px 12px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;transition:all .15s;white-space:nowrap">🔍 検索</button>
     </div>
-    <div id="da-suggest" style="display:none;position:fixed;background:white;border:1.5px solid var(--bd);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:600;overflow:hidden;max-height:220px;overflow-y:auto"></div>
+    <div id="da-suggest" style="display:none;position:absolute;top:100%;left:0;right:50px;background:white;border:1.5px solid var(--bd);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;overflow:hidden;margin-top:3px"></div>
   </div>
   <div id="da-status" style="display:none;font-size:11px;color:var(--lav);padding:6px 0;align-items:center;gap:5px">
     <span class="spin">✦</span><span id="da-status-txt">情報を取得中…</span>
@@ -2364,7 +2364,7 @@ function openAddDrama(){
   dSelCh='';dSelDay='';
   const fields=document.getElementById('da-fields');if(fields)fields.style.display='none';
   const st=document.getElementById('da-status');if(st)st.style.display='none';
-  const gBtn=document.getElementById('da-google-btn');if(gBtn)gBtn.remove();
+  const sug=document.getElementById('da-suggest');if(sug)sug.style.display='none';
   hideDramaSuggest();
   document.getElementById('drama-add-ov').classList.add('on');
 }
@@ -2457,20 +2457,29 @@ function selectDramaSuggest(title){
   dramaAutoFill();
 }
 function dramaTitleInput(val){
-  hideDramaSuggest();
-  clearTimeout(dramaTitleTimer);
   clearTimeout(dramaSuggestTimer);
-  if(!val.trim())return;
-  // サジェストの位置を入力欄に合わせる
-  const inp=document.getElementById('da-title');
   const sug=document.getElementById('da-suggest');
-  if(inp&&sug){
-    const rect=inp.getBoundingClientRect();
-    sug.style.top=(rect.bottom+4)+'px';
-    sug.style.left=rect.left+'px';
-    sug.style.width=rect.width+'px';
-  }
-  dramaSuggestTimer=setTimeout(()=>fetchDramaSuggest(val.trim(),'da-suggest',null),600);
+  if(!val.trim()){if(sug)sug.style.display='none';return;}
+  dramaSuggestTimer=setTimeout(async()=>{
+    if(!sug)return;
+    sug.style.display='block';
+    sug.innerHTML='<div style="padding:8px 12px;font-size:11px;color:var(--lav);display:flex;align-items:center;gap:5px"><span class="spin">✦</span>検索中…</div>';
+    try{
+      const url=`https://ja.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(val)}&limit=6&namespace=0&format=json&origin=*`;
+      const res=await fetch(url);
+      const data=await res.json();
+      const titles=data[1]||[];
+      if(!titles.length){sug.style.display='none';return;}
+      sug.innerHTML=titles.map((t,i)=>`<div class="da-sug-item" style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px" data-v="${t.replace(/"/g,'&quot;')}"><span>📺</span><span>${t}</span></div>`).join('');
+      sug.querySelectorAll('.da-sug-item').forEach(el=>{
+        el.addEventListener('click',()=>{
+          document.getElementById('da-title').value=el.dataset.v;
+          sug.style.display='none';
+          dramaAutoFill();
+        });
+      });
+    }catch(e){sug.style.display='none';}
+  },500);
 }
 
 async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
@@ -2485,17 +2494,20 @@ async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
     const data=await res.json();
     const titles=data[1]||[];
     if(!titles.length){suggest.style.display='none';return;}
-    suggest.innerHTML=titles.map((t,i)=>{
-      const esc=t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      const fn=onSelect||'selectDramaSuggest';
-      return `<div
-           onmousedown="event.preventDefault();${fn}('${esc}')"
-           ontouchstart="event.preventDefault();${fn}('${esc}')"
+    const fn=onSelect?window[onSelect]:selectDramaSuggest;
+    suggest.innerHTML=titles.map((t,i)=>`
+      <div data-title="${t.replace(/"/g,'&quot;')}"
            style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px;transition:background .1s;-webkit-tap-highlight-color:transparent"
            onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''">
         <span style="font-size:14px">📺</span><span>${t}</span>
-      </div>`;
-    }).join('');
+      </div>`).join('');
+    // イベントをJSで直接バインド（onclickより確実）
+    suggest.querySelectorAll('[data-title]').forEach(el=>{
+      const t=el.dataset.title;
+      const handler=(e)=>{e.preventDefault();e.stopPropagation();(fn||selectDramaSuggest)(t);};
+      el.addEventListener('mousedown',handler);
+      el.addEventListener('touchend',handler);
+    });
   }catch(e){suggest.style.display='none';}
 }
 
@@ -2510,40 +2522,28 @@ async function dramaAutoFill(){
   if(stTxt)stTxt.textContent='「'+title+'」をWikipediaで検索中…';
   if(btn){btn.disabled=true;btn.style.opacity='.5';}
   try{
-    // ① Wikipedia 記事の概要を取得
     const url=`https://ja.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=extracts&exintro=1&explaintext=1&format=json&origin=*`;
     const res=await fetch(url);
     const data=await res.json();
     const pages=data.query?.pages||{};
     const page=Object.values(pages)[0];
     if(!page||page.missing||!page.extract){
-      // 見つからない場合
-      if(stTxt)stTxt.textContent='⚠️ Wikipediaに情報がありませんでした';
+      if(stTxt)stTxt.textContent='⚠️ Wikipediaに情報なし。タイトルを確認してね';
       if(fields)fields.style.display='block';
-      _showGoogleBtn(title);
       return;
     }
-    const text=page.extract||'';
-    // 話数
-    const eps=_extractPattern(text,[/全(\d+)話/,/(\d+)話完結/,/全(\d+)回/]);
-    // キャスト
-    const cast=_extractCast(text);
-    // あらすじ（最初の意味ある段落、200字まで）
-    const synopsis=(text.split('\n').find(l=>l.trim().length>30)||'').slice(0,200).trim();
-    // メモにまとめる
-    let memo='';
-    if(synopsis)memo+=synopsis+(synopsis.length>=200?'…':'');
-    if(cast)memo+='\n\n【キャスト】'+cast;
-    // フォームに入れる
-    if(eps && document.getElementById('da-eps'))document.getElementById('da-eps').value=eps;
-    if(memo && document.getElementById('da-memo'))document.getElementById('da-memo').value=memo;
+    // 正式タイトル（Wikipediaの記事名）をそのまま使う
+    const officialTitle=page.title||title;
+    document.getElementById('da-title').value=officialTitle;
+    // あらすじ（最初の段落、200字まで）
+    const synopsis=(page.extract.split('\n').find(l=>l.trim().length>20)||'').slice(0,200).trim();
+    const memo=synopsis+(synopsis.length>=200?'…':'');
+    if(memo)document.getElementById('da-memo').value=memo;
     if(fields)fields.style.display='block';
-    if(stTxt)stTxt.textContent='✓ Wikipedia から取得しました（内容を確認してね）';
-    _showGoogleBtn(title);
+    if(stTxt)stTxt.textContent='✓ 取得しました（内容を確認してね）';
   }catch(e){
     if(stTxt)stTxt.textContent='⚠️ 取得失敗。手動で入力してください';
     if(fields)fields.style.display='block';
-    _showGoogleBtn(title);
   }finally{
     if(btn){btn.disabled=false;btn.style.opacity='1';}
   }
