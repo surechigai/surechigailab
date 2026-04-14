@@ -2626,20 +2626,36 @@ function showAllEpRows(did){
     </div>`;
   }).join('');
 }
+function _getDayFromBroadcast(d){
+  const src=d.broadcast||d.ch||'';
+  const m=src.match(/([月火水木金土日])曜/);
+  return m?m[1]+'曜':null;
+}
+
 function renderDramaAiring(){
   const list=document.getElementById('drama-airing-list');
   if(!list)return;
   if(!S.dramaAiring.length){list.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:#ccc">まだ追加されていません</div>';return;}
-  list.innerHTML=S.dramaAiring.map(d=>{
+
+  // 曜日順にグループ化
+  const DAY_ORDER=['月曜','火曜','水曜','木曜','金曜','土曜','日曜','その他'];
+  const groups={};
+  DAY_ORDER.forEach(d=>groups[d]=[]);
+  S.dramaAiring.forEach(d=>{
+    const day=_getDayFromBroadcast(d)||'その他';
+    (groups[day]=groups[day]||[]).push(d);
+  });
+
+  const cardHtml=(d)=>{
     const done=d.episodes.filter(e=>(me==='ig'?e.igStar:e.tkStar)>0).length;
     const total=d.episodes.length;
     const pct=total>0?Math.round(done/total*100):0;
-    return `<div class="drama-card" onclick="openDramaDetail(${d.id})" style="cursor:pointer">
+    const meta=[d.broadcast||d.ch,d.totalEps?`全${d.totalEps}話`:''].filter(Boolean).join(' · ');
+    return `<div class="drama-card" onclick="openDramaDetail(${d.id})" style="cursor:pointer;margin-bottom:6px">
       <div style="display:flex;align-items:center;gap:10px;padding:11px 13px">
         <div style="flex:1;min-width:0">
           <div class="drama-title">${d.title}</div>
-          <div class="drama-meta" style="margin-top:2px">${d.ch||''}${d.ch&&d.eps?' · ':''}${d.eps?'全'+d.eps+'話':''}</div>
-          ${d.stream?`<div style="font-size:9px;color:var(--lav);margin-top:2px">📺 ${d.stream}</div>`:''}
+          ${meta?`<div class="drama-meta" style="margin-top:2px">${meta}</div>`:''}
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:11px;font-weight:600;color:var(--lav)">${done}/${total}話</div>
@@ -2649,7 +2665,16 @@ function renderDramaAiring(){
       </div>
       ${total>0?`<div style="height:3px;background:var(--bd);border-radius:0 0 12px 12px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,var(--lav),var(--ig));width:${pct}%;transition:width .5s"></div></div>`:''}
     </div>`;
-  }).join('');
+  };
+
+  let html='';
+  DAY_ORDER.forEach(day=>{
+    const dramas=groups[day];
+    if(!dramas||!dramas.length)return;
+    html+=`<div style="font-size:10px;font-weight:700;color:var(--wg);letter-spacing:.06em;margin:10px 0 5px;padding-left:2px">${day==='その他'?'曜日未設定':day}</div>`;
+    html+=dramas.map(cardHtml).join('');
+  });
+  list.innerHTML=html;
 }
 
 function openDramaDetail(id){
