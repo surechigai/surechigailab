@@ -968,18 +968,6 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
           </div>
           <div id="drama-airing-list"></div>
         </div>
-        <!-- 詳細画面（作品タップで表示） -->
-        <div id="drama-detail" style="display:none;position:fixed;inset:0;background:var(--cream);overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:200">
-          <div style="display:flex;align-items:center;gap:8px;padding:10px 13px;background:var(--card);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:1">
-            <button onclick="closeDramaDetail()" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--wg);font-family:'Noto Sans JP',sans-serif;padding:0;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="13"><polyline points="15 18 9 12 15 6"/></svg>一覧</button>
-            <div id="dd-title" style="font-family:'Zen Maru Gothic',serif;font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-            <button id="dd-edit-btn" onclick="" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--wg);padding:2px 4px;letter-spacing:-1px;line-height:1">⋯</button>
-          </div>
-          <!-- 概要エリア -->
-          <div id="dd-overview" style="padding:12px 13px;background:var(--card);border-bottom:1px solid var(--bd)"></div>
-          <!-- 各話レビューエリア -->
-          <div id="dd-episodes" style="padding:10px 13px"></div>
-        </div>
       </div>
       <!-- 鑑賞記録 -->
       <div class="note-pane" id="fpane-log">
@@ -1122,6 +1110,17 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
         <button class="dl-btn secondary" id="copy-btn" onclick="copyExport()">📋 コピー</button>
       </div>
     </div>
+  </div>
+
+  <!-- ドラマ詳細パネル（appレベル・position:absolute） -->
+  <div id="drama-detail" style="display:none;position:absolute;inset:0;background:var(--cream);overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:200">
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 13px;background:var(--card);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:1">
+      <button onclick="closeDramaDetail()" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--wg);font-family:'Noto Sans JP',sans-serif;padding:0;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="13"><polyline points="15 18 9 12 15 6"/></svg>一覧</button>
+      <div id="dd-title" style="font-family:'Zen Maru Gothic',serif;font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      <button id="dd-edit-btn" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--wg);padding:2px 4px;letter-spacing:-1px;line-height:1">⋯</button>
+    </div>
+    <div id="dd-overview" style="padding:12px 13px;background:var(--card);border-bottom:1px solid var(--bd)"></div>
+    <div id="dd-episodes" style="padding:10px 13px"></div>
   </div>
 
 </div>
