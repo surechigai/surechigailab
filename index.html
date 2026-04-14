@@ -2624,26 +2624,45 @@ function openDramaDetail(id){
   const d=S.dramaAiring.find(x=>x.id===id);if(!d)return;
   const detail=document.getElementById('drama-detail');
   if(!detail)return;
+  // 現在のドラマIDを記録
+  detail.dataset.dramaId=id;
   document.getElementById('dd-title').textContent=d.title;
-  // 編集ボタン
-  const editBtn=document.getElementById('dd-edit-btn');
-  editBtn.onclick=()=>openDramaEdit(id);
+  document.getElementById('dd-edit-btn').onclick=()=>openDramaEdit(id);
   // 概要
   const ov=document.getElementById('dd-overview');
   ov.innerHTML=`
     <div style="display:flex;flex-wrap:wrap;gap:10px">
-      ${d.ch?`<div><div style="font-size:9px;color:var(--wg);margin-bottom:2px">放送</div><div style="font-size:12px;font-weight:500">${d.ch}</div></div>`:''}
-      ${d.eps?`<div><div style="font-size:9px;color:var(--wg);margin-bottom:2px">全話数</div><div style="font-size:12px;font-weight:500">${d.eps}話</div></div>`:''}
-      ${d.memo?`<div style="width:100%;padding-top:${d.ch||d.eps?'6px':'0'};border-top:${d.ch||d.eps?'1px solid var(--bd)':'none'};margin-top:${d.ch||d.eps?'4px':'0'}"><div style="font-size:11px;color:var(--wg);line-height:1.6">${d.memo}</div></div>`:''}
+      ${d.memo?`<div style="width:100%"><div style="font-size:11px;color:var(--wg);line-height:1.6">${d.memo}</div></div>`:''}
     </div>
     <div style="display:flex;gap:8px;margin-top:10px">
-      <button id="dd-add-ep-btn" style="flex:1;border:1.5px solid var(--bd);border-radius:12px;padding:8px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--text)">＋ 話を追加</button>
-      <button id="dd-complete-btn" style="flex:1;border:none;border-radius:12px;padding:8px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:'Zen Maru Gothic',serif">✓ 鑑賞完了にする</button>
+      <button data-action="add-ep" style="flex:1;border:1.5px solid var(--bd);border-radius:12px;padding:8px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--text)">＋ 話を追加</button>
+      <button data-action="complete" style="flex:1;border:none;border-radius:12px;padding:8px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:'Zen Maru Gothic',serif">✓ 鑑賞完了にする</button>
     </div>`;
-  // ボタンをJSで直接バインド
-  document.getElementById('dd-add-ep-btn').onclick=()=>addEpisodeToAiring(id);
-  document.getElementById('dd-complete-btn').onclick=()=>promptCompleteDrama(d);
-  // 各話
+  // イベント委譲をdetailパネル全体に設定（一度だけ）
+  if(!detail._delegated){
+    detail._delegated=true;
+    detail.addEventListener('click',e=>{
+      const did=parseInt(detail.dataset.dramaId);
+      const drama=S.dramaAiring.find(x=>x.id===did);
+      if(!drama)return;
+      const btn=e.target.closest('[data-action]');
+      if(btn){
+        const action=btn.dataset.action;
+        if(action==='add-ep')addEpisodeToAiring(did);
+        else if(action==='complete')promptCompleteDrama(drama);
+        else if(action==='next-ep')addEpisodeToAiring(did);
+        else if(action==='add-first')addEpisodeToAiring(did);
+        return;
+      }
+      const epCard=e.target.closest('[data-ep-open]');
+      if(epCard){
+        openEpModal(did,parseInt(epCard.dataset.epOpen));
+        return;
+      }
+      const mask=e.target.closest('[data-spoil]');
+      if(mask){revealSpoil(mask.dataset.spoil);}
+    });
+  }
   renderDramaDetailEps(d);
   detail.style.display='block';
   detail.scrollTop=0;
@@ -2656,9 +2675,8 @@ function renderDramaDetailEps(d){
     container.innerHTML=`<div style="font-size:11px;font-weight:600;color:var(--wg);margin-bottom:8px">各話レビュー</div>
       <div style="text-align:center;padding:16px;font-size:12px;color:#ccc">
         <div style="margin-bottom:8px">まだ話が追加されていません</div>
-        <button id="dd-add-first-btn" style="border:none;border-radius:12px;padding:7px 18px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif">＋ 第1話を追加</button>
+        <button data-action="add-first" style="border:none;border-radius:12px;padding:7px 18px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif">＋ 第1話を追加</button>
       </div>`;
-    document.getElementById('dd-add-first-btn').onclick=()=>addEpisodeToAiring(d.id);
     return;
   }
   const visibleEps=d.episodes.filter(e=>{
@@ -2701,7 +2719,7 @@ function renderDramaDetailEps(d){
          ${pMemo?`<div style="font-size:11px;color:var(--text);line-height:1.55">${pMemo}</div>`:`<div style="font-size:10px;color:#bbb">コメントなし</div>`}`
       :`<div style="font-size:10px;color:#ccc;padding:4px 0">まだ記録なし</div>`;
     const pMaskHtml=pHasInput
-      ?`<div id="${spoilId}-mask" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;background:rgba(230,220,248,.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);border-radius:12px;transition:opacity .2s">
+      ?`<div data-spoil="${spoilId}" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;background:rgba(230,220,248,.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);border-radius:12px;transition:opacity .2s">
             <span style="font-size:18px">👀</span>
             <span style="font-size:9px;color:var(--lav);font-weight:600">タップで表示</span>
           </div>`:''
@@ -2711,7 +2729,7 @@ function renderDramaDetailEps(d){
         ${tempDiff?`<span style="font-size:9px;background:#fff3cd;color:#856404;border-radius:8px;padding:1px 7px">温度差あり 👀</span>`:''}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-        <div class="dd-ep-my" data-drama="${d.id}" data-ep="${e.ep}"
+        <div data-ep-open="${e.ep}"
              style="background:${myHasInput?myBg:'#f5f2ef'};border-radius:12px;padding:9px 11px;cursor:pointer;border:1.5px solid ${myHasInput?'transparent':'var(--bd)'};transition:filter .15s">
           <div style="font-size:10px;font-weight:600;color:${myCol};margin-bottom:5px">${myName}</div>
           ${myCardInner}
@@ -2724,18 +2742,9 @@ function renderDramaDetailEps(d){
       </div>
     </div>`;
   }).join('')+`<div style="padding:12px 0;text-align:center">
-    <button id="dd-next-ep-btn" style="border:1.5px solid var(--bd);border-radius:12px;padding:7px 20px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">＋ 次の話を追加</button>
+    <button data-action="next-ep" style="border:1.5px solid var(--bd);border-radius:12px;padding:7px 20px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">＋ 次の話を追加</button>
   </div>`;
-  // ボタンをJSで直接バインド
-  container.querySelectorAll('.dd-ep-my').forEach(el=>{
-    el.addEventListener('click',()=>openEpModal(parseInt(el.dataset.drama),parseInt(el.dataset.ep)));
-  });
-  container.querySelectorAll('[id$="-mask"]').forEach(el=>{
-    const sid=el.id.replace('-mask','');
-    el.addEventListener('click',()=>revealSpoil(sid));
-  });
-  const nextBtn=document.getElementById('dd-next-ep-btn');
-  if(nextBtn)nextBtn.onclick=()=>addEpisodeToAiring(d.id);
+  // 個別バインド不要（イベント委譲で処理）
 }
 
 function closeDramaDetail(){
@@ -2743,11 +2752,12 @@ function closeDramaDetail(){
   if(detail)detail.style.display='none';
 }
 function revealSpoil(id){
-  const mask=document.getElementById(id+'-mask');
+  // data-spoil属性を持つ要素を非表示にする
+  const mask=document.querySelector(`[data-spoil="${id}"]`)||document.getElementById(id+'-mask');
   if(mask){
     mask.style.opacity='0';
     mask.style.pointerEvents='none';
-    setTimeout(()=>{if(mask.parentElement)mask.style.display='none';},200);
+    setTimeout(()=>{if(mask.parentElement)mask.remove();},300);
   }
 }
 function addEpisodeToAiring(dramaId){
@@ -2756,6 +2766,8 @@ function addEpisodeToAiring(dramaId){
   d.episodes.push({ep:nextEp,igStar:0,igMemo:'',tkStar:0,tkMemo:''});
   d.eps=d.episodes.length;
   renderDramaAiring();renderDramaDetailEps(d);lsSave();
+  // 感想モーダルをすぐ開く
+  openEpModal(dramaId,nextEp);
 }
 
 function toggleDramaEps(id){
