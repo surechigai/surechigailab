@@ -1284,7 +1284,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
   </div>
   <div id="da-fields" style="display:none">
     <div class="fl" style="margin-top:8px">放送情報（任意）</div>
-    <input class="fi" id="da-broadcast" placeholder="例：フジ 火曜21時 / Netflix" style="font-size:13px"/>
+    <input class="fi" id="da-broadcast" placeholder="例：フジ 火曜21時 / Netflix 毎週金曜" style="font-size:13px"/>
     <div class="fl">メモ（あらすじなど）</div>
     <textarea class="fi" id="da-memo" rows="3" style="resize:none;line-height:1.6;font-size:12px" placeholder="Wikipediaから取得した情報が入ります…"></textarea>
   </div>
@@ -1301,7 +1301,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
   <div class="fl">タイトル</div>
   <input class="fi" id="de-title" placeholder="タイトル"/>
   <div class="fl">放送情報（任意）</div>
-  <input class="fi" id="de-broadcast" placeholder="例：フジ 火曜21時 / Netflix" style="font-size:13px"/>
+  <input class="fi" id="de-broadcast" placeholder="例：フジ 火曜21時 / Netflix 毎週金曜 / 配信中" style="font-size:13px"/>
   <div class="fl">メモ</div>
   <textarea class="fi" id="de-memo" rows="3" style="resize:none;line-height:1.6;font-size:12px" placeholder="あらすじなど…"></textarea>
   <div class="mbtns" style="margin-top:10px">
@@ -2680,15 +2680,23 @@ function renderDramaAiring(){
       ${dramas.map(cardHtml).join('')}
     </div>`;
   });
-  // 曜日未設定
+  // 曜日未設定：放送情報があればその内容でラベル、なければ「未設定」
   if(unset.length){
-    html+=`<div style="margin-bottom:10px;background:var(--card);border-radius:14px;border:1.5px solid var(--bd);overflow:hidden;box-shadow:var(--shadow-sm)">
-      <div style="padding:7px 12px;background:#f0f0f0;display:flex;align-items:center;gap:6px">
-        <span style="font-size:12px;font-weight:700;color:#888">曜日未設定</span>
-        <span style="font-size:10px;color:#aaa">${unset.length}作品</span>
-      </div>
-      ${unset.map(cardHtml).join('')}
-    </div>`;
+    // 放送情報ごとにさらにグループ化
+    const broadcastGroups={};
+    unset.forEach(d=>{
+      const label=(d.broadcast||d.ch||'').trim()||'未設定';
+      (broadcastGroups[label]=broadcastGroups[label]||[]).push(d);
+    });
+    Object.entries(broadcastGroups).forEach(([label,dramas])=>{
+      html+=`<div style="margin-bottom:10px;background:var(--card);border-radius:14px;border:1.5px solid var(--bd);overflow:hidden;box-shadow:var(--shadow-sm)">
+        <div style="padding:7px 12px;background:#f0f0f0;display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;font-weight:700;color:#888">${label}</span>
+          <span style="font-size:10px;color:#aaa">${dramas.length}作品</span>
+        </div>
+        ${dramas.map(cardHtml).join('')}
+      </div>`;
+    });
   }
   list.innerHTML=html;
 }
