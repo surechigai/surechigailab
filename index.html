@@ -2460,6 +2460,17 @@ async function dramaAutoFill(){
     const text=page.extract||'';
     const epsMatch=text.match(/全(\d+)話|(\d+)話完結|全(\d+)回/);
     const eps=epsMatch?parseInt(epsMatch[1]||epsMatch[2]||epsMatch[3])||0:0;
+    // 放送局を抽出
+    const chMatch=text.match(/(?:放送局|放送|テレビ放送)[^\n]*?((?:フジテレビ|TBS|日本テレビ|日テレ|テレビ朝日|テレ朝|テレビ東京|テレ東|NHK|Netflix|Disney\+|Prime\s*Video|U-NEXT|FOD|WOWOW|MBS|ABC|関西テレビ)[^\n。、]{0,10})/)||text.match(/((?:フジテレビ|TBS|日本テレビ|テレビ朝日|テレビ東京|NHK)(?:[^\n。、]{0,6}?)(?:系列?|ドラマ)?)/);
+    const ch=chMatch?chMatch[1].trim():'';
+    // 曜日・時間を抽出
+    const dayMatch=text.match(/([月火水木金土日])曜(?:日)?(?:(?:午後?|深夜)?(\d{1,2})時(?:(\d{2})分)?(?:から)?(?:\s*放送)?)?/);
+    const day=dayMatch?dayMatch[1]+'曜':'';
+    const time=dayMatch&&dayMatch[2]?dayMatch[2]+'時'+(dayMatch[3]?dayMatch[3]+'分':''):'';
+    // 放送情報を組み立て
+    const broadcastParts=[ch,day,time].filter(Boolean);
+    const broadcast=broadcastParts.join(' ');
+    if(broadcast)document.getElementById('da-broadcast').value=broadcast;
     // あらすじ（最初の段落、200字まで）
     const synopsis=(text.split('\n').find(l=>l.trim().length>20)||'').slice(0,200).trim();
     const memo=synopsis+(synopsis.length>=200?'…':'');
@@ -2471,7 +2482,10 @@ async function dramaAutoFill(){
       document.getElementById('da-title').dataset.eps=eps;
     }
     if(fields)fields.style.display='block';
-    if(stTxt)stTxt.textContent='✓ 取得しました（内容を確認してね）'+(eps?` 全${eps}話`:'');
+    const got=[];
+    if(eps)got.push(`全${eps}話`);
+    if(broadcast)got.push(broadcast);
+    if(stTxt)stTxt.textContent='✓ 取得しました'+(got.length?`（${got.join('・')}）`:'（内容を確認してね）');
   }catch(e){
     if(stTxt)stTxt.textContent='⚠️ 取得失敗。手動で入力してください';
     if(fields)fields.style.display='block';
