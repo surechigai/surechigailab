@@ -1283,7 +1283,9 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
     <span class="spin">✦</span><span id="da-status-txt">情報を取得中…</span>
   </div>
   <div id="da-fields" style="display:none">
-    <div class="fl" style="margin-top:8px">メモ（あらすじなど）</div>
+    <div class="fl" style="margin-top:8px">放送情報（任意）</div>
+    <input class="fi" id="da-broadcast" placeholder="例：フジ 火曜21時 / Netflix" style="font-size:13px"/>
+    <div class="fl">メモ（あらすじなど）</div>
     <textarea class="fi" id="da-memo" rows="3" style="resize:none;line-height:1.6;font-size:12px" placeholder="Wikipediaから取得した情報が入ります…"></textarea>
   </div>
   <div class="mbtns" style="margin-top:10px">
@@ -1298,6 +1300,8 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
   <input type="hidden" id="de-id"/>
   <div class="fl">タイトル</div>
   <input class="fi" id="de-title" placeholder="タイトル"/>
+  <div class="fl">放送情報（任意）</div>
+  <input class="fi" id="de-broadcast" placeholder="例：フジ 火曜21時 / Netflix" style="font-size:13px"/>
   <div class="fl">メモ</div>
   <textarea class="fi" id="de-memo" rows="3" style="resize:none;line-height:1.6;font-size:12px" placeholder="あらすじなど…"></textarea>
   <div class="mbtns" style="margin-top:10px">
@@ -2279,7 +2283,7 @@ function dChip(btn, group, val){
 }
 
 function openAddDrama(){
-  ['da-title','da-memo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['da-title','da-memo','da-broadcast'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const fields=document.getElementById('da-fields');if(fields)fields.style.display='none';
   const st=document.getElementById('da-status');if(st)st.style.display='none';
   const sug=document.getElementById('da-suggest');if(sug)sug.style.display='none';
@@ -2452,12 +2456,22 @@ async function dramaAutoFill(){
     // 正式タイトル（Wikipediaの記事名）をそのまま使う
     const officialTitle=page.title||title;
     document.getElementById('da-title').value=officialTitle;
+    // 全話数を抽出
+    const text=page.extract||'';
+    const epsMatch=text.match(/全(\d+)話|(\d+)話完結|全(\d+)回/);
+    const eps=epsMatch?parseInt(epsMatch[1]||epsMatch[2]||epsMatch[3])||0:0;
     // あらすじ（最初の段落、200字まで）
-    const synopsis=(page.extract.split('\n').find(l=>l.trim().length>20)||'').slice(0,200).trim();
+    const synopsis=(text.split('\n').find(l=>l.trim().length>20)||'').slice(0,200).trim();
     const memo=synopsis+(synopsis.length>=200?'…':'');
     if(memo)document.getElementById('da-memo').value=memo;
+    // 話数が取れたら表示
+    if(eps){
+      const epsInfo=document.getElementById('da-eps-info');
+      if(epsInfo){epsInfo.textContent=`全${eps}話`;epsInfo.style.display='inline';}
+      document.getElementById('da-title').dataset.eps=eps;
+    }
     if(fields)fields.style.display='block';
-    if(stTxt)stTxt.textContent='✓ 取得しました（内容を確認してね）';
+    if(stTxt)stTxt.textContent='✓ 取得しました（内容を確認してね）'+(eps?` 全${eps}話`:'');
   }catch(e){
     if(stTxt)stTxt.textContent='⚠️ 取得失敗。手動で入力してください';
     if(fields)fields.style.display='block';
@@ -2499,6 +2513,7 @@ function openDramaEdit(id){
   const d=S.dramaAiring.find(x=>x.id===id);if(!d)return;
   document.getElementById('de-id').value=id;
   document.getElementById('de-title').value=d.title||'';
+  document.getElementById('de-broadcast').value=d.broadcast||d.ch||'';
   document.getElementById('de-memo').value=d.memo||'';
   document.getElementById('drama-edit-ov').classList.add('on');
 }
@@ -2507,6 +2522,7 @@ function saveDramaEdit(){
   const id=parseInt(document.getElementById('de-id').value);
   const d=S.dramaAiring.find(x=>x.id===id);if(!d)return;
   d.title=document.getElementById('de-title').value.trim();
+  d.broadcast=document.getElementById('de-broadcast').value.trim();
   d.memo=document.getElementById('de-memo').value.trim();
   closeDramaEdit();renderDramaAiring();
   const detail=document.getElementById('drama-detail');
@@ -2533,10 +2549,13 @@ function deleteEpReview(){
 }
 
 function saveDramaAdd(){
-  const title=document.getElementById('da-title').value.trim();
+  const titleEl=document.getElementById('da-title');
+  const title=titleEl.value.trim();
   if(!title){alert('タイトルを入力してください');return;}
   const memo=document.getElementById('da-memo')?.value.trim()||'';
-  S.dramaAiring.unshift({id:dramaIdCnt++,title,eps:0,memo,episodes:[],epsFixed:false});
+  const broadcast=document.getElementById('da-broadcast')?.value.trim()||'';
+  const totalEps=parseInt(titleEl.dataset.eps)||0;
+  S.dramaAiring.unshift({id:dramaIdCnt++,title,eps:totalEps,totalEps,broadcast,memo,episodes:[],epsFixed:totalEps>0});
   closeDramaAdd();renderDramaAiring();lsSave(true);
 }
 function renderDramaNow(){
@@ -2631,11 +2650,8 @@ function openDramaDetail(id){
   const ov=document.getElementById('dd-overview');
   ov.innerHTML=`
     <div style="display:flex;flex-wrap:wrap;gap:10px">
-      ${d.memo?`<div style="width:100%"><div style="font-size:11px;color:var(--wg);line-height:1.6">${d.memo}</div></div>`:''}
-    </div>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <button data-action="add-ep" style="flex:1;border:1.5px solid var(--bd);border-radius:12px;padding:8px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--text)">＋ 話を追加</button>
-      <button data-action="complete" style="flex:1;border:none;border-radius:12px;padding:8px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:'Zen Maru Gothic',serif">✓ 鑑賞完了にする</button>
+      ${(d.broadcast||d.ch)?`<div style="width:100%"><div style="font-size:10px;color:var(--wg);margin-bottom:2px">📡 放送</div><div style="font-size:13px;font-weight:500">${d.broadcast||d.ch}</div></div>`:''}
+      ${d.memo?`<div style="width:100%;${(d.broadcast||d.ch)?'border-top:1px solid var(--bd);padding-top:8px':''}""><div style="font-size:11px;color:var(--wg);line-height:1.7">${d.memo}</div></div>`:''}
     </div>`;
   // イベント委譲をdetailパネル全体に設定（一度だけ）
   if(!detail._delegated){
@@ -2703,10 +2719,15 @@ function renderDramaDetailEps(d){
     const spoilId=`dd-spoil-${d.id}-${e.ep}`;
     const tempDiff=hasBoth&&Math.abs(igStar-tkStar)>=2;
     const myStarHtml=myStar?`${'★'.repeat(myStar)}<span style="color:#e0e0e0">${'★'.repeat(5-myStar)}</span>`:`<span style="color:#e0e0e0">★★★★★</span>`;
+    const myDate=me==='ig'?e.igDate:e.tkDate;
+    const pDate=me==='ig'?e.tkDate:e.igDate;
     const myCardInner=myHasInput
       ?`<div style="font-size:13px;color:var(--amber);margin-bottom:4px">${myStarHtml}</div>
          ${myMemo?`<div style="font-size:11px;color:var(--text);line-height:1.55">${myMemo}</div>`:''}
-         <div style="font-size:9px;color:${myCol};margin-top:5px;opacity:.65">✏ タップして編集</div>`
+         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px">
+           ${myDate?`<span style="font-size:9px;color:#bbb">${myDate}</span>`:'<span></span>'}
+           <span style="font-size:9px;color:${myCol};opacity:.65">✏ 編集</span>
+         </div>`
       :`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0;gap:4px">
            <span style="font-size:20px">✏️</span>
            <span style="font-size:10px;color:${myCol};font-weight:600">タップして記録</span>
@@ -2715,8 +2736,10 @@ function renderDramaDetailEps(d){
     const pStarHtml=pStar?`${'★'.repeat(pStar)}<span style="color:#e0e0e0">${'★'.repeat(5-pStar)}</span>`:`<span style="color:#e0e0e0">★★★★★</span>`;
     const pContent=pHasInput
       ?`<div style="font-size:13px;color:var(--amber);margin-bottom:4px">${pStarHtml}</div>
-         ${pMemo?`<div style="font-size:11px;color:var(--text);line-height:1.55">${pMemo}</div>`:`<div style="font-size:10px;color:#bbb">コメントなし</div>`}`
-      :`<div style="font-size:10px;color:#ccc;padding:4px 0">まだ記録なし</div>`;
+         ${pMemo?`<div style="font-size:11px;color:var(--text);line-height:1.55">${pMemo}</div>`:`<div style="font-size:10px;color:#bbb">コメントなし</div>`}
+         ${pDate?`<div style="font-size:9px;color:#bbb;margin-top:5px">${pDate}</div>`:''}`
+      :`<div style="font-size:11px;color:#ccc;padding:4px 0">まだ記録なし</div>`;
+    // 相手が記録済みのときだけマスク
     const pMaskHtml=pHasInput
       ?`<div data-spoil="${spoilId}" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;background:rgba(230,220,248,.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);border-radius:12px;transition:opacity .2s">
             <span style="font-size:18px">👀</span>
@@ -2727,13 +2750,13 @@ function renderDramaDetailEps(d){
         <span style="font-size:11px;font-weight:700;color:var(--wg);width:34px;flex-shrink:0">第${e.ep}話</span>
         ${tempDiff?`<span style="font-size:9px;background:#fff3cd;color:#856404;border-radius:8px;padding:1px 7px">温度差あり 👀</span>`:''}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;align-items:stretch">
         <div data-ep-open="${e.ep}"
-             style="background:${myHasInput?myBg:'#f5f2ef'};border-radius:12px;padding:9px 11px;cursor:pointer;border:1.5px solid ${myHasInput?'transparent':'var(--bd)'};transition:filter .15s">
+             style="background:${myHasInput?myBg:'#f5f2ef'};border-radius:12px;padding:9px 11px;cursor:pointer;border:1.5px solid ${myHasInput?'transparent':'var(--bd)'};transition:filter .15s;min-height:90px;box-sizing:border-box;overflow:hidden">
           <div style="font-size:10px;font-weight:600;color:${myCol};margin-bottom:5px">${myName}</div>
           ${myCardInner}
         </div>
-        <div style="background:${pHasInput?pBg:'#f5f2ef'};border-radius:12px;padding:9px 11px;position:relative;overflow:hidden;border:1.5px solid ${pHasInput?'transparent':'var(--bd)'}">
+        <div style="background:${pHasInput?pBg:'#f5f2ef'};border-radius:12px;padding:9px 11px;position:relative;overflow:hidden;border:1.5px solid ${pHasInput?'transparent':'var(--bd)'};min-height:90px;box-sizing:border-box">
           <div style="font-size:10px;font-weight:600;color:${pCol};margin-bottom:5px">${pName}</div>
           <div id="${spoilId}">${pContent}</div>
           ${pMaskHtml}
@@ -2741,7 +2764,10 @@ function renderDramaDetailEps(d){
       </div>
     </div>`;
   }).join('')+`<div style="padding:12px 0;text-align:center">
-    <button data-action="next-ep" style="border:1.5px solid var(--bd);border-radius:12px;padding:7px 20px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">＋ 次の話を追加</button>
+    <button data-action="next-ep" style="border:1.5px solid var(--bd);border-radius:12px;padding:7px 20px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">＋ 話を追加</button>
+  </div>
+  <div style="padding:4px 0 16px;text-align:center">
+    <button data-action="complete" style="border:none;background:none;font-size:11px;color:#bbb;cursor:pointer;font-family:'Noto Sans JP',sans-serif;text-decoration:underline;text-underline-offset:2px">✓ 鑑賞完了にする</button>
   </div>`;
   // 個別バインド不要（イベント委譲で処理）
 }
@@ -2761,12 +2787,20 @@ function revealSpoil(id){
 }
 function addEpisodeToAiring(dramaId){
   const d=S.dramaAiring.find(x=>x.id===dramaId);if(!d)return;
+  // 追加はせずに次の話番号でモーダルを開くだけ
   const nextEp=(d.episodes.length>0?Math.max(...d.episodes.map(e=>e.ep)):0)+1;
-  d.episodes.push({ep:nextEp,igStar:0,igMemo:'',tkStar:0,tkMemo:''});
-  d.eps=d.episodes.length;
-  renderDramaAiring();renderDramaDetailEps(d);lsSave();
-  // 感想モーダルをすぐ開く
-  openEpModal(dramaId,nextEp);
+  openEpModalNew(dramaId,nextEp);
+}
+
+function openEpModalNew(dramaId,ep){
+  // 話をまだ追加しない状態でモーダルを開く
+  const d=S.dramaAiring.find(x=>x.id===dramaId);if(!d)return;
+  epEditCtx={dramaId,ep,isNew:true};
+  epStarSel=0;
+  document.getElementById('ep-modal-title').textContent=`📺 ${d.title} 第${ep}話`;
+  document.getElementById('ep-memo').value='';
+  renderEpStars();
+  document.getElementById('ep-ov').classList.add('on');
 }
 
 function toggleDramaEps(id){
@@ -2801,26 +2835,36 @@ function renderEpStars(){
   row.innerHTML=[1,2,3,4,5].map(n=>`<button class="star-btn" onclick="setEpStar(${n})" style="font-size:24px;color:${n<=epStarSel?'var(--amber)':'#ddd'}">${n<=epStarSel?'★':'☆'}</button>`).join('');
 }
 function setEpStar(n){epStarSel=epStarSel===n?0:n;renderEpStars();}
-function closeEpModal(){document.getElementById('ep-ov').classList.remove('on');epEditCtx=null;}
+function closeEpModal(){
+  document.getElementById('ep-ov').classList.remove('on');
+  epEditCtx=null;
+}
 function saveEp(){
   if(!epEditCtx)return;
-  const{dramaId,ep}=epEditCtx;
+  const{dramaId,ep,isNew}=epEditCtx;
   const d=S.dramaAiring.find(x=>x.id===dramaId);
-  const e=d?.episodes.find(x=>x.ep===ep);
+  if(!d)return;
+  // 新規の場合はここで話を追加
+  if(isNew){
+    d.episodes.push({ep,igStar:0,igMemo:'',tkStar:0,tkMemo:''});
+    d.episodes.sort((a,b)=>a.ep-b.ep);
+    d.eps=d.episodes.length;
+  }
+  const e=d.episodes.find(x=>x.ep===ep);
   if(!e)return;
-  if(me==='ig'){e.igStar=epStarSel;e.igMemo=document.getElementById('ep-memo').value.trim();}
-  else{e.tkStar=epStarSel;e.tkMemo=document.getElementById('ep-memo').value.trim();}
-  closeEpModal();renderDramaAiring();lsSave(true);
-  // 詳細画面が開いていれば更新
+  const now=new Date();
+  const dateStr=`${now.getMonth()+1}/${now.getDate()}`;
+  if(me==='ig'){e.igStar=epStarSel;e.igMemo=document.getElementById('ep-memo').value.trim();e.igDate=dateStr;}
+  else{e.tkStar=epStarSel;e.tkMemo=document.getElementById('ep-memo').value.trim();e.tkDate=dateStr;}
+  epEditCtx=null;
+  document.getElementById('ep-ov').classList.remove('on');
+  renderDramaAiring();
   const detail=document.getElementById('drama-detail');
-  if(detail&&detail.style.display!=='none') renderDramaDetailEps(d);
+  if(detail&&detail.style.display!=='none')renderDramaDetailEps(d);
   lsSave();
-
-  // 全話レビュー完了チェック
-  // 話数が明示設定済み(epsFixed)かつ全話に星をつけた場合のみポップ表示
-  if(d&&d.eps>0&&d.epsFixed){
+  if(d&&d.totalEps>0){
     const allDone=d.episodes.every(ep=>me==='ig'?ep.igStar>0:ep.tkStar>0);
-    if(allDone)promptCompleteDrama(d);
+    if(allDone&&d.episodes.length>=d.totalEps)promptCompleteDrama(d);
   }
 }
 
@@ -5134,7 +5178,7 @@ function switchDrama(pane){
  openRM,closeRM,saveRoom,deleteRoom,confirmDeleteRoom,
  openRoom,openRoomRename,saveRoomName,setRoomsEditMode,confirmDeleteEv,
  insBold,insUnder,insCheck,ins,copyMemo,saveMemo,
- openEpModal,saveEp,closeEpModal,setEpStar,deleteEpReview,
+ openEpModal,openEpModalNew,saveEp,closeEpModal,setEpStar,deleteEpReview,
  rFmt,rIco,rCat,addItem,delItem,togItem,openItemMemo,saveItemMemo,clearDone,showDoneItems,
  switchNote,calMove,calRender,calSelectDate,calRenderEvs,renderCalDaylog,
  openAddEv,closeAddEv,openEditEv,saveEv,deleteEv,evType,evRep,openAddEvWithDate,expandEvs,
