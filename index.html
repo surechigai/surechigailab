@@ -2624,24 +2624,25 @@ function openDramaDetail(id){
   const d=S.dramaAiring.find(x=>x.id===id);if(!d)return;
   const detail=document.getElementById('drama-detail');
   if(!detail)return;
-  // タイトル
   document.getElementById('dd-title').textContent=d.title;
   // 編集ボタン
-  document.getElementById('dd-edit-btn').setAttribute('onclick',`openDramaEdit(${id})`);
+  const editBtn=document.getElementById('dd-edit-btn');
+  editBtn.onclick=()=>openDramaEdit(id);
   // 概要
   const ov=document.getElementById('dd-overview');
   ov.innerHTML=`
     <div style="display:flex;flex-wrap:wrap;gap:10px">
       ${d.ch?`<div><div style="font-size:9px;color:var(--wg);margin-bottom:2px">放送</div><div style="font-size:12px;font-weight:500">${d.ch}</div></div>`:''}
       ${d.eps?`<div><div style="font-size:9px;color:var(--wg);margin-bottom:2px">全話数</div><div style="font-size:12px;font-weight:500">${d.eps}話</div></div>`:''}
-      ${d.stream?`<div style="width:100%"><div style="font-size:9px;color:var(--wg);margin-bottom:2px">配信</div><div style="font-size:12px;color:var(--lav)">📺 ${d.stream}</div></div>`:''}
-      ${d.cast?`<div style="width:100%"><div style="font-size:9px;color:var(--wg);margin-bottom:2px">キャスト</div><div style="font-size:12px;color:var(--text)">🎭 ${d.cast}</div></div>`:''}
-      ${d.memo?`<div style="width:100%;padding-top:${d.ch||d.eps||d.stream||d.cast?'6px':'0'};border-top:${d.ch||d.eps||d.stream||d.cast?'1px solid var(--bd)':'none'};margin-top:${d.ch||d.eps||d.stream||d.cast?'4px':'0'}"><div style="font-size:11px;color:var(--wg);line-height:1.6">${d.memo}</div></div>`:''}
+      ${d.memo?`<div style="width:100%;padding-top:${d.ch||d.eps?'6px':'0'};border-top:${d.ch||d.eps?'1px solid var(--bd)':'none'};margin-top:${d.ch||d.eps?'4px':'0'}"><div style="font-size:11px;color:var(--wg);line-height:1.6">${d.memo}</div></div>`:''}
     </div>
     <div style="display:flex;gap:8px;margin-top:10px">
-      <button onclick="addEpisodeToAiring(${id})" style="flex:1;border:1.5px solid var(--bd);border-radius:12px;padding:8px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--text)">＋ 話を追加</button>
-      <button onclick="promptCompleteDrama(S.dramaAiring.find(x=>x.id===${id}))" style="flex:1;border:none;border-radius:12px;padding:8px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:'Zen Maru Gothic',serif">✓ 鑑賞完了にする</button>
+      <button id="dd-add-ep-btn" style="flex:1;border:1.5px solid var(--bd);border-radius:12px;padding:8px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--text)">＋ 話を追加</button>
+      <button id="dd-complete-btn" style="flex:1;border:none;border-radius:12px;padding:8px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:'Zen Maru Gothic',serif">✓ 鑑賞完了にする</button>
     </div>`;
+  // ボタンをJSで直接バインド
+  document.getElementById('dd-add-ep-btn').onclick=()=>addEpisodeToAiring(id);
+  document.getElementById('dd-complete-btn').onclick=()=>promptCompleteDrama(d);
   // 各話
   renderDramaDetailEps(d);
   detail.style.display='block';
@@ -2655,10 +2656,16 @@ function renderDramaDetailEps(d){
     container.innerHTML=`<div style="font-size:11px;font-weight:600;color:var(--wg);margin-bottom:8px">各話レビュー</div>
       <div style="text-align:center;padding:16px;font-size:12px;color:#ccc">
         <div style="margin-bottom:8px">まだ話が追加されていません</div>
-        <button onclick="addEpisodeToAiring(${d.id})" style="border:none;border-radius:12px;padding:7px 18px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif">＋ 第1話を追加</button>
+        <button id="dd-add-first-btn" style="border:none;border-radius:12px;padding:7px 18px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif">＋ 第1話を追加</button>
       </div>`;
+    document.getElementById('dd-add-first-btn').onclick=()=>addEpisodeToAiring(d.id);
     return;
   }
+  const visibleEps=d.episodes.filter(e=>{
+    const myHasInput=(me==='ig'?(e.igStar>0||e.igMemo):(e.tkStar>0||e.tkMemo));
+    const pHasInput=(me==='ig'?(e.tkStar>0||e.tkMemo):(e.igStar>0||e.igMemo));
+    return myHasInput||pHasInput;
+  });
   container.innerHTML=`<div style="font-size:11px;font-weight:600;color:var(--wg);margin-bottom:8px">各話レビュー</div>`+
   d.episodes.map(e=>{
     const igStar=e.igStar||0, tkStar=e.tkStar||0;
@@ -2678,54 +2685,37 @@ function renderDramaDetailEps(d){
     const pBg=me==='ig'?'var(--tk-bg)':'var(--ig-bg)';
     const spoilId=`dd-spoil-${d.id}-${e.ep}`;
     const tempDiff=hasBoth&&Math.abs(igStar-tkStar)>=2;
-
-    // ── 自分のカード：タップで入力モーダルを開く ──
-    const myStarHtml=myStar
-      ? `${'★'.repeat(myStar)}<span style="color:#e0e0e0">${'★'.repeat(5-myStar)}</span>`
-      : `<span style="color:#e0e0e0">★★★★★</span>`;
+    const myStarHtml=myStar?`${'★'.repeat(myStar)}<span style="color:#e0e0e0">${'★'.repeat(5-myStar)}</span>`:`<span style="color:#e0e0e0">★★★★★</span>`;
     const myCardInner=myHasInput
-      ? `<div style="font-size:13px;color:var(--amber);margin-bottom:4px">${myStarHtml}</div>
+      ?`<div style="font-size:13px;color:var(--amber);margin-bottom:4px">${myStarHtml}</div>
          ${myMemo?`<div style="font-size:11px;color:var(--text);line-height:1.55">${myMemo}</div>`:''}
          <div style="font-size:9px;color:${myCol};margin-top:5px;opacity:.65">✏ タップして編集</div>`
-      : `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0;gap:4px">
+      :`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0;gap:4px">
            <span style="font-size:20px">✏️</span>
            <span style="font-size:10px;color:${myCol};font-weight:600">タップして記録</span>
          </div>`;
-
-    // ── 両方未記録の話は非表示 ──
-    if(!myHasInput&&!pHasInput) return '';
-
-    // ── 相手のカード：記録済みのときだけブラーで隠す（未記録時はマスクなし）──
-    const pStarHtml=pStar
-      ? `${'★'.repeat(pStar)}<span style="color:#e0e0e0">${'★'.repeat(5-pStar)}</span>`
-      : `<span style="color:#e0e0e0">★★★★★</span>`;
+    if(!myHasInput&&!pHasInput)return '';
+    const pStarHtml=pStar?`${'★'.repeat(pStar)}<span style="color:#e0e0e0">${'★'.repeat(5-pStar)}</span>`:`<span style="color:#e0e0e0">★★★★★</span>`;
     const pContent=pHasInput
-      ? `<div style="font-size:13px;color:var(--amber);margin-bottom:4px">${pStarHtml}</div>
+      ?`<div style="font-size:13px;color:var(--amber);margin-bottom:4px">${pStarHtml}</div>
          ${pMemo?`<div style="font-size:11px;color:var(--text);line-height:1.55">${pMemo}</div>`:`<div style="font-size:10px;color:#bbb">コメントなし</div>`}`
-      : `<div style="font-size:10px;color:#ccc;padding:4px 0">まだ記録なし</div>`;
-    // 相手が記録済みの時だけマスクを表示
+      :`<div style="font-size:10px;color:#ccc;padding:4px 0">まだ記録なし</div>`;
     const pMaskHtml=pHasInput
-      ? `<div id="${spoilId}-mask" onclick="revealSpoil('${spoilId}')"
-               style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;background:rgba(230,220,248,.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);border-radius:12px;transition:opacity .2s">
+      ?`<div id="${spoilId}-mask" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;background:rgba(230,220,248,.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);border-radius:12px;transition:opacity .2s">
             <span style="font-size:18px">👀</span>
             <span style="font-size:9px;color:var(--lav);font-weight:600">タップで表示</span>
-          </div>`
-      : '';
-
+          </div>`:''
     return `<div style="padding:10px 0;border-bottom:1px solid var(--bd)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span style="font-size:11px;font-weight:700;color:var(--wg);width:34px;flex-shrink:0">第${e.ep}話</span>
         ${tempDiff?`<span style="font-size:9px;background:#fff3cd;color:#856404;border-radius:8px;padding:1px 7px">温度差あり 👀</span>`:''}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-        <!-- 自分のカード -->
-        <div onclick="openEpModal(${d.id},${e.ep})"
-             style="background:${myHasInput?myBg:'#f5f2ef'};border-radius:12px;padding:9px 11px;cursor:pointer;border:1.5px solid ${myHasInput?'transparent':'var(--bd)'};transition:filter .15s"
-             ontouchstart="this.style.filter='brightness(.92)'" ontouchend="this.style.filter=''">
+        <div class="dd-ep-my" data-drama="${d.id}" data-ep="${e.ep}"
+             style="background:${myHasInput?myBg:'#f5f2ef'};border-radius:12px;padding:9px 11px;cursor:pointer;border:1.5px solid ${myHasInput?'transparent':'var(--bd)'};transition:filter .15s">
           <div style="font-size:10px;font-weight:600;color:${myCol};margin-bottom:5px">${myName}</div>
           ${myCardInner}
         </div>
-        <!-- 相手のカード：記録済みのときだけブラーで隠す -->
         <div style="background:${pHasInput?pBg:'#f5f2ef'};border-radius:12px;padding:9px 11px;position:relative;overflow:hidden;border:1.5px solid ${pHasInput?'transparent':'var(--bd)'}">
           <div style="font-size:10px;font-weight:600;color:${pCol};margin-bottom:5px">${pName}</div>
           <div id="${spoilId}">${pContent}</div>
@@ -2734,8 +2724,18 @@ function renderDramaDetailEps(d){
       </div>
     </div>`;
   }).join('')+`<div style="padding:12px 0;text-align:center">
-    <button onclick="addEpisodeToAiring(${d.id})" style="border:1.5px solid var(--bd);border-radius:12px;padding:7px 20px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">＋ 次の話を追加</button>
+    <button id="dd-next-ep-btn" style="border:1.5px solid var(--bd);border-radius:12px;padding:7px 20px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">＋ 次の話を追加</button>
   </div>`;
+  // ボタンをJSで直接バインド
+  container.querySelectorAll('.dd-ep-my').forEach(el=>{
+    el.addEventListener('click',()=>openEpModal(parseInt(el.dataset.drama),parseInt(el.dataset.ep)));
+  });
+  container.querySelectorAll('[id$="-mask"]').forEach(el=>{
+    const sid=el.id.replace('-mask','');
+    el.addEventListener('click',()=>revealSpoil(sid));
+  });
+  const nextBtn=document.getElementById('dd-next-ep-btn');
+  if(nextBtn)nextBtn.onclick=()=>addEpisodeToAiring(d.id);
 }
 
 function closeDramaDetail(){
