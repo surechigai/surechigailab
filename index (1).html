@@ -59,9 +59,12 @@ async function initNotifications(userId) {
       console.log('✅ 通知トークン登録完了', userId);
     }
     // フォアグラウンド通知（アプリが開いているとき）
-    // ※フォアグラウンド時はFCMのネイティブ通知は自動的に表示されないため
-    //   onMessageのトーストのみ表示する（重複しない）
+    // SWにフォアグラウンド状態を通知し、ネイティブ通知の重複を防ぐ
     _messaging.onMessage((payload) => {
+      // SWへ「フォアグラウンドで受け取った」と伝えて二重表示を抑制
+      navigator.serviceWorker.ready.then(reg => {
+        reg.active?.postMessage({ type: 'FOREGROUND_RECEIVED' });
+      }).catch(()=>{});
       const { title, body } = payload.notification || payload.data || {};
       if(!title) return;
       // 既に同じ内容のトーストが表示中なら重複表示しない
@@ -80,11 +83,11 @@ async function initNotifications(userId) {
 // 通知を送る（相手のトークンに送信・自分には送らない）
 window._sendNotification = async function(toUserId, title, body) {
   if(typeof _db === 'undefined') return;
-  if(!toUserId || !window.me) return; // me未設定（ユーザー選択前）はスキップ
+  if(!toUserId || typeof me==='undefined' || !me) return; // me未設定（ユーザー選択前）はスキップ
   try {
     const [toSnap, mySnap] = await Promise.all([
       _db.ref(`${FCM_TOKEN_PATH}/${toUserId}`).get(),
-      _db.ref(`${FCM_TOKEN_PATH}/${window.me}`).get()
+      _db.ref(`${FCM_TOKEN_PATH}/${me}`).get()
     ]);
     const toToken = toSnap.val();
     const myToken = mySnap.val();
@@ -4324,9 +4327,8 @@ function qSubmit(){
   }
   // 相手への通知
   const partner2=me==='ig'?'tk':'ig';
-  const pName2=me==='ig'?'テケテケさん':'出口さん';
   const myName2=me==='ig'?'出口さん':'テケテケさん';
-  if(window._sendNotification) window._sendNotification(partner2, `📝 ${myName2}が質問に回答`, `「${S.curQ?.text||'質問'}」`);
+  if(window._sendNotification) _sendNotification(partner2, `📝 ${myName2}が質問に回答`, `「${S.curQ?.text||'質問'}」`);
   lsSave();qRender();
   if(room)renderRooms();
 }
