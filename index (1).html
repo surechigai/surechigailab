@@ -1010,6 +1010,13 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
             <div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700">📡 鑑賞中のドラマ</div>
             <button class="rec-add-btn" onclick="openAddDrama()">＋ 追加</button>
           </div>
+          <!-- 検索欄 -->
+          <div style="position:relative;margin-bottom:9px">
+            <input id="airing-search" type="text" placeholder="タイトルで検索…" oninput="renderDramaAiring()"
+              style="width:100%;border:1.5px solid var(--bd);border-radius:12px;padding:7px 12px 7px 32px;font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;background:var(--card);box-sizing:border-box;transition:border-color .15s"
+              onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='var(--bd)'"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--wg)" stroke-width="2" width="14" height="14" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
           <div id="drama-airing-list"></div>
         </div>
       </div>
@@ -2273,6 +2280,8 @@ function go(s){
   if(shoplist)shoplist.style.display='none';
   const qlog=document.getElementById('sc-qlog');
   if(qlog)qlog.style.display='none';
+  // 長押しメニューを閉じる
+  hideCtx();
   document.querySelectorAll('.scr').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>{b.classList.remove('on');b.style.color='';});
   document.getElementById('sc-'+s).classList.add('on');
@@ -2688,15 +2697,24 @@ function _getDayFromBroadcast(d){
 function renderDramaAiring(){
   const list=document.getElementById('drama-airing-list');
   if(!list)return;
-  if(!S.dramaAiring.length){
-    list.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:#ccc">まだ追加されていません<br><span style="font-size:10px">「＋ 追加」からドラマを登録しよう</span></div>';
+
+  // 検索フィルター
+  const searchVal=(document.getElementById('airing-search')?.value||'').trim().toLowerCase();
+  const filtered=searchVal
+    ? S.dramaAiring.filter(d=>d.title?.toLowerCase().includes(searchVal)||(d.broadcast||'').toLowerCase().includes(searchVal))
+    : S.dramaAiring;
+
+  if(!filtered.length){
+    list.innerHTML=searchVal
+      ? `<div style="text-align:center;padding:20px;font-size:12px;color:#ccc">「${searchVal}」に一致するドラマがありません</div>`
+      : '<div style="text-align:center;padding:20px;font-size:12px;color:#ccc">まだ追加されていません<br><span style="font-size:10px">「＋ 追加」からドラマを登録しよう</span></div>';
     return;
   }
 
   const DAY_ORDER=['月曜','火曜','水曜','木曜','金曜','土曜','日曜'];
   const groups={};
   const unset=[];
-  S.dramaAiring.forEach(d=>{
+  filtered.forEach(d=>{
     const day=_getDayFromBroadcast(d);
     if(day){(groups[day]=groups[day]||[]).push(d);}
     else unset.push(d);
@@ -2769,34 +2787,33 @@ function openDramaDetail(id){
       ${(d.broadcast||d.ch)?`<div style="width:100%"><div style="font-size:10px;color:var(--wg);margin-bottom:2px">📡 放送</div><div style="font-size:13px;font-weight:500">${d.broadcast||d.ch}</div></div>`:''}
       ${d.memo?`<div style="width:100%;${(d.broadcast||d.ch)?'border-top:1px solid var(--bd);padding-top:8px':''}""><div style="font-size:11px;color:var(--wg);line-height:1.7">${d.memo}</div></div>`:''}
     </div>`;
-  // イベント委譲をdetailパネル全体に設定（一度だけ）
-  if(!detail._delegated){
-    detail._delegated=true;
-    detail.addEventListener('click',e=>{
-      const did=parseInt(detail.dataset.dramaId);
-      const drama=S.dramaAiring.find(x=>x.id===did);
-      if(!drama)return;
-      const btn=e.target.closest('[data-action]');
-      if(btn){
-        const action=btn.dataset.action;
-        if(action==='add-ep')addEpisodeToAiring(did);
-        else if(action==='complete')promptCompleteDrama(drama);
-        else if(action==='next-ep')addEpisodeToAiring(did);
-        else if(action==='add-first')addEpisodeToAiring(did);
-        return;
-      }
-      const epCard=e.target.closest('[data-ep-open]');
-      if(epCard){
-        openEpModal(did,parseInt(epCard.dataset.epOpen));
-        return;
-      }
-      const mask=e.target.closest('[data-spoil]');
-      if(mask){revealSpoil(mask.dataset.spoil);}
-    });
-  }
-  renderDramaDetailEps(d);
-  detail.style.display='block';
-  detail.scrollTop=0;
+  // イベント委譲：毎回クリーンに付け直す（古いIDへのジャンプを防止）
+  const newDetail=detail.cloneNode(false);
+  while(detail.firstChild)newDetail.appendChild(detail.firstChild);
+  detail.parentNode.replaceChild(newDetail,detail);
+  const freshDetail=document.getElementById('drama-detail');
+  freshDetail.dataset.dramaId=id;
+  freshDetail.addEventListener('click',e=>{
+    const did=parseInt(freshDetail.dataset.dramaId);
+    const drama=S.dramaAiring.find(x=>x.id===did);
+    if(!drama)return;
+    const btn=e.target.closest('[data-action]');
+    if(btn){
+      const action=btn.dataset.action;
+      if(action==='add-ep')addEpisodeToAiring(did);
+      else if(action==='complete')promptCompleteDrama(drama);
+      else if(action==='next-ep')addEpisodeToAiring(did);
+      else if(action==='add-first')addEpisodeToAiring(did);
+      return;
+    }
+    const epCard=e.target.closest('[data-ep-open]');
+    if(epCard){openEpModal(did,parseInt(epCard.dataset.epOpen));return;}
+    const mask=e.target.closest('[data-spoil]');
+    if(mask){revealSpoil(mask.dataset.spoil);}
+  });
+  renderDramaDetailEps(S.dramaAiring.find(x=>x.id===id));
+  freshDetail.style.display='block';
+  freshDetail.scrollTop=0;
 }
 
 function renderDramaDetailEps(d){
