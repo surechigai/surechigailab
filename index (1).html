@@ -4134,12 +4134,7 @@ function qRender(){
     const answersEl=document.getElementById('q-answers');
     document.getElementById('rv-ig').textContent=S.igAns.text;
     document.getElementById('rv-tk').textContent=S.tkAns.text;
-    // 履歴に追加（初回のみ）
-    const isNew=!S.qHist.length||S.qHist[0].text!==S.curQ.text;
-    if(isNew){
-      S.qHist.unshift({text:S.curQ.text,cat:S.curQ.cat,igA:S.igAns.text,tkA:S.tkAns.text,ts:new Date().toISOString().slice(0,10)});
-      updateCnt();qRH();lsSave();
-    }
+
     // 予想vs結果の演出：answersが未表示のときだけ走らせる（Firebase再配信で重複しない）
     if(!answersEl||answersEl.style.display==='none'){
       qReveal();
