@@ -2301,6 +2301,8 @@ function go(s){
   if(qlog)qlog.style.display='none';
   // 長押しメニューを閉じる
   hideCtx();
+  // ドラマ詳細パネルを閉じる（position:absoluteで全面を覆うため必須）
+  closeDramaDetail();
   document.querySelectorAll('.scr').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>{b.classList.remove('on');b.style.color='';});
   document.getElementById('sc-'+s).classList.add('on');
@@ -3280,36 +3282,31 @@ function renderFilmarks(){
       const rep=recs[0];
       const ig=recs.find(x=>x.who==='ig');
       const tk=recs.find(x=>x.who==='tk');
-      const typeIcon=TYPE_ICON[rep.type]||'🎬';
+      const typeIcon=TYPE_ICON[rep.type]||'\u{1F3AC}';
       const statusBg=STATUS_BG[rep.status]||'var(--lav-bg)';
       const statusCol=STATUS_COL[rep.status]||'var(--lav)';
-      const starHtml=(r)=>r?.star?`${'★'.repeat(r.star)}<span style="color:#e0e0e0">${'★'.repeat(5-r.star)}</span>`:'<span style="color:#e0e0e0">★★★★★</span>';
       const fmdId='fmd-g-'+rep.id;
-      return `<div style="background:var(--card);border-radius:14px;border:1.5px solid var(--bd);margin-bottom:8px;overflow:hidden">
-        <div onclick="(function(){var el=document.getElementById('${fmdId}');if(el)el.style.display=el.style.display==='block'?'none':'block';})()" style="padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer">
-          <span style="font-size:20px;flex-shrink:0">${typeIcon}</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;font-family:'Zen Maru Gothic',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
-            <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
-              <span style="font-size:9px;padding:1px 7px;border-radius:8px;background:${statusBg};color:${statusCol};font-weight:600">${STATUS_LABEL[rep.status]||''}</span>
-              ${rep.date?`<span style="font-size:9px;color:var(--wg)">${rep.date}</span>`:''}
-            </div>
-          </div>
-          <span style="font-size:13px;color:var(--wg);flex-shrink:0">›</span>
-        </div>
-        <div id="${fmdId}" style="display:none;border-top:1px solid var(--bd);padding:10px 13px;background:var(--cream)">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-            <div style="background:var(--ig-bg);border-radius:11px;padding:8px 10px">
-              <div style="font-size:10px;font-weight:700;color:var(--ig-d);margin-bottom:4px">💙 出口さん</div>
-              ${ig?`<div style="font-size:12px;color:var(--amber)">${starHtml(ig)}</div>${ig.memo?`<div style="font-size:10px;color:var(--text);line-height:1.5;margin-top:4px">${ig.memo.slice(0,50)}</div>`:'`}`:'<div style="font-size:10px;color:#bbb">まだ記録なし</div>'}
-            </div>
-            <div style="background:var(--tk-bg);border-radius:11px;padding:8px 10px">
-              <div style="font-size:10px;font-weight:700;color:var(--tk-d);margin-bottom:4px">🌸 テケテケさん</div>
-              ${tk?`<div style="font-size:12px;color:var(--amber)">${starHtml(tk)}</div>${tk.memo?`<div style="font-size:10px;color:var(--text);line-height:1.5;margin-top:4px">${tk.memo.slice(0,50)}</div>`:''}`:'<div style="font-size:10px;color:#bbb">まだ記録なし</div>'}
-            </div>
-          </div>
-        </div>
-      </div>`;
+      const star=(r)=>r&&r.star?'\u2605'.repeat(r.star)+'\u2606'.repeat(5-r.star):'';
+      const igStar=star(ig), tkStar=star(tk);
+      const igMemo=ig&&ig.memo?ig.memo.slice(0,50):'';
+      const tkMemo=tk&&tk.memo?tk.memo.slice(0,50):'';
+      const igBlock=ig?(igStar?'<div style="color:var(--amber);font-size:11px;margin-bottom:3px">'+igStar+'</div>':'')+(igMemo?'<div style="font-size:10px;color:var(--text);line-height:1.5">'+igMemo+'</div>':''):'<div style="font-size:10px;color:#bbb">\u307E\u3060\u8A18\u9332\u306A\u3057</div>';
+      const tkBlock=tk?(tkStar?'<div style="color:var(--amber);font-size:11px;margin-bottom:3px">'+tkStar+'</div>':'')+(tkMemo?'<div style="font-size:10px;color:var(--text);line-height:1.5">'+tkMemo+'</div>':''):'<div style="font-size:10px;color:#bbb">\u307E\u3060\u8A18\u9332\u306A\u3057</div>';
+      const dateSpan=rep.date?'<span style="font-size:9px;color:var(--wg)">'+rep.date+'</span>':'';
+      const statusSpan='<span style="font-size:9px;padding:1px 7px;border-radius:8px;background:'+statusBg+';color:'+statusCol+';font-weight:600">'+(STATUS_LABEL[rep.status]||'')+'</span>';
+      const toggleJS='var _e=document.getElementById(\"'+fmdId+'\");if(_e)_e.style.display=_e.style.display==\"block\"?\"none\":\"block\"';
+      return '<div style="background:var(--card);border-radius:14px;border:1.5px solid var(--bd);margin-bottom:8px;overflow:hidden">'
+        +'<div onclick="'+toggleJS+'" style="padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer">'
+        +'<span style="font-size:20px;flex-shrink:0">'+typeIcon+'</span>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+title+'</div>'
+        +'<div style="display:flex;align-items:center;gap:5px;margin-top:3px">'+statusSpan+dateSpan+'</div></div>'
+        +'<span style="font-size:13px;color:var(--wg);flex-shrink:0">\u203A</span>'
+        +'</div>'
+        +'<div id="'+fmdId+'" style="display:none;border-top:1px solid var(--bd);padding:10px 13px;background:var(--cream)">'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+        +'<div style="background:var(--ig-bg);border-radius:11px;padding:8px 10px"><div style="font-size:10px;font-weight:700;color:var(--ig-d);margin-bottom:4px">\uD83D\uDC99 \u51FA\u53E3\u3055\u3093</div>'+igBlock+'</div>'
+        +'<div style="background:var(--tk-bg);border-radius:11px;padding:8px 10px"><div style="font-size:10px;font-weight:700;color:var(--tk-d);margin-bottom:4px">\uD83C\uDF38 \u30C6\u30B1\u30C6\u30B1\u3055\u3093</div>'+tkBlock+'</div>'
+        +'</div></div></div>';
     }).join('');
     return;
   }
