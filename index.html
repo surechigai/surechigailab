@@ -81,7 +81,7 @@ async function initNotifications(userId) {
 
 // 通知を送る（相手のトークンに送信・自分には送らない）
 window._sendNotification = async function(toUserId, title, body) {
-  if(typeof _db === 'undefined') return;
+  if(!_db) return;
   if(!toUserId || typeof me==='undefined' || !me) return; // me未設定（ユーザー選択前）はスキップ
   try {
     const [toSnap, mySnap] = await Promise.all([
