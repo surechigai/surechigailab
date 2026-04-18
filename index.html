@@ -2070,6 +2070,7 @@ function fbApplyData(raw){
     if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
     // gYear/gMonthはFirebaseの値で上書きしない（各端末で独立して管理）
   }catch(e){console.warn('データ適用失敗',e);}
+  _syncIdCounters();
 }
 
 function fbStartListening(){
@@ -2091,6 +2092,23 @@ function fbStartListening(){
   });
 }
 
+function _syncIdCounters(){
+  // filmarkId：既存filmarksの最大ID+1
+  if(S.filmarks&&S.filmarks.length){
+    const maxId=Math.max(...S.filmarks.map(f=>f.id||0));
+    if(maxId>=filmarkId) filmarkId=maxId+1;
+  }
+  // dramaIdCnt：既存dramaAiringの最大ID+1
+  if(S.dramaAiring&&S.dramaAiring.length){
+    const maxId=Math.max(...S.dramaAiring.map(d=>d.id||0));
+    if(maxId>=dramaIdCnt) dramaIdCnt=maxId+1;
+  }
+  // watchedIdCnt：既存dramaWatchedの最大ID+1
+  if(S.dramaWatched&&S.dramaWatched.length){
+    const maxId=Math.max(...S.dramaWatched.map(d=>d.id||0));
+    if(maxId>=watchedIdCnt) watchedIdCnt=maxId+1;
+  }
+}
 function _fixRoomIds(){
   const seen=new Set();
   R.forEach(r=>{
@@ -2124,6 +2142,8 @@ function lsLoad(){
       if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
       // gYear/gMonthはlocalStorageから復元しない（常に現在月を使う）
     }
+    // IDカウンターを既存データの最大値+1に揃える（ID衝突バグ防止）
+    _syncIdCounters();
     // Firebaseからデータを読み込んでからUI更新
     let fbRetry = 0;
     const fbWait = setInterval(()=>{
@@ -3126,7 +3146,7 @@ function renderDramaWatched(){
 }
 
 // ── 鑑賞記録（filmarks）──
-let filmarkId=1, filmarkFilterCat='all', filmarkWhoFilterVal='all', filmarkStatusSel='watched', filmarkTypeSel='movie', filmarkStarSel=4;
+let filmarkId=1, filmarkFilterCat='all', filmarkWhoFilterVal='me', filmarkStatusSel='watched', filmarkTypeSel='movie', filmarkStarSel=4;
 function openAddFilmark(){
   document.getElementById('filmark-ov').classList.add('on');
   document.getElementById('fm-title-inp').value='';
