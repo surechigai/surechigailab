@@ -4154,12 +4154,26 @@ function qLoad(){
   S.igAns=null;S.tkAns=null;myStamp='';
   ['q-state-a','q-state-b','q-state-c'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const answersEl=document.getElementById('q-answers');if(answersEl)answersEl.style.display='none';
-  // 予想UIリセット
+  // 予想UIリセット（先攻用）
   const gTa=document.getElementById('q-guess-ta');if(gTa)gTa.value='';
   const gBtn=document.getElementById('q-guess-btn');if(gBtn)gBtn.style.display='block';
   const gSaved=document.getElementById('q-guess-saved');if(gSaved)gSaved.style.display='none';
-  const gBanner=document.getElementById('q-guess-result');if(gBanner)gBanner.style.display='none';
-  const gReveal=document.getElementById('q-my-guess-reveal');if(gReveal)gReveal.style.display='none';
+  // 後攻用予想欄リセット
+  const aGTa=document.getElementById('q-a-guess-ta');if(aGTa)aGTa.value='';
+  const aGWrap=document.getElementById('q-a-guess-wrap');if(aGWrap)aGWrap.style.display='none';
+  // 答え合わせ演出リセット
+  const loader=document.getElementById('q-reveal-loader');if(loader)loader.style.display='none';
+  const nextBtn=document.getElementById('q-next-btn');if(nextBtn)nextBtn.style.display='none';
+  ['rv-card-ig','rv-card-tk'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('in');el.style.opacity='0';}});
+  // 予想表示エリアをリセット（前の質問の予想が残らないよう）
+  ['q-pg-ig','q-pg-tk'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.style.display='none';el.classList.remove('in');el.style.opacity='0';}
+  });
+  ['q-pg-ig-text','q-pg-tk-text'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.textContent='';el.classList.remove('guess-hit-anim');}
+  });
   // ローディング非表示（即時表示）
   const qLdEl=document.getElementById('q-ld');if(qLdEl)qLdEl.style.display='none';
   const qta=document.getElementById('q-ta');if(qta)qta.value='';
