@@ -2377,7 +2377,7 @@ function fmTitleInput(val){
   hideFmSuggest();
   clearTimeout(fmSuggestTimer);
   if(!val.trim())return;
-  fmSuggestTimer=setTimeout(()=>fetchDramaSuggest(val.trim(),'fm-suggest','selectFmSuggest'),600);
+  fmSuggestTimer=setTimeout(()=>fetchDramaSuggest(val.trim(),'fm-suggest',selectFmSuggest),600);
 }
 function hideFmSuggest(){
   const s=document.getElementById('fm-suggest');
@@ -2496,7 +2496,7 @@ async function fetchDramaSuggest(val, suggestElId='da-suggest', onSelect=null){
     const data=await res.json();
     const titles=data[1]||[];
     if(!titles.length){suggest.style.display='none';return;}
-    const fn=onSelect?window[onSelect]:selectDramaSuggest;
+    const fn=onSelect||selectDramaSuggest;
     suggest.innerHTML=titles.map((t,i)=>`
       <div data-title="${t.replace(/"/g,'&quot;')}"
            style="padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:${i<titles.length-1?'1px solid var(--bd)':'none'};display:flex;align-items:center;gap:8px;transition:background .1s;-webkit-tap-highlight-color:transparent"
