@@ -3794,7 +3794,7 @@ function renderRooms(){
         onmouseleave="clearRoomLong()">
         <div class="ri-ic" style="background:${fc.bg}"><span>${r.icon}</span><span class="ri-dot" style="background:${fc.dot}">${r.fmt==='free'?'💬':r.fmt==='memo'?'📝':'✅'}</span></div>
         <div class="ri-body"><div class="ri-name">${r.name}</div><div class="ri-prev">${prev}</div></div>
-        <div class="ri-r"><div class="ri-time">${ts}</div>${r.badge?`<div class="ri-badge">${r.badge}</div>`:''}</div>
+        <div class="ri-r"><div class="ri-time">${ts}</div>${(()=>{const cnt=r.fmt==='free'?(r.msgs||[]).filter(m=>!m.recalled&&m.who!==me&&!m.read).length:0;return cnt?`<div class="ri-badge">${cnt}</div>`:'';})()} </div>
       </div>
       <button class="ri-del" onclick="deleteRoom(${r.id},event)">✕</button>
     </div>`;
@@ -4392,30 +4392,11 @@ function qSubmit(){
     if(!S.curQ.guess)S.curQ.guess={};
     S.curQ.guess[me]=aGuess;
   }
-  // 相手への状況連携：フリートークルームに自動投稿
+  // 相手への通知（ごはん投稿と同様にシンプルに通知のみ）
   const myName=me==='ig'?'出口さん':'テケテケさん';
-  const pName=me==='ig'?'テケテケさん':'出口さん';
-  // フリートークルームを探す（名前に「すれちがい」があれば優先）
-  const room=R.find(r=>r.fmt==='free'&&r.name.includes('すれちがい'))
-    ||R.find(r=>r.fmt==='free');
-  if(room){
-    const now=new Date();
-    const ts=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
-    if(!room.nMid)room.nMid=100;
-    room.msgs.push({
-      id:room.nMid++,
-      who:me,
-      text:`📝 「${S.curQ?.text||'質問'}」に回答しました！\n${pName}も答えてね 👀`,
-      ts,read:false,recalled:false,auto:true
-    });
-    room.badge=(room.badge||0)+1;
-  }
-  // 相手への通知
   const partner2=me==='ig'?'tk':'ig';
-  const myName2=me==='ig'?'出口さん':'テケテケさん';
-  if(window._sendNotification) _sendNotification(partner2, `📝 ${myName2}が質問に回答`, `「${S.curQ?.text||'質問'}」`);
+  _sendNotification(partner2, `📝 ${myName}が質問に回答`, `「${S.curQ?.text||'質問'}」`);
   lsSave();qRender();
-  if(room)renderRooms();
 }
 function qShuffle(){
   if(S.igAns||S.tkAns)return;
