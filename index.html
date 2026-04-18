@@ -58,23 +58,31 @@ async function initNotifications(userId) {
       _db.ref(`${FCM_TOKEN_PATH}/${userId}`).set(token);
       console.log('✅ 通知トークン登録完了', userId);
     }
-    // フォアグラウンド通知（アプリが開いているとき）
+    // フォアグラウンド通知：アプリが開いているときはトーストのみ表示
+    // （SWのネイティブ通知と重複しないよう、フォアグラウンドフラグをSWに通知）
     _messaging.onMessage((payload) => {
-      if(document.visibilityState === 'visible'){
-        const { title, body } = payload.notification;
-        const toast = document.createElement('div');
-        toast.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(40,30,28,.92);color:white;border-radius:16px;padding:10px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:9999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:90vw;text-align:center';
-        toast.textContent = `${title} - ${body}`;
-        document.body.appendChild(toast);
-        setTimeout(()=>toast.remove(), 3000);
-      }
+      // SWへフォアグラウンドであることを伝える（SW側でshowNotificationをスキップ）
+      navigator.serviceWorker.ready.then(reg => {
+        reg.active?.postMessage({ type: 'FOREGROUND_ACK' });
+      }).catch(()=>{});
+      const { title, body } = payload.notification || payload.data || {};
+      if(!title) return;
+      // 重複トースト防止
+      if(document.querySelector('[data-notif-toast]')) return;
+      const toast = document.createElement('div');
+      toast.setAttribute('data-notif-toast', '1');
+      toast.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(40,30,28,.92);color:white;border-radius:16px;padding:10px 18px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;z-index:9999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:90vw;text-align:center';
+      toast.textContent = `${title} - ${body}`;
+      document.body.appendChild(toast);
+      setTimeout(()=>toast.remove(), 3000);
     });
   } catch(e) { if(!String(e).includes('404'))console.warn('通知初期化失敗:', e); }
 }
 
 // 通知を送る（相手のトークンに送信・自分には送らない）
 window._sendNotification = async function(toUserId, title, body) {
-  if(typeof _db === 'undefined') return; // Firebase未初期化時はスキップ
+  if(typeof _db === 'undefined') return;
+  if(!toUserId || typeof me==='undefined' || !me) return; // me未設定（ユーザー選択前）はスキップ
   try {
     const [toSnap, mySnap] = await Promise.all([
       _db.ref(`${FCM_TOKEN_PATH}/${toUserId}`).get(),
@@ -83,7 +91,7 @@ window._sendNotification = async function(toUserId, title, body) {
     const toToken = toSnap.val();
     const myToken = mySnap.val();
     // 同じトークン（同じ端末）なら送らない
-    if (!toToken || toToken === myToken) return;
+    if (!toToken || !myToken || toToken === myToken) return;
     await fetch('https://falling-mouse-65ca.ma1-vvvv.workers.dev/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -335,6 +343,13 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
 .rev-who.ig{color:var(--ig-d)}.rev-who.tk{color:var(--tk-d)}
 .rev-text{font-size:13px;line-height:1.65}.rev-st{font-size:24px;margin-top:5px}
 .next-btn{background:white;border-radius:13px;padding:11px;width:100%;font-size:13px;font-weight:600;cursor:pointer;font-family:'Zen Maru Gothic',serif;margin-top:3px;border:1.5px solid var(--bd);transition:all .18s;box-shadow:var(--shadow-sm);letter-spacing:.02em}
+@keyframes revealCard{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes revealGuess{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes guessHit{0%{background:rgba(255,255,255,.5)}50%{background:rgba(255,218,60,.4)}100%{background:rgba(255,255,255,.5)}}
+.rv-card{opacity:0;transition:none}.rv-card.in{animation:revealCard .38s cubic-bezier(.22,1,.36,1) forwards}
+.rv-guess{opacity:0}.rv-guess.in{animation:revealGuess .3s ease forwards}
+.guess-hit-anim{animation:guessHit 1.2s ease 1}
+#q-reveal-loader{text-align:center;padding:18px 0;font-size:12px;color:var(--lav);display:flex;align-items:center;justify-content:center;gap:7px}
 .next-btn:active{background:var(--tk-bg);transform:scale(.97);border-color:rgba(224,112,144,.3)}
 .phint{margin:0 12px 8px;font-size:11px;padding:8px 12px;border-radius:10px;line-height:1.65;display:none}.phint.on{display:block}
 @keyframes bdot{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
@@ -836,47 +851,75 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
                 <div class="ans-who" id="q-aw">出口さんの回答</div>
                 <textarea class="ans-ta" id="q-ta" placeholder="ここに答えを書いてね..."></textarea>
               </div>
+              <!-- 後攻用：相手が回答済みのときだけ予想欄を表示 -->
+              <div id="q-a-guess-wrap" style="display:none;margin-top:10px;border-top:1.5px dashed var(--bd);padding-top:10px">
+                <div style="font-size:11px;font-weight:700;color:var(--lav);margin-bottom:6px;display:flex;align-items:center;gap:5px">
+                  <span>🔮</span><span id="q-a-guess-label">相手はなんて答えたと思う？</span>
+                </div>
+                <textarea id="q-a-guess-ta" style="width:100%;border:1.5px solid rgba(138,110,192,.2);border-radius:12px;padding:8px 12px;font-size:12px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.5;height:60px;background:#faf8fe;box-sizing:border-box;transition:border-color .18s" placeholder="予想を入力…（任意）" onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='rgba(138,110,192,.2)'"></textarea>
+              </div>
               <div style="margin-top:10px">
                 <button class="sub-btn" id="q-sub" onclick="qSubmit()" style="width:100%">回答を送信 ✓</button>
               </div>
             </div>
 
-            <!-- 状態B: 自分のみ回答済み -->
-            <div id="q-state-b" style="display:none;text-align:center;padding:16px 0 8px">
-              <div style="font-size:28px;margin-bottom:8px">⏳</div>
-              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">回答を送信しました！</div>
-              <div style="font-size:12px;color:var(--wg)" id="q-wait-msg">相手の回答を待っています…</div>
-              <div style="font-size:10px;color:var(--wg);margin-top:10px;opacity:.6">相手が回答すると結果が見られます</div>
+            <!-- 状態B: 自分のみ回答済み → 予想入力 -->
+            <div id="q-state-b" style="display:none">
+              <div style="text-align:center;padding:14px 0 10px">
+                <div style="font-size:24px;margin-bottom:6px">✅</div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">回答を送信しました！</div>
+                <div style="font-size:11px;color:var(--wg)" id="q-wait-msg">相手の回答を待ち中…</div>
+              </div>
+              <!-- 予想入力エリア -->
+              <div style="border-top:1.5px dashed var(--bd);padding-top:14px;margin-top:4px">
+                <div style="text-align:center;margin-bottom:10px">
+                  <div style="font-size:16px;margin-bottom:5px">🔮</div>
+                  <div style="font-size:13px;font-weight:700;color:var(--text)" id="q-guess-title">テケテケさんはなんて答えると思う？</div>
+                  <div style="font-size:10px;color:var(--wg);margin-top:3px">予想してから答え合わせしよ</div>
+                </div>
+                <textarea id="q-guess-ta" style="width:100%;border:1.5px solid rgba(138,110,192,.25);border-radius:14px;padding:10px 13px;font-size:13px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.5;height:72px;background:#faf8fe;box-sizing:border-box;transition:border-color .18s" placeholder="きっとこう答えると思う…" onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='rgba(138,110,192,.25)'"></textarea>
+                <button onclick="qSaveGuess()" id="q-guess-btn" style="margin-top:8px;width:100%;padding:10px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:13px;font-family:'Zen Maru Gothic',serif;font-weight:700;cursor:pointer;letter-spacing:.03em;transition:all .18s;box-shadow:0 3px 10px rgba(138,110,192,.3)">予想を確定する 🔮</button>
+                <div id="q-guess-saved" style="display:none;margin-top:8px;background:var(--lav-bg);border-radius:12px;padding:9px 12px;font-size:11px;color:var(--lav);font-weight:600;text-align:center">予想を保存しました ✓ 相手の回答が楽しみ！</div>
+              </div>
             </div>
 
-            <!-- 状態C: 両方回答済み → 結果発表 + 相性分析 -->
+            <!-- 状態C: 両方回答済み -->
             <div id="q-state-c" style="display:none">
-              <!-- 質問文（再掲） -->
               <div id="q-result-text" style="font-size:14px;font-weight:600;color:var(--text);line-height:1.65;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bd)"></div>
-              <!-- AI相性分析エリア（先に表示） -->
-              <div id="q-analysis" style="background:linear-gradient(135deg,var(--ig-bg),var(--tk-bg));border-radius:12px;padding:12px 13px;margin-bottom:12px">
-                <div style="font-size:10px;color:var(--wg);font-weight:600;margin-bottom:6px">🔬 すれちがい研究所の分析</div>
-                <div id="q-analysis-ld" style="font-size:11px;color:var(--wg);display:flex;align-items:center;gap:5px">
-                  <span style="animation:bdot .9s infinite;display:inline-block;width:4px;height:4px;background:var(--wg);border-radius:50%"></span>
-                  <span style="animation:bdot .9s .15s infinite;display:inline-block;width:4px;height:4px;background:var(--wg);border-radius:50%"></span>
-                  <span style="animation:bdot .9s .3s infinite;display:inline-block;width:4px;height:4px;background:var(--wg);border-radius:50%"></span>
-                  <span style="margin-left:4px">2人の回答を分析中…</span>
-                </div>
-                <div id="q-analysis-text" style="display:none;font-size:12px;color:var(--text);line-height:1.7"></div>
+              <!-- ローディング表示（答え合わせ中） -->
+              <div id="q-reveal-loader" style="display:none">
+                <span style="display:inline-block;animation:bdot .7s infinite">●</span>
+                <span style="display:inline-block;animation:bdot .7s .15s infinite">●</span>
+                <span style="display:inline-block;animation:bdot .7s .3s infinite">●</span>
+                <span style="margin-left:4px">答え合わせ中…</span>
               </div>
-              <!-- 分析完了後に回答を表示（初期は非表示） -->
               <div id="q-answers" style="display:none">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-                  <div style="background:var(--ig-bg);border-radius:10px;padding:10px 11px">
-                    <div style="font-size:9px;color:var(--ig-d);font-weight:700;margin-bottom:5px">💙 出口さん</div>
-                    <div style="font-size:13px;color:var(--text);line-height:1.5" id="rv-ig"></div>
+                <!-- ふたりの回答 + 相手の予想をカードで表示 -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px">
+                  <!-- 出口さんカード -->
+                  <div class="rv-card" id="rv-card-ig" style="background:var(--ig-bg);border-radius:12px;padding:10px 11px">
+                    <div style="font-size:9px;color:var(--ig-d);font-weight:700;margin-bottom:6px">💙 出口さん</div>
+                    <div style="font-size:13px;color:var(--text);line-height:1.5;font-weight:600;margin-bottom:8px" id="rv-ig"></div>
+                    <!-- テケテケさんが出口さんをこう予想した -->
+                    <div id="q-pg-ig" class="rv-guess" style="display:none;border-top:1px solid rgba(224,112,144,.2);padding-top:6px;margin-top:2px">
+                      <div style="font-size:9px;color:var(--tk-d);opacity:.8;margin-bottom:3px">🌸 の予想</div>
+                      <div style="font-size:11px;color:var(--text);line-height:1.4;font-style:italic;padding:4px 7px;background:rgba(255,255,255,.5);border-radius:7px" id="q-pg-ig-text"></div>
+                    </div>
                   </div>
-                  <div style="background:var(--tk-bg);border-radius:10px;padding:10px 11px">
-                    <div style="font-size:9px;color:var(--tk-d);font-weight:700;margin-bottom:5px">🌸 テケテケさん</div>
-                    <div style="font-size:13px;color:var(--text);line-height:1.5" id="rv-tk"></div>
+                  <!-- テケテケさんカード -->
+                  <div class="rv-card" id="rv-card-tk" style="background:var(--tk-bg);border-radius:12px;padding:10px 11px">
+                    <div style="font-size:9px;color:var(--tk-d);font-weight:700;margin-bottom:6px">🌸 テケテケさん</div>
+                    <div style="font-size:13px;color:var(--text);line-height:1.5;font-weight:600;margin-bottom:8px" id="rv-tk"></div>
+                    <!-- 出口さんがテケテケさんをこう予想した -->
+                    <div id="q-pg-tk" class="rv-guess" style="display:none;border-top:1px solid rgba(74,143,212,.2);padding-top:6px;margin-top:2px">
+                      <div style="font-size:9px;color:var(--ig-d);opacity:.8;margin-bottom:3px">💙 の予想</div>
+                      <div style="font-size:11px;color:var(--text);line-height:1.4;font-style:italic;padding:4px 7px;background:rgba(255,255,255,.5);border-radius:7px" id="q-pg-tk-text"></div>
+                    </div>
                   </div>
                 </div>
-                <button class="next-btn" onclick="qLoad()">次の質問へ ›</button>
+                <div id="q-analysis-ld" style="display:none"></div>
+                <div id="q-analysis-text" style="display:none"></div>
+                <button class="next-btn" id="q-next-btn" style="display:none" onclick="qLoad()">次の質問へ ›</button>
               </div>
             </div>
           </div>
@@ -965,6 +1008,13 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
             <div style="font-family:'Zen Maru Gothic',serif;font-size:15px;font-weight:700">📡 鑑賞中のドラマ</div>
             <button class="rec-add-btn" onclick="openAddDrama()">＋ 追加</button>
+          </div>
+          <!-- 検索欄 -->
+          <div style="position:relative;margin-bottom:9px">
+            <input id="airing-search" type="text" placeholder="タイトルで検索…" oninput="renderDramaAiring()"
+              style="width:100%;border:1.5px solid var(--bd);border-radius:12px;padding:7px 12px 7px 32px;font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;background:var(--card);box-sizing:border-box;transition:border-color .15s"
+              onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='var(--bd)'"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--wg)" stroke-width="2" width="14" height="14" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
           <div id="drama-airing-list"></div>
         </div>
@@ -2005,7 +2055,16 @@ function fbApplyData(raw){
         if(Array.isArray(d.S[k])) S[k] = [...d.S[k]];
       });
       Object.keys(d.S).forEach(k=>{
-        if(!arrays.includes(k)) S[k] = d.S[k];
+        if(!arrays.includes(k)){
+          if(k==='curQ' && S.curQ && d.S.curQ && S.curQ.text===d.S.curQ.text){
+            const myGuess=S.curQ.guess||{};
+            S.curQ=d.S.curQ;
+            if(!S.curQ.guess)S.curQ.guess={};
+            Object.assign(S.curQ.guess,myGuess);
+          } else {
+            S[k]=d.S[k];
+          }
+        }
       });
     }
     if(d.R && Array.isArray(d.R)){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
@@ -2220,6 +2279,8 @@ function go(s){
   if(shoplist)shoplist.style.display='none';
   const qlog=document.getElementById('sc-qlog');
   if(qlog)qlog.style.display='none';
+  // 長押しメニューを閉じる
+  hideCtx();
   document.querySelectorAll('.scr').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>{b.classList.remove('on');b.style.color='';});
   document.getElementById('sc-'+s).classList.add('on');
@@ -2635,15 +2696,24 @@ function _getDayFromBroadcast(d){
 function renderDramaAiring(){
   const list=document.getElementById('drama-airing-list');
   if(!list)return;
-  if(!S.dramaAiring.length){
-    list.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:#ccc">まだ追加されていません<br><span style="font-size:10px">「＋ 追加」からドラマを登録しよう</span></div>';
+
+  // 検索フィルター
+  const searchVal=(document.getElementById('airing-search')?.value||'').trim().toLowerCase();
+  const filtered=searchVal
+    ? S.dramaAiring.filter(d=>d.title?.toLowerCase().includes(searchVal)||(d.broadcast||'').toLowerCase().includes(searchVal))
+    : S.dramaAiring;
+
+  if(!filtered.length){
+    list.innerHTML=searchVal
+      ? `<div style="text-align:center;padding:20px;font-size:12px;color:#ccc">「${searchVal}」に一致するドラマがありません</div>`
+      : '<div style="text-align:center;padding:20px;font-size:12px;color:#ccc">まだ追加されていません<br><span style="font-size:10px">「＋ 追加」からドラマを登録しよう</span></div>';
     return;
   }
 
   const DAY_ORDER=['月曜','火曜','水曜','木曜','金曜','土曜','日曜'];
   const groups={};
   const unset=[];
-  S.dramaAiring.forEach(d=>{
+  filtered.forEach(d=>{
     const day=_getDayFromBroadcast(d);
     if(day){(groups[day]=groups[day]||[]).push(d);}
     else unset.push(d);
@@ -2716,34 +2786,33 @@ function openDramaDetail(id){
       ${(d.broadcast||d.ch)?`<div style="width:100%"><div style="font-size:10px;color:var(--wg);margin-bottom:2px">📡 放送</div><div style="font-size:13px;font-weight:500">${d.broadcast||d.ch}</div></div>`:''}
       ${d.memo?`<div style="width:100%;${(d.broadcast||d.ch)?'border-top:1px solid var(--bd);padding-top:8px':''}""><div style="font-size:11px;color:var(--wg);line-height:1.7">${d.memo}</div></div>`:''}
     </div>`;
-  // イベント委譲をdetailパネル全体に設定（一度だけ）
-  if(!detail._delegated){
-    detail._delegated=true;
-    detail.addEventListener('click',e=>{
-      const did=parseInt(detail.dataset.dramaId);
-      const drama=S.dramaAiring.find(x=>x.id===did);
-      if(!drama)return;
-      const btn=e.target.closest('[data-action]');
-      if(btn){
-        const action=btn.dataset.action;
-        if(action==='add-ep')addEpisodeToAiring(did);
-        else if(action==='complete')promptCompleteDrama(drama);
-        else if(action==='next-ep')addEpisodeToAiring(did);
-        else if(action==='add-first')addEpisodeToAiring(did);
-        return;
-      }
-      const epCard=e.target.closest('[data-ep-open]');
-      if(epCard){
-        openEpModal(did,parseInt(epCard.dataset.epOpen));
-        return;
-      }
-      const mask=e.target.closest('[data-spoil]');
-      if(mask){revealSpoil(mask.dataset.spoil);}
-    });
-  }
-  renderDramaDetailEps(d);
-  detail.style.display='block';
-  detail.scrollTop=0;
+  // イベント委譲：毎回クリーンに付け直す（古いIDへのジャンプを防止）
+  const newDetail=detail.cloneNode(false);
+  while(detail.firstChild)newDetail.appendChild(detail.firstChild);
+  detail.parentNode.replaceChild(newDetail,detail);
+  const freshDetail=document.getElementById('drama-detail');
+  freshDetail.dataset.dramaId=id;
+  freshDetail.addEventListener('click',e=>{
+    const did=parseInt(freshDetail.dataset.dramaId);
+    const drama=S.dramaAiring.find(x=>x.id===did);
+    if(!drama)return;
+    const btn=e.target.closest('[data-action]');
+    if(btn){
+      const action=btn.dataset.action;
+      if(action==='add-ep')addEpisodeToAiring(did);
+      else if(action==='complete')promptCompleteDrama(drama);
+      else if(action==='next-ep')addEpisodeToAiring(did);
+      else if(action==='add-first')addEpisodeToAiring(did);
+      return;
+    }
+    const epCard=e.target.closest('[data-ep-open]');
+    if(epCard){openEpModal(did,parseInt(epCard.dataset.epOpen));return;}
+    const mask=e.target.closest('[data-spoil]');
+    if(mask){revealSpoil(mask.dataset.spoil);}
+  });
+  renderDramaDetailEps(S.dramaAiring.find(x=>x.id===id));
+  freshDetail.style.display='block';
+  freshDetail.scrollTop=0;
 }
 
 function renderDramaDetailEps(d){
@@ -4030,8 +4099,12 @@ function qLoad(){
   S.igAns=null;S.tkAns=null;myStamp='';
   ['q-state-a','q-state-b','q-state-c'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const answersEl=document.getElementById('q-answers');if(answersEl)answersEl.style.display='none';
-  const ldAn=document.getElementById('q-analysis-ld');if(ldAn)ldAn.style.display='flex';
-  const txAn=document.getElementById('q-analysis-text');if(txAn)txAn.style.display='none';
+  // 予想UIリセット
+  const gTa=document.getElementById('q-guess-ta');if(gTa)gTa.value='';
+  const gBtn=document.getElementById('q-guess-btn');if(gBtn)gBtn.style.display='block';
+  const gSaved=document.getElementById('q-guess-saved');if(gSaved)gSaved.style.display='none';
+  const gBanner=document.getElementById('q-guess-result');if(gBanner)gBanner.style.display='none';
+  const gReveal=document.getElementById('q-my-guess-reveal');if(gReveal)gReveal.style.display='none';
   // ローディング非表示（即時表示）
   const qLdEl=document.getElementById('q-ld');if(qLdEl)qLdEl.style.display='none';
   const qta=document.getElementById('q-ta');if(qta)qta.value='';
@@ -4071,108 +4144,185 @@ function qRender(){
   if(qsub)qsub.className='sub-btn '+me;
 
   if(igD&&tkD){
-    // 状態D: 両方回答済み → 分析→結果発表
+    // 状態C: 両方回答済み → 予想vs結果
     document.getElementById('q-ld').style.display='none';
-    document.getElementById('qtext').style.display='none'; // qtopの質問文は非表示（状態C内に表示）
+    document.getElementById('qtext').style.display='none';
     const resultText=document.getElementById('q-result-text');
     if(resultText)resultText.textContent=S.curQ.text;
     sc.style.display='block';
-    // 回答エリアは最初非表示（分析完了後に表示）
     const answersEl=document.getElementById('q-answers');
-    if(answersEl)answersEl.style.display='none';
     document.getElementById('rv-ig').textContent=S.igAns.text;
     document.getElementById('rv-tk').textContent=S.tkAns.text;
-    // 履歴に追加（初回のみ）
-    const isNew=!S.qHist.length||S.qHist[0].text!==S.curQ.text;
-    if(isNew){
-      S.qHist.unshift({text:S.curQ.text,cat:S.curQ.cat,igA:S.igAns.text,tkA:S.tkAns.text,ts:new Date().toISOString().slice(0,10)});
-      updateCnt();qRH();lsSave();
-    }
-    // 分析テキストがすでに保存済みなら即表示、なければAPI生成
-    if(S.curQ.analysis){
-      const ldEl=document.getElementById('q-analysis-ld');
-      const txEl=document.getElementById('q-analysis-text');
-      if(ldEl)ldEl.style.display='none';
-      if(txEl){txEl.textContent=S.curQ.analysis;txEl.style.display='block';}
-      if(answersEl)answersEl.style.display='block';
-    } else {
-      qAnalysis();
+
+    // 予想vs結果の演出：answersが未表示のときだけ走らせる（Firebase再配信で重複しない）
+    if(!answersEl||answersEl.style.display==='none'){
+      qReveal();
     }
   } else if(myD&&!pD){
-    // 状態B: 自分のみ回答済み
+    // 状態B: 自分のみ回答済み → 予想入力
     const wm=document.getElementById('q-wait-msg');
-    if(wm)wm.textContent=pName+'の回答を待っています…';
+    if(wm)wm.textContent=pName+'の回答待ち中…';
+    const gt=document.getElementById('q-guess-title');
+    if(gt)gt.textContent=pName+'はなんて答えると思う？';
+    // 予想済みなら保存済み表示
+    const savedGuess=S.curQ?.guess?.[me];
+    const gBtn=document.getElementById('q-guess-btn');
+    const gSaved=document.getElementById('q-guess-saved');
+    const gTa=document.getElementById('q-guess-ta');
+    if(savedGuess){
+      if(gTa)gTa.value=savedGuess;
+      if(gBtn)gBtn.style.display='none';
+      if(gSaved)gSaved.style.display='block';
+    } else {
+      if(gTa)gTa.value='';
+      if(gBtn)gBtn.style.display='block';
+      if(gSaved)gSaved.style.display='none';
+    }
     sb.style.display='block';
   } else {
-    // 状態A: 未回答 or 相手のみ回答済み
-    // テキストエリアをクリア（前のユーザーの入力が残らないように）
+    // 状態A: 未回答 or 相手のみ回答済み（後攻）
     const qtaClear=document.getElementById('q-ta');
     if(qtaClear)qtaClear.value='';
+    // 相手が回答済み＝後攻のとき予想欄を表示
+    const guessWrap=document.getElementById('q-a-guess-wrap');
+    const guessLbl=document.getElementById('q-a-guess-label');
+    const guessTa=document.getElementById('q-a-guess-ta');
+    if(pD&&guessWrap){
+      if(guessLbl)guessLbl.textContent=pName+'はなんて答えた？予想してみて';
+      if(guessTa)guessTa.value='';
+      guessWrap.style.display='block';
+    } else if(guessWrap){
+      guessWrap.style.display='none';
+    }
     sa.style.display='block';
   }
 }
-function qAnalysis(){
-  const ldEl=document.getElementById('q-analysis-ld');
-  const txEl=document.getElementById('q-analysis-text');
+function qSaveGuess(){
+  const ta=document.getElementById('q-guess-ta');
+  const text=ta?.value.trim();
+  if(!text){ta.focus();return;}
+  if(!S.curQ.guess)S.curQ.guess={};
+  S.curQ.guess[me]=text;
+  lsSave();
+  const gBtn=document.getElementById('q-guess-btn');
+  const gSaved=document.getElementById('q-guess-saved');
+  if(gBtn)gBtn.style.display='none';
+  if(gSaved)gSaved.style.display='block';
+  // 軽いアニメーション
+  if(gSaved){gSaved.style.transform='scale(.96)';setTimeout(()=>{gSaved.style.transform='scale(1)';gSaved.style.transition='transform .25s cubic-bezier(.34,1.56,.64,1)';},30);}
+}
+
+function _calcHit(guess, ans){
+  if(!guess||!ans)return false;
+  const gc=guess.replace(/[。、！？\s]/g,'').split('');
+  const ac=ans.replace(/[。、！？\s]/g,'').split('');
+  const hits=gc.filter(c=>ac.includes(c));
+  const score=hits.length/Math.max(gc.length,ac.length,1);
+  return score>0.3||ans.includes(guess.slice(0,4))||guess.includes(ans.slice(0,4));
+}
+
+function qReveal(){
   const answersEl=document.getElementById('q-answers');
-  if(!ldEl||!txEl)return;
-  ldEl.style.display='flex';txEl.style.display='none';
-  if(answersEl)answersEl.style.display='none';
+  if(!answersEl)return;
 
-  const igText=(S.igAns?.text||'').trim();
-  const tkText=(S.tkAns?.text||'').trim();
+  const guess=S.curQ?.guess||{};
+  const igGuess=guess['ig']||'';
+  const tkGuess=guess['tk']||'';
+  const igAns=S.igAns?.text||'';
+  const tkAns=S.tkAns?.text||'';
 
-  // 回答の類似度チェック（共通ワードを探す）
-  const igWords=igText.replace(/[。、！？\s]/g,'').split('');
-  const tkWords=tkText.replace(/[。、！？\s]/g,'').split('');
-  const common=igWords.filter(c=>tkWords.includes(c)&&c.length>0);
-  const similarRatio=common.length/Math.max(igWords.length,tkWords.length,1);
-  const isSimilar=similarRatio>0.25||igText.length>0&&tkText.length>0&&(
-    igText.includes(tkText.slice(0,4))||tkText.includes(igText.slice(0,4))
-  );
+  // テキストをセット（まだ非表示）
+  document.getElementById('rv-ig').textContent=igAns;
+  document.getElementById('rv-tk').textContent=tkAns;
 
-  // カテゴリごとのパターンコメント
-  const cat=S.curQ?.cat||'love';
+  const pgIg=document.getElementById('q-pg-ig');
+  const pgIgTxt=document.getElementById('q-pg-ig-text');
+  const pgTk=document.getElementById('q-pg-tk');
+  const pgTkTxt=document.getElementById('q-pg-tk-text');
 
-  // パターン辞書（INTJ=出口さん、ENFP=テケテケさん の特性を踏まえた文章）
-  const PATTERNS={
-    similar:{
-      love:['ふたりとも同じ方向を向いてるかも。言葉にしなくても伝わってる部分が多そう 💕','答えが似てる…！無意識に価値観がそろってきてるのかもしれない 🔬','おお、かなり一致してる。ふたりの「好き」の形が近づいてきてる気がする 🌸'],
-      touch:['スキンシップの感覚、けっこう合ってそう。お互い心地よい距離感を掴んでるかも 🤝','似た答えが出た。無意識のうちにふたりのペースができてきてるのかも ✨','答えが近い！お互いの「ちょうどいい」が自然とすり合わさってきてる感じ 🌿'],
-      future:['将来のイメージ、けっこう一致してる。同じ方向を向いて歩けてるかも 🌟','ふたりの未来のビジョンが近い！これは心強い 🗺','答えが似てるということは、ふたりの「なりたい姿」が近いってことかも 💫'],
-      daily:['日常の感覚が合ってそう。一緒にいると自然に同じリズムになれるかもしれない ☀️','似た答え。生活のテンポやペースが合ってきてる証拠かも 🍀','お互いの「普通」が近い。日常を一緒に過ごすのが楽になってきてるのかも 🏡'],
-      gap:['同じように感じてたんだね。すれちがいじゃなく、ちゃんとシンクロしてるかも 💭','答えが近い。伝えにくいことも、ちゃんと分かり合えてきてるのかも 🌈','似た感覚を持ってたんだ。このふたりなら素直に話し合えそう 🔓']
-    },
-    different:{
-      love:['答えが違うのが面白い！INTJ的な「じわじわ伝わる好き」とENFP的な「ストレートな好き」の違いかも 💙🌸','ちょっと違う視点だね。でもそれがふたりの「すれちがい研究」のネタになる 🔬','アプローチが違う。でもどちらも相手を思ってるからこそ、とも言えるかも 💕'],
-      touch:['スキンシップの感覚に少し差があるかも。「もっと」派と「ちょうどいい」派の違いかな 🤝','答えが違う…！相手の「心地よい距離感」を改めて聞いてみるいいきっかけかも 💬','ここが少し違うみたい。どっちが正解じゃなく、すり合わせていくのが大事かも ✨'],
-      future:['将来のイメージに違いがある。INTJは「計画的に」、ENFPは「可能性を広げながら」かも 🌟','ちょっと違う未来図。でもそれをふたりで話し合うことで新しい青写真ができるかも 🗺','答えが違う！お互いの「なりたい姿」をもっと語り合うチャンスかも 💫'],
-      daily:['日常のスタイルに違いがあるね。INTJの「ルーティン派」とENFPの「その日の気分派」かも ☀️','答えが違う。ふたりの「普通」のすり合わせを楽しむのも関係を深めるコツかも 🍀','少し違う感覚。お互いの違いを知ることが、もっと過ごしやすくなるヒントになるかも 🏡'],
-      gap:['ここに温度差があるみたい。INTJ的「考えてから言う」とENFP的「感じたらすぐ言う」の違いかも 💭','答えが違う。伝え方・受け取り方のズレが「すれちがい」を生んでるのかもしれない 🔍','ここが違うんだね。でも違いがわかったなら、次は近づけるチャンス 🌈']
+  if(tkGuess&&pgIg&&pgIgTxt){pgIgTxt.textContent=tkGuess;pgIg.style.display='block';}
+  else if(pgIg){pgIg.style.display='none';}
+  if(igGuess&&pgTk&&pgTkTxt){pgTkTxt.textContent=igGuess;pgTk.style.display='block';}
+  else if(pgTk){pgTk.style.display='none';}
+
+  // カード・予想のアニメクラスをリセット
+  ['rv-card-ig','rv-card-tk'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.classList.remove('in');el.style.opacity='0';}
+  });
+  if(pgIg){pgIg.classList.remove('in');pgIg.style.opacity='0';}
+  if(pgTk){pgTk.classList.remove('in');pgTk.style.opacity='0';}
+
+  // ローダー表示
+  const loader=document.getElementById('q-reveal-loader');
+  const nextBtn=document.getElementById('q-next-btn');
+  if(loader)loader.style.display='flex';
+  if(nextBtn)nextBtn.style.display='none';
+  answersEl.style.display='block';
+  answersEl.style.opacity='1';
+  answersEl.style.transform='none';
+
+  const delay=(ms)=>new Promise(r=>setTimeout(r,ms));
+
+  (async()=>{
+    await delay(750);
+    if(loader)loader.style.display='none';
+
+    // 左カード（出口さん）イン
+    const cardIg=document.getElementById('rv-card-ig');
+    if(cardIg)cardIg.classList.add('in');
+    await delay(220);
+
+    // 右カード（テケテケさん）イン
+    const cardTk=document.getElementById('rv-card-tk');
+    if(cardTk)cardTk.classList.add('in');
+    await delay(320);
+
+    // 予想エリア（両方同時）
+    const hasGuess=(tkGuess&&pgIg&&pgIg.style.display!=='none')||(igGuess&&pgTk&&pgTk.style.display!=='none');
+    if(hasGuess){
+      await delay(80);
+      if(pgIg&&pgIg.style.display!=='none')pgIg.classList.add('in');
+      if(pgTk&&pgTk.style.display!=='none')pgTk.classList.add('in');
+      await delay(400);
+
+      // 予想と回答が近ければ光る演出
+      if(tkGuess&&_calcHit(tkGuess,igAns)&&pgIgTxt){
+        pgIgTxt.classList.add('guess-hit-anim');
+      }
+      if(igGuess&&_calcHit(igGuess,tkAns)&&pgTkTxt){
+        pgTkTxt.classList.add('guess-hit-anim');
+      }
     }
-  };
 
-  const patternKey=isSimilar?'similar':'different';
-  const msgs=PATTERNS[patternKey][cat]||PATTERNS[patternKey].love;
-  const result=msgs[Math.floor(Math.random()*msgs.length)];
-
-  // 少し「間」を作ってから表示（自然な感じに）
-  setTimeout(()=>{
-    txEl.textContent=result;
-    if(S.curQ)S.curQ.analysis=result;
-    ldEl.style.display='none';
-    txEl.style.display='block';
-    if(answersEl){
-      answersEl.style.display='block';
-      setTimeout(()=>answersEl.scrollIntoView({behavior:'smooth',block:'nearest'}),300);
+    await delay(200);
+    // 次の質問ボタンを表示
+    if(nextBtn){
+      nextBtn.style.display='block';
+      nextBtn.style.opacity='0';
+      nextBtn.style.transition='opacity .3s ease';
+      setTimeout(()=>{nextBtn.style.opacity='1';},30);
     }
-  },800);
+    setTimeout(()=>answersEl.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  })();
+}
+
+function qAnalysis(){
+  // 互換stub（旧コードからの参照が残る場合のため）
+  qReveal();
 }
 function qBanner(){qRender();}
 function qSubmit(){
   const text=document.getElementById('q-ta')?.value.trim();
   if(!text){alert('回答を入力してください');return;}
   if(me==='ig')S.igAns={text};else S.tkAns={text};
+  // 後攻用予想欄の値を保存
+  const aGuessTa=document.getElementById('q-a-guess-ta');
+  const aGuess=aGuessTa?.value.trim()||'';
+  if(aGuess){
+    if(!S.curQ.guess)S.curQ.guess={};
+    S.curQ.guess[me]=aGuess;
+  }
   // 相手への状況連携：フリートークルームに自動投稿
   const myName=me==='ig'?'出口さん':'テケテケさん';
   const pName=me==='ig'?'テケテケさん':'出口さん';
@@ -4191,6 +4341,10 @@ function qSubmit(){
     });
     room.badge=(room.badge||0)+1;
   }
+  // 相手への通知
+  const partner2=me==='ig'?'tk':'ig';
+  const myName2=me==='ig'?'出口さん':'テケテケさん';
+  if(window._sendNotification) _sendNotification(partner2, `📝 ${myName2}が質問に回答`, `「${S.curQ?.text||'質問'}」`);
   lsSave();qRender();
   if(room)renderRooms();
 }
@@ -5233,7 +5387,7 @@ function switchDrama(pane){
  doSendMood,selMood,resetMood,homeSelMood,homeSendMoodText,homeResetMood,homeUpdateMyMood,
  handleKimochiBgTap,renderPartnerMood,updateHomeMood,
  agendaAdd,agendaClear,agendaDone,agendaRender,
- qLoad,qInit,qSubmit,openQLog,closeQLog,qlogFilter,qlogRender,
+ qLoad,qInit,qSubmit,qSaveGuess,qReveal,openQLog,closeQLog,qlogFilter,qlogRender,
  qCat,qBm,qBanner,qRH,qAnalysis,qGenQ,qPick,qShuffle,qRender,
  sendMsg,sendImage,closeChat,hideCtx,showCtx,copyMsg,recallMsg,
  startRoomNameLong,clearRoomNameLong,doRoomExport,
