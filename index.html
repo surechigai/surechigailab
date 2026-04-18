@@ -870,16 +870,51 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
                 <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">回答を送信しました！</div>
                 <div style="font-size:11px;color:var(--wg)" id="q-wait-msg">相手の回答を待ち中…</div>
               </div>
-              <!-- 予想入力エリア -->
-              <div style="border-top:1.5px dashed var(--bd);padding-top:14px;margin-top:4px">
-                <div style="text-align:center;margin-bottom:10px">
-                  <div style="font-size:16px;margin-bottom:5px">🔮</div>
-                  <div style="font-size:13px;font-weight:700;color:var(--text)" id="q-guess-title">テケテケさんはなんて答えると思う？</div>
-                  <div style="font-size:10px;color:var(--wg);margin-top:3px">予想してから答え合わせしよ</div>
+              <!-- 自分の回答確認・編集エリア -->
+              <div style="border-top:1.5px solid var(--bd);padding-top:12px;margin-top:2px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+                  <div style="font-size:11px;font-weight:700;color:var(--wg)" id="q-my-ans-label">💙 あなたの回答</div>
+                  <button id="q-edit-btn" onclick="qStartEdit()" style="font-size:10px;background:none;border:1px solid var(--bd);border-radius:10px;padding:3px 10px;color:var(--wg);cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .15s">✏ 編集</button>
                 </div>
-                <textarea id="q-guess-ta" style="width:100%;border:1.5px solid rgba(138,110,192,.25);border-radius:14px;padding:10px 13px;font-size:13px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.5;height:72px;background:#faf8fe;box-sizing:border-box;transition:border-color .18s" placeholder="きっとこう答えると思う…" onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='rgba(138,110,192,.25)'"></textarea>
-                <button onclick="qSaveGuess()" id="q-guess-btn" style="margin-top:8px;width:100%;padding:10px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:13px;font-family:'Zen Maru Gothic',serif;font-weight:700;cursor:pointer;letter-spacing:.03em;transition:all .18s;box-shadow:0 3px 10px rgba(138,110,192,.3)">予想を確定する 🔮</button>
-                <div id="q-guess-saved" style="display:none;margin-top:8px;background:var(--lav-bg);border-radius:12px;padding:9px 12px;font-size:11px;color:var(--lav);font-weight:600;text-align:center">予想を保存しました ✓ 相手の回答が楽しみ！</div>
+                <!-- 表示モード -->
+                <div id="q-my-ans-view" style="font-size:13px;color:var(--text);line-height:1.6;background:var(--cream);border-radius:12px;padding:9px 12px;min-height:40px"></div>
+                <!-- 編集モード -->
+                <div id="q-my-ans-edit" style="display:none">
+                  <textarea id="q-edit-ta" style="width:100%;border:1.5px solid var(--lav);border-radius:12px;padding:9px 12px;font-size:13px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.6;height:80px;background:#fafafa;box-sizing:border-box"></textarea>
+                  <div style="display:flex;gap:7px;margin-top:7px">
+                    <button onclick="qCancelEdit()" style="flex:1;padding:8px;border:1.5px solid var(--bd);border-radius:11px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
+                    <button onclick="qSaveEdit()" style="flex:2;padding:8px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;cursor:pointer;font-family:'Zen Maru Gothic',serif;font-weight:700">更新する ✓</button>
+                  </div>
+                </div>
+              </div>
+              <!-- 予想エリア（未入力→入力 / 保存後→確認・編集） -->
+              <div style="border-top:1.5px dashed var(--bd);padding-top:14px;margin-top:4px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <span style="font-size:14px">🔮</span>
+                    <div style="font-size:12px;font-weight:700;color:var(--text)" id="q-guess-title">テケテケさんはなんて答えると思う？</div>
+                  </div>
+                  <button id="q-guess-edit-btn" onclick="qStartGuessEdit()" style="display:none;font-size:10px;background:none;border:1px solid var(--bd);border-radius:10px;padding:3px 10px;color:var(--wg);cursor:pointer;font-family:'Noto Sans JP',sans-serif">✏ 編集</button>
+                </div>
+                <!-- 未入力・入力中 -->
+                <div id="q-guess-input-area">
+                  <textarea id="q-guess-ta" style="width:100%;border:1.5px solid rgba(138,110,192,.25);border-radius:12px;padding:9px 12px;font-size:13px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.5;height:72px;background:#faf8fe;box-sizing:border-box;transition:border-color .18s" placeholder="きっとこう答えると思う…" onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='rgba(138,110,192,.25)'"></textarea>
+                  <button onclick="qSaveGuess()" id="q-guess-btn" style="margin-top:7px;width:100%;padding:10px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:13px;font-family:'Zen Maru Gothic',serif;font-weight:700;cursor:pointer;transition:all .18s;box-shadow:0 3px 10px rgba(138,110,192,.3)">予想を確定する 🔮</button>
+                </div>
+                <!-- 保存済み表示 -->
+                <div id="q-guess-saved-view" style="display:none">
+                  <div style="font-size:13px;color:var(--text);line-height:1.6;background:var(--lav-bg);border-radius:12px;padding:9px 12px;min-height:40px" id="q-guess-saved-text"></div>
+                </div>
+                <!-- 編集モード -->
+                <div id="q-guess-saved-edit" style="display:none">
+                  <textarea id="q-guess-edit-ta" style="width:100%;border:1.5px solid var(--lav);border-radius:12px;padding:9px 12px;font-size:13px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.5;height:72px;background:#fafafa;box-sizing:border-box"></textarea>
+                  <div style="display:flex;gap:7px;margin-top:7px">
+                    <button onclick="qCancelGuessEdit()" style="flex:1;padding:8px;border:1.5px solid var(--bd);border-radius:11px;background:white;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
+                    <button onclick="qSaveGuessEdit()" style="flex:2;padding:8px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:12px;cursor:pointer;font-family:'Zen Maru Gothic',serif;font-weight:700">更新する 🔮</button>
+                  </div>
+                </div>
+                <!-- 後方互換（非表示） -->
+                <div id="q-guess-saved" style="display:none"></div>
               </div>
             </div>
 
@@ -990,6 +1025,19 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--text);background:linear-g
           <div id="cal-daylog" style="display:none;margin-bottom:10px">
             <div style="font-size:11px;color:var(--lav);font-weight:600;margin:8px 0 6px 2px" id="cal-daylog-lbl"></div>
             <div id="cal-daylog-diary-view" style="background:white;border:1.5px solid var(--bd);border-radius:14px;padding:6px 13px;min-height:44px"></div>
+            <!-- 日記入力欄 -->
+            <div style="margin-top:8px;background:var(--card);border-radius:14px;border:1.5px solid var(--bd);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:6px;padding:6px 12px 3px">
+                <div id="cal-diary-q" style="font-size:11px;color:var(--lav);font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="calDiaryUseQ()"></div>
+                <button onclick="calDiaryLoadQ(true)" style="background:none;border:none;font-size:12px;cursor:pointer;color:var(--lav);opacity:.5;padding:2px;flex-shrink:0">🔀</button>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:6px;padding:0 10px 8px 12px">
+                <textarea id="cal-diary-ta" style="flex:1;min-width:0;border:1.5px solid rgba(155,126,200,.15);border-radius:12px;padding:6px 11px;font-size:12px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.5;height:34px;max-height:100px;background:#fafafa;box-sizing:border-box;transition:border-color .18s" placeholder="その日なにがあった？" oninput="this.style.height='34px';this.style.height=Math.min(this.scrollHeight,100)+'px'" onfocus="this.style.borderColor='var(--lav)'" onblur="this.style.borderColor='rgba(155,126,200,.15)'"></textarea>
+                <button onclick="calDiarySave()" style="border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
           <div id="cal-evs"></div>
         </div>
@@ -4158,6 +4206,11 @@ function qLoad(){
   const gTa=document.getElementById('q-guess-ta');if(gTa)gTa.value='';
   const gBtn=document.getElementById('q-guess-btn');if(gBtn)gBtn.style.display='block';
   const gSaved=document.getElementById('q-guess-saved');if(gSaved)gSaved.style.display='none';
+  // 予想エリア新構造のリセット
+  const gInputArea=document.getElementById('q-guess-input-area');if(gInputArea)gInputArea.style.display='block';
+  const gSavedView=document.getElementById('q-guess-saved-view');if(gSavedView)gSavedView.style.display='none';
+  const gSavedEdit=document.getElementById('q-guess-saved-edit');if(gSavedEdit)gSavedEdit.style.display='none';
+  const gEditBtn=document.getElementById('q-guess-edit-btn');if(gEditBtn)gEditBtn.style.display='none';
   // 後攻用予想欄リセット
   const aGTa=document.getElementById('q-a-guess-ta');if(aGTa)aGTa.value='';
   const aGWrap=document.getElementById('q-a-guess-wrap');if(aGWrap)aGWrap.style.display='none';
@@ -4226,6 +4279,10 @@ function qRender(){
     // 予想vs結果の演出：answersが未表示のときだけ走らせる（Firebase再配信で重複しない）
     if(!answersEl||answersEl.style.display==='none'){
       qReveal();
+    } else {
+      // 既に表示中（編集後のlsSave→qRender再呼び出し等）→nextBtnだけ確実に表示
+      const nb=document.getElementById('q-next-btn');
+      if(nb)nb.style.display='block';
     }
   } else if(myD&&!pD){
     // 状態B: 自分のみ回答済み → 予想入力
@@ -4233,19 +4290,39 @@ function qRender(){
     if(wm)wm.textContent=pName+'の回答待ち中…';
     const gt=document.getElementById('q-guess-title');
     if(gt)gt.textContent=pName+'はなんて答えると思う？';
-    // 予想済みなら保存済み表示
+    // 自分の回答を表示
+    const myAnsView=document.getElementById('q-my-ans-view');
+    const myAnsLabel=document.getElementById('q-my-ans-label');
+    const myAnsText=(me==='ig'?S.igAns:S.tkAns)?.text||'';
+    if(myAnsView)myAnsView.textContent=myAnsText;
+    if(myAnsLabel)myAnsLabel.textContent=(me==='ig'?'💙 出口さん':'🌸 テケテケさん')+'の回答';
+    // 編集モードを閉じる
+    const editArea=document.getElementById('q-my-ans-edit');
+    const viewArea=document.getElementById('q-my-ans-view');
+    const editBtn=document.getElementById('q-edit-btn');
+    if(editArea)editArea.style.display='none';
+    if(viewArea)viewArea.style.display='block';
+    if(editBtn)editBtn.style.display='block';
+    // 予想済みなら保存済みビューを表示、未入力なら入力エリアを表示
     const savedGuess=S.curQ?.guess?.[me];
-    const gBtn=document.getElementById('q-guess-btn');
-    const gSaved=document.getElementById('q-guess-saved');
-    const gTa=document.getElementById('q-guess-ta');
+    const inputArea=document.getElementById('q-guess-input-area');
+    const savedView=document.getElementById('q-guess-saved-view');
+    const savedEditArea=document.getElementById('q-guess-saved-edit');
+    const guessEditBtn=document.getElementById('q-guess-edit-btn');
     if(savedGuess){
-      if(gTa)gTa.value=savedGuess;
-      if(gBtn)gBtn.style.display='none';
-      if(gSaved)gSaved.style.display='block';
+      if(inputArea)inputArea.style.display='none';
+      if(savedEditArea)savedEditArea.style.display='none';
+      if(savedView)savedView.style.display='block';
+      const savedText=document.getElementById('q-guess-saved-text');
+      if(savedText)savedText.textContent=savedGuess;
+      if(guessEditBtn)guessEditBtn.style.display='block';
     } else {
+      if(inputArea)inputArea.style.display='block';
+      if(savedView)savedView.style.display='none';
+      if(savedEditArea)savedEditArea.style.display='none';
+      if(guessEditBtn)guessEditBtn.style.display='none';
+      const gTa=document.getElementById('q-guess-ta');
       if(gTa)gTa.value='';
-      if(gBtn)gBtn.style.display='block';
-      if(gSaved)gSaved.style.display='none';
     }
     sb.style.display='block';
   } else {
@@ -4269,18 +4346,93 @@ function qRender(){
 function qSaveGuess(){
   const ta=document.getElementById('q-guess-ta');
   const text=ta?.value.trim();
-  if(!text){ta.focus();return;}
+  if(!text){ta?.focus();return;}
   if(!S.curQ.guess)S.curQ.guess={};
   S.curQ.guess[me]=text;
   lsSave();
-  const gBtn=document.getElementById('q-guess-btn');
-  const gSaved=document.getElementById('q-guess-saved');
-  if(gBtn)gBtn.style.display='none';
-  if(gSaved)gSaved.style.display='block';
-  // 軽いアニメーション
-  if(gSaved){gSaved.style.transform='scale(.96)';setTimeout(()=>{gSaved.style.transform='scale(1)';gSaved.style.transition='transform .25s cubic-bezier(.34,1.56,.64,1)';},30);}
+  _qGuessShowSaved(text);
+}
+function _qGuessShowSaved(text){
+  // 入力エリアを隠して保存済み表示に切り替え
+  const inputArea=document.getElementById('q-guess-input-area');
+  const savedView=document.getElementById('q-guess-saved-view');
+  const savedText=document.getElementById('q-guess-saved-text');
+  const editBtn=document.getElementById('q-guess-edit-btn');
+  if(inputArea)inputArea.style.display='none';
+  if(savedText)savedText.textContent=text;
+  if(savedView){
+    savedView.style.display='block';
+    savedView.style.transform='scale(.97)';
+    setTimeout(()=>{savedView.style.transform='scale(1)';savedView.style.transition='transform .2s cubic-bezier(.34,1.56,.64,1)';},30);
+  }
+  if(editBtn)editBtn.style.display='block';
+}
+function qStartGuessEdit(){
+  const text=S.curQ?.guess?.[me]||'';
+  const savedView=document.getElementById('q-guess-saved-view');
+  const editArea=document.getElementById('q-guess-saved-edit');
+  const editTa=document.getElementById('q-guess-edit-ta');
+  const editBtn=document.getElementById('q-guess-edit-btn');
+  if(savedView)savedView.style.display='none';
+  if(editTa)editTa.value=text;
+  if(editArea)editArea.style.display='block';
+  if(editBtn)editBtn.style.display='none';
+  setTimeout(()=>editTa?.focus(),50);
+}
+function qCancelGuessEdit(){
+  const text=S.curQ?.guess?.[me]||'';
+  const savedView=document.getElementById('q-guess-saved-view');
+  const editArea=document.getElementById('q-guess-saved-edit');
+  const editBtn=document.getElementById('q-guess-edit-btn');
+  if(editArea)editArea.style.display='none';
+  if(savedView)savedView.style.display='block';
+  if(editBtn)editBtn.style.display='block';
+}
+function qSaveGuessEdit(){
+  const text=document.getElementById('q-guess-edit-ta')?.value.trim();
+  if(!text)return;
+  if(!S.curQ.guess)S.curQ.guess={};
+  S.curQ.guess[me]=text;
+  lsSave();
+  const editArea=document.getElementById('q-guess-saved-edit');
+  const savedText=document.getElementById('q-guess-saved-text');
+  const savedView=document.getElementById('q-guess-saved-view');
+  const editBtn=document.getElementById('q-guess-edit-btn');
+  if(editArea)editArea.style.display='none';
+  if(savedText)savedText.textContent=text;
+  if(savedView)savedView.style.display='block';
+  if(editBtn)editBtn.style.display='block';
 }
 
+function qStartEdit(){
+  const myAnsText=(me==='ig'?S.igAns:S.tkAns)?.text||'';
+  const ta=document.getElementById('q-edit-ta');
+  const viewArea=document.getElementById('q-my-ans-view');
+  const editArea=document.getElementById('q-my-ans-edit');
+  const editBtn=document.getElementById('q-edit-btn');
+  if(ta)ta.value=myAnsText;
+  if(viewArea)viewArea.style.display='none';
+  if(editArea)editArea.style.display='block';
+  if(editBtn)editBtn.style.display='none';
+  setTimeout(()=>ta?.focus(),50);
+}
+function qCancelEdit(){
+  const viewArea=document.getElementById('q-my-ans-view');
+  const editArea=document.getElementById('q-my-ans-edit');
+  const editBtn=document.getElementById('q-edit-btn');
+  if(viewArea)viewArea.style.display='block';
+  if(editArea)editArea.style.display='none';
+  if(editBtn)editBtn.style.display='block';
+}
+function qSaveEdit(){
+  const text=document.getElementById('q-edit-ta')?.value.trim();
+  if(!text)return;
+  if(me==='ig')S.igAns={text};else S.tkAns={text};
+  const myAnsView=document.getElementById('q-my-ans-view');
+  if(myAnsView)myAnsView.textContent=text;
+  qCancelEdit();
+  lsSave();
+}
 function _calcHit(guess, ans){
   if(!guess||!ans)return false;
   const gc=guess.replace(/[。、！？\s]/g,'').split('');
@@ -5197,7 +5349,7 @@ function calRenderEvs(visOverride){
     const dt=new Date(sel+'T00:00:00');
     const dateLabel=`${dt.getMonth()+1}月${dt.getDate()}日（${dayNames[dt.getDay()]}）`;
     lbl.innerHTML=`<span style="font-size:13px;font-weight:600;color:var(--text);flex:1">${dateLabel}の予定と記録</span><button onclick="openAddEvWithDate('${sel}')" style="font-size:10px;background:linear-gradient(135deg,var(--ig),var(--tk));color:white;border:none;border-radius:12px;padding:4px 11px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;flex-shrink:0">＋ 予定</button>`;
-    if(daylogEl){daylogEl.style.display='block';renderCalDaylog(sel,vis);}
+    if(daylogEl){daylogEl.style.display='block';renderCalDaylog(sel,vis);calDiaryLoadQ();}
   } else {
     lbl.textContent='';
     if(daylogEl)daylogEl.style.display='none';
@@ -5208,14 +5360,32 @@ function renderCalDaylog(date,vis){
   if(!viewEl)return;
   const evs=(vis||[]).filter(e=>e.date===date).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
   const recs=(S.recs||[]).filter(r=>r.date===date);
-  const posts=(S.posts||[]).filter(p=>p.date===date&&(p.text||p.img)&&!p.text?.startsWith('🍽')).slice().reverse();
+  const allPosts=(S.posts||[]).filter(p=>p.date===date&&(p.text||p.img)&&!p.text?.startsWith('🍽')).slice().reverse();
+  // 日記投稿（diary:true）と通常投稿を分離
+  const diaryPosts=allPosts.filter(p=>p.diary);
+  const posts=allPosts.filter(p=>!p.diary);
   const igPosts=posts.filter(p=>p.who==='ig');
   const tkPosts=posts.filter(p=>p.who==='tk');
-  if(!evs.length&&!recs.length&&!posts.length){
+  if(!evs.length&&!recs.length&&!allPosts.length){
     viewEl.innerHTML='<div style="font-size:12px;color:#999;text-align:center;padding:10px 0">この日の記録はありません</div>';
     return;
   }
   let html='';
+  // 日記投稿を最初に表示
+  if(diaryPosts.length){
+    diaryPosts.forEach(p=>{
+      const nameCol=p.who==='ig'?'var(--ig-d)':'var(--tk-d)';
+      const nameTxt=p.who==='ig'?'💙 出口さん':'🌸 テケテケさん';
+      const timeStr=p.ts?.split(' ')[1]||'';
+      html+=`<div style="padding:8px 0;border-bottom:1px solid rgba(0,0,0,.07)">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
+          <span style="font-size:10px;font-weight:700;color:${nameCol}">${nameTxt}</span>
+          <span style="font-size:9px;color:#bbb">${timeStr}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap">${p.text}</div>
+      </div>`;
+    });
+  }
   evs.forEach(e=>{
     const rb=e.repeat&&e.repeat!=='none'?`<span style="font-size:9px;color:var(--lav);margin-left:4px">${e.repeat==='yearly'?'🔁毎年':'🔄毎月'}</span>`:'';
     html+=`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.07);cursor:pointer" onclick="openEditEv(${e.id})">
@@ -5267,6 +5437,58 @@ function renderCalDaylog(date,vis){
   viewEl.innerHTML=html;
 }
 
+// ダイアリー日記ランダム質問
+const DIARY_Q_LIST=[
+  'その日なにがあった？',
+  'その日いちばん印象に残ったこと',
+  'その日笑ったことは？',
+  'その日うれしかったことは？',
+  'その日モヤっとしたことある？',
+  'その日の自分、どんな感じだった？',
+  'その日のごはん、なに食べた？',
+  'その日だれかに感謝したことは？',
+  'ひとことでその日を表すと？',
+  'その日いちばん疲れた瞬間は？',
+  'その日の「好き」をひとつ教えて',
+  'その日テンション何点くらいだった？',
+];
+let diaryQIdx=Math.floor(Math.random()*DIARY_Q_LIST.length);
+function calDiaryLoadQ(forceRandom=false){
+  const qEl=document.getElementById('cal-diary-q');if(!qEl)return;
+  if(forceRandom){
+    const prev=diaryQIdx;
+    do{diaryQIdx=Math.floor(Math.random()*DIARY_Q_LIST.length);}
+    while(diaryQIdx===prev&&DIARY_Q_LIST.length>1);
+  }
+  qEl.textContent=DIARY_Q_LIST[diaryQIdx];
+}
+function calDiaryUseQ(){
+  const q=document.getElementById('cal-diary-q')?.textContent?.trim();
+  const ta=document.getElementById('cal-diary-ta');
+  if(!q||!ta)return;
+  ta.value=q+'　';
+  ta.style.height='34px';
+  ta.style.height=Math.min(ta.scrollHeight,100)+'px';
+  ta.focus();
+  ta.setSelectionRange(ta.value.length,ta.value.length);
+}
+function calDiarySave(){
+  const ta=document.getElementById('cal-diary-ta');
+  const text=ta?.value.trim();
+  if(!text||!S.calSelDate)return;
+  const now=new Date();
+  const ts=S.calSelDate+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  if(!S.posts)S.posts=[];
+  S.posts.push({who:me,date:S.calSelDate,text,ts,diary:true});
+  ta.value='';ta.style.height='34px';
+  // 再描画
+  calRender();
+  // パートナーへ通知
+  const partner=me==='ig'?'tk':'ig';
+  const myName=me==='ig'?'出口さん':'テケテケさん';
+  _sendNotification(partner,`📖 ${myName}が日記を書きました`,text.length>30?text.slice(0,30)+'…':text);
+  lsSave();
+}
 function calMove(d){S.calM+=d;if(S.calM>12){S.calM=1;S.calY++;}if(S.calM<1){S.calM=12;S.calY--;}S.calSelDate=null;calRender();}
 function openAddEv(){openAddEvWithDate(new Date().toISOString().slice(0,10));}
 function openAddEvWithDate(date){
@@ -5437,7 +5659,7 @@ function switchDrama(pane){
  doSendMood,selMood,resetMood,homeSelMood,homeSendMoodText,homeResetMood,homeUpdateMyMood,
  handleKimochiBgTap,renderPartnerMood,updateHomeMood,
  agendaAdd,agendaClear,agendaDone,agendaRender,
- qLoad,qInit,qSubmit,qSaveGuess,qReveal,openQLog,closeQLog,qlogFilter,qlogRender,
+ qLoad,qInit,qSubmit,qSaveGuess,qStartGuessEdit,qCancelGuessEdit,qSaveGuessEdit,qReveal,qStartEdit,qCancelEdit,qSaveEdit,openQLog,closeQLog,qlogFilter,qlogRender,
  qCat,qBm,qBanner,qRH,qAnalysis,qGenQ,qPick,qShuffle,qRender,
  sendMsg,sendImage,closeChat,hideCtx,showCtx,copyMsg,recallMsg,
  startRoomNameLong,clearRoomNameLong,doRoomExport,
@@ -5447,7 +5669,7 @@ function switchDrama(pane){
  insBold,insUnder,insCheck,ins,copyMemo,saveMemo,
  openEpModal,openEpModalNew,saveEp,closeEpModal,setEpStar,deleteEpReview,
  rFmt,rIco,rCat,addItem,delItem,togItem,openItemMemo,saveItemMemo,clearDone,showDoneItems,
- switchNote,calMove,calRender,calSelectDate,calRenderEvs,renderCalDaylog,
+ switchNote,calMove,calRender,calSelectDate,calDiarySave,calDiaryLoadQ,calDiaryUseQ,calRenderEvs,renderCalDaylog,
  openAddEv,closeAddEv,openEditEv,saveEv,deleteEv,evType,evRep,openAddEvWithDate,expandEvs,
  switchFilm,
  openAddDrama,closeDramaAdd,saveDramaAdd,dramaTitleInput,fetchDramaSuggest,hideDramaSuggest,selectDramaSuggest,dramaAutoFill,dramaSub,dChip,
