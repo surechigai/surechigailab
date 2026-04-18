@@ -3255,69 +3255,109 @@ function renderFilmarks(){
   const list=document.getElementById('filmark-list');
   if(!list)return;
   if(!S.filmarks||!S.filmarks.length){list.innerHTML='<div style="text-align:center;padding:24px;font-size:12px;color:#ccc">まだ記録がありません</div>';return;}
+
+  const STATUS_LABEL={watched:'✅ 観た',want:'🔖 観たい'};
+  const TYPE_ICON={movie:'🎬',drama:'📺'};
+  const STATUS_BG={watched:'var(--sage-bg)',want:'var(--amber-bg)'};
+  const STATUS_COL={watched:'#3d7a3d',want:'#8a6a2a'};
+
   let items=S.filmarks;
-  // 検索フィルター
   const searchVal=(document.getElementById('filmark-search')?.value||'').trim().toLowerCase();
   if(searchVal)items=items.filter(f=>f.title?.toLowerCase().includes(searchVal)||(f.cast||'').toLowerCase().includes(searchVal));
-  // 自分の記録のみ表示
-  items=items.filter(f=>f.who===me);
-  // 観た/観たいフィルター
+  if(filmarkWhoFilterVal!=='all')items=items.filter(f=>f.who===me);
   if(filmarkStatusFilterVal==='watched')items=items.filter(f=>f.status==='watched');
   else if(filmarkStatusFilterVal==='want')items=items.filter(f=>f.status==='want');
-  // ジャンルフィルター
   if(filmarkFilterCat==='drama')items=items.filter(f=>f.type==='drama');
   else if(filmarkFilterCat==='movie')items=items.filter(f=>f.type==='movie');
   if(!items.length){list.innerHTML='<div style="text-align:center;padding:24px;font-size:12px;color:#ccc">該当する記録がありません</div>';return;}
-  const statusLabel={watched:'✅ 観た',want:'🔖 観たい'};
-  const typeLabel={movie:'映画',drama:'ドラマ'};
-  const typeBg={movie:'var(--ig-bg)',drama:'var(--tk-bg)'};
-  const typeCol={movie:'var(--ig-d)',drama:'var(--tk-d)'};
+
+  // ふたりビュー（タイトルでグループ化）
+  if(filmarkWhoFilterVal==='all'){
+    const grouped=new Map();
+    items.forEach(f=>{
+      if(!grouped.has(f.title))grouped.set(f.title,[]);
+      grouped.get(f.title).push(f);
+    });
+    list.innerHTML=[...grouped.entries()].map(([title,recs])=>{
+      const rep=recs[0];
+      const ig=recs.find(x=>x.who==='ig');
+      const tk=recs.find(x=>x.who==='tk');
+      const typeIcon=TYPE_ICON[rep.type]||'🎬';
+      const statusBg=STATUS_BG[rep.status]||'var(--lav-bg)';
+      const statusCol=STATUS_COL[rep.status]||'var(--lav)';
+      const starHtml=(r)=>r?.star?`${'★'.repeat(r.star)}<span style="color:#e0e0e0">${'★'.repeat(5-r.star)}</span>`:'<span style="color:#e0e0e0">★★★★★</span>';
+      const fmdId='fmd-g-'+rep.id;
+      return `<div style="background:var(--card);border-radius:14px;border:1.5px solid var(--bd);margin-bottom:8px;overflow:hidden">
+        <div onclick="(function(){var el=document.getElementById('${fmdId}');if(el)el.style.display=el.style.display==='block'?'none':'block';})()" style="padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer">
+          <span style="font-size:20px;flex-shrink:0">${typeIcon}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;font-family:'Zen Maru Gothic',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
+              <span style="font-size:9px;padding:1px 7px;border-radius:8px;background:${statusBg};color:${statusCol};font-weight:600">${STATUS_LABEL[rep.status]||''}</span>
+              ${rep.date?`<span style="font-size:9px;color:var(--wg)">${rep.date}</span>`:''}
+            </div>
+          </div>
+          <span style="font-size:13px;color:var(--wg);flex-shrink:0">›</span>
+        </div>
+        <div id="${fmdId}" style="display:none;border-top:1px solid var(--bd);padding:10px 13px;background:var(--cream)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div style="background:var(--ig-bg);border-radius:11px;padding:8px 10px">
+              <div style="font-size:10px;font-weight:700;color:var(--ig-d);margin-bottom:4px">💙 出口さん</div>
+              ${ig?`<div style="font-size:12px;color:var(--amber)">${starHtml(ig)}</div>${ig.memo?`<div style="font-size:10px;color:var(--text);line-height:1.5;margin-top:4px">${ig.memo.slice(0,50)}</div>`:'`}`:'<div style="font-size:10px;color:#bbb">まだ記録なし</div>'}
+            </div>
+            <div style="background:var(--tk-bg);border-radius:11px;padding:8px 10px">
+              <div style="font-size:10px;font-weight:700;color:var(--tk-d);margin-bottom:4px">🌸 テケテケさん</div>
+              ${tk?`<div style="font-size:12px;color:var(--amber)">${starHtml(tk)}</div>${tk.memo?`<div style="font-size:10px;color:var(--text);line-height:1.5;margin-top:4px">${tk.memo.slice(0,50)}</div>`:''}`:'<div style="font-size:10px;color:#bbb">まだ記録なし</div>'}
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // 自分ビュー
   list.innerHTML=items.map(f=>{
-    const statusLabel={watched:'✅ 観た',want:'🔖 観たい'};
-    const typeLabel={movie:'映画',drama:'ドラマ'};
-    const typeBg={movie:'var(--ig-bg)',drama:'var(--tk-bg)'};
-    const typeCol={movie:'var(--ig-d)',drama:'var(--tk-d)'};
-    const myColor=me==='ig'?'var(--ig-d)':'var(--tk-d)';
-    const myEmoji=me==='ig'?'💙':'🌸';
-    let starLine=f.star?`<span style="font-size:11px;color:var(--amber)">${'★'.repeat(f.star)}<span style="color:#e0e0e0">${'★'.repeat(5-f.star)}</span></span>`:'';
-    const displayMemo=f.memo||'';
-    const epDetail=displayMemo?displayMemo.split('\n').filter(Boolean).slice(0,3).map(l=>{
-      const epMatch=l.match(/^(第?\s*(\d+)\s*話[:：]?\s*)(.*)/);
-      if(epMatch){
-        return `<div style="font-size:10px;color:var(--wg);padding:4px 0;border-bottom:1px solid var(--bd);line-height:1.6;display:flex;gap:6px;align-items:baseline"><span style="font-size:10px;font-weight:700;color:var(--lav);flex-shrink:0">【第${epMatch[2]}話】</span><span>${epMatch[3]||''}</span></div>`;
-      }
-      return `<div style="font-size:10px;color:var(--wg);padding:4px 0;border-bottom:1px solid var(--bd);line-height:1.6">${l}</div>`;
+    const fid=f.id??0;
+    const typeIcon=TYPE_ICON[f.type]||'🎬';
+    const statusBg=STATUS_BG[f.status]||'var(--lav-bg)';
+    const statusCol=STATUS_COL[f.status]||'var(--lav)';
+    const starHtml=f.star?`${'★'.repeat(f.star)}<span style="color:#e0e0e0">${'★'.repeat(5-f.star)}</span>`:'';
+    const epDetailHtml=f.memo?f.memo.split('\n').filter(Boolean).slice(0,3).map(l=>{
+      const m=l.match(/^(第?\s*(\d+)\s*話[:：]?\s*)(.*)/);
+      return m?`<div style="font-size:10px;color:var(--wg);padding:3px 0;border-bottom:1px solid var(--bd);display:flex;gap:5px;align-items:baseline"><span style="font-weight:700;color:var(--lav);flex-shrink:0">第${m[2]}話</span><span>${m[3]||''}</span></div>`
+        :`<div style="font-size:10px;color:var(--wg);padding:3px 0;border-bottom:1px solid var(--bd)">${l}</div>`;
     }).join(''):'';
-    return `<div style="background:var(--card);border-radius:13px;border:1.5px solid var(--bd);margin-bottom:7px;overflow:hidden">
-      <div onclick="toggleFilmarkDetail(${f.id})" style="padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer">
-        <span style="font-size:20px;flex-shrink:0">${f.type==='movie'?'🎬':'📺'}</span>
+    return `<div style="background:var(--card);border-radius:14px;border:1.5px solid var(--bd);margin-bottom:8px;overflow:hidden">
+      <div onclick="toggleFilmarkDetail(${fid})" style="padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:${f.type==='movie'?'var(--ig-bg)':'var(--tk-bg)'};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${typeIcon}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;font-family:'Zen Maru Gothic',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.title}</div>
-          <div style="display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap">
-            <span style="font-size:9px;padding:1px 6px;border-radius:8px;background:${f.status==='watched'?'var(--sage-bg)':'var(--amber-bg)'};color:${f.status==='watched'?'#3d7a3d':'#8a6a2a'};font-weight:500">${statusLabel[f.status]||''}</span>
-            ${starLine}
+          <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap">
+            <span style="font-size:9px;padding:1px 7px;border-radius:8px;background:${statusBg};color:${statusCol};font-weight:600">${STATUS_LABEL[f.status]||''}</span>
+            ${starHtml?`<span style="font-size:12px;color:var(--amber)">${starHtml}</span>`:''}
             ${f.date?`<span style="font-size:9px;color:var(--wg)">${f.date}</span>`:''}
           </div>
         </div>
         <span style="font-size:13px;color:var(--wg);flex-shrink:0">›</span>
       </div>
-      <div id="fmd-${f.id}" style="display:none;border-top:1px solid var(--bd);padding:10px 13px;background:var(--cream)">
-        ${f.ch||f.cast||f.stream?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--bd)">
-          ${f.ch?`<div><div style="font-size:9px;color:var(--wg)">放送</div><div style="font-size:11px;font-weight:500">${f.ch}</div></div>`:''}
-          ${f.eps?`<div><div style="font-size:9px;color:var(--wg)">全話数</div><div style="font-size:11px;font-weight:500">${f.eps}話</div></div>`:''}
-          ${f.stream?`<div style="width:100%"><div style="font-size:9px;color:var(--wg)">配信</div><div style="font-size:11px;color:var(--lav)">📺 ${f.stream}</div></div>`:''}
-          ${f.cast?`<div style="width:100%"><div style="font-size:9px;color:var(--wg)">キャスト</div><div style="font-size:11px">🎭 ${f.cast}</div></div>`:''}
+      <div id="fmd-${fid}" style="display:none;border-top:1px solid var(--bd);padding:10px 13px;background:var(--cream)">
+        ${f.memo&&!epDetailHtml?`<div style="font-size:11px;color:var(--text);line-height:1.6;margin-bottom:8px">${f.memo}</div>`:''}
+        ${epDetailHtml?`<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--wg);margin-bottom:4px">各話メモ</div>${epDetailHtml}</div>`:''}
+        ${f.ch||f.stream||f.cast?`<div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;border-top:1px solid var(--bd);margin-bottom:8px">
+          ${f.ch?`<span style="font-size:10px;background:var(--lav-bg);color:var(--lav);border-radius:7px;padding:2px 8px">📡 ${f.ch}</span>`:''}
+          ${f.stream?`<span style="font-size:10px;background:var(--lav-bg);color:var(--lav);border-radius:7px;padding:2px 8px">▶ ${f.stream}</span>`:''}
+          ${f.eps?`<span style="font-size:10px;background:var(--cream);color:var(--wg);border-radius:7px;padding:2px 8px;border:1px solid var(--bd)">全${f.eps}話</span>`:''}
+          ${f.cast?`<span style="font-size:10px;color:var(--wg)">🎭 ${f.cast}</span>`:''}
         </div>`:''}
-        ${epDetail?`<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:600;color:var(--wg);margin-bottom:4px">各話メモ</div>${epDetail}</div>`:''}
-        <div style="display:flex;gap:7px;margin-top:6px">
-          <button onclick="openFilmarkEdit(${f.id})" style="flex:1;border:1.5px solid var(--bd);border-radius:10px;padding:6px;font-size:11px;cursor:pointer;background:white;font-family:'Noto Sans JP',sans-serif;color:var(--text)">✏ 編集</button>
-          <button onclick="deleteFilmark(${f.id})" style="flex:1;border:none;border-radius:10px;padding:6px;font-size:11px;cursor:pointer;background:#fff0f0;font-family:'Noto Sans JP',sans-serif;color:#cc3333">🗑 削除</button>
+        <div style="display:flex;gap:7px">
+          <button onclick="openFilmarkEdit(${fid})" style="flex:1;border:1.5px solid var(--bd);border-radius:10px;padding:7px;font-size:11px;cursor:pointer;background:white;font-family:'Noto Sans JP',sans-serif;color:var(--text)">✏ 編集</button>
+          <button onclick="deleteFilmark(${fid})" style="flex:1;border:none;border-radius:10px;padding:7px;font-size:11px;cursor:pointer;background:#fff0f0;font-family:'Noto Sans JP',sans-serif;color:#cc3333">🗑 削除</button>
         </div>
       </div>
     </div>`;
   }).join('');
 }
-
 function agendaRender(){
   const list=document.getElementById('agenda-list');
   if(!list)return;
