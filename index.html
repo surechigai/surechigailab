@@ -4276,6 +4276,19 @@ function qRender(){
     document.getElementById('rv-ig').textContent=S.igAns.text;
     document.getElementById('rv-tk').textContent=S.tkAns.text;
 
+    // 履歴に追加（初回のみ・guessも一緒に保存）
+    const isNew=!S.qHist.length||S.qHist[0].text!==S.curQ.text;
+    if(isNew){
+      const guess=S.curQ?.guess||{};
+      S.qHist.unshift({
+        text:S.curQ.text,cat:S.curQ.cat,
+        igA:S.igAns.text,tkA:S.tkAns.text,
+        igGuess:guess['ig']||'',tkGuess:guess['tk']||'',
+        ts:new Date().toISOString().slice(0,10)
+      });
+      updateCnt();qRH();lsSave();
+    }
+
     // 予想vs結果の演出：answersが未表示のときだけ走らせる（Firebase再配信で重複しない）
     if(!answersEl||answersEl.style.display==='none'){
       qReveal();
@@ -4586,23 +4599,26 @@ function qlogRender(){
   if(!filtered.length){list.innerHTML='<div style="text-align:center;padding:32px 0;font-size:12px;color:#ccc">このカテゴリの回答はまだありません</div>';return;}
   list.innerHTML=filtered.map(h=>{
     const ci=CAT[h.cat]||CAT.love;
-    return `<div class="hcard" style="margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
-        <span style="font-size:9px;padding:2px 7px;border-radius:10px;background:${ci.bg};color:${ci.tc};font-weight:600;flex-shrink:0">${ci.label}</span>
-        <span style="font-size:10px;color:var(--wg);margin-left:auto;flex-shrink:0">${h.ts||''}</span>
-      </div>
-      <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:9px">${h.text}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-        <div style="background:var(--ig-bg);border-radius:8px;padding:8px 9px">
-          <div style="font-size:9px;color:var(--ig-d);font-weight:700;margin-bottom:3px">💙 出口さん</div>
-          <div style="font-size:12px;color:var(--text);line-height:1.5">${h.igA||'—'}</div>
-        </div>
-        <div style="background:var(--tk-bg);border-radius:8px;padding:8px 9px">
-          <div style="font-size:9px;color:var(--tk-d);font-weight:700;margin-bottom:3px">🌸 テケテケさん</div>
-          <div style="font-size:12px;color:var(--text);line-height:1.5">${h.tkA||'—'}</div>
-        </div>
-      </div>
-    </div>`;
+    const guessHtml=(h.igGuess||h.tkGuess)?('<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px">'
+      +'<div style="background:var(--lav-bg);border-radius:8px;padding:6px 9px"><div style="font-size:9px;color:var(--lav);font-weight:700;margin-bottom:2px">🔮 出口さんの予想</div>'
+      +'<div style="font-size:11px;color:var(--text);line-height:1.4;font-style:italic">'+(h.igGuess||'—')+'</div></div>'
+      +'<div style="background:var(--lav-bg);border-radius:8px;padding:6px 9px"><div style="font-size:9px;color:var(--lav);font-weight:700;margin-bottom:2px">🔮 テケテケさんの予想</div>'
+      +'<div style="font-size:11px;color:var(--text);line-height:1.4;font-style:italic">'+(h.tkGuess||'—')+'</div></div>'
+      +'</div>'):'';
+    return '<div class="hcard" style="margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">'
+      +'<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:'+ci.bg+';color:'+ci.tc+';font-weight:600;flex-shrink:0">'+ci.label+'</span>'
+      +'<span style="font-size:10px;color:var(--wg);margin-left:auto;flex-shrink:0">'+(h.ts||'')+'</span>'
+      +'</div>'
+      +'<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:9px">'+h.text+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+      +'<div style="background:var(--ig-bg);border-radius:8px;padding:8px 9px"><div style="font-size:9px;color:var(--ig-d);font-weight:700;margin-bottom:3px">💙 出口さん</div>'
+      +'<div style="font-size:12px;color:var(--text);line-height:1.5">'+(h.igA||'—')+'</div></div>'
+      +'<div style="background:var(--tk-bg);border-radius:8px;padding:8px 9px"><div style="font-size:9px;color:var(--tk-d);font-weight:700;margin-bottom:3px">🌸 テケテケさん</div>'
+      +'<div style="font-size:12px;color:var(--text);line-height:1.5">'+(h.tkA||'—')+'</div></div>'
+      +'</div>'
+      +guessHtml
+      +'</div>';
   }).join('');
 }
 function qRH(){
@@ -4611,17 +4627,22 @@ function qRH(){
   if(!S.qHist.length){list.innerHTML='<div style="text-align:center;padding:14px;font-size:12px;color:#ccc">まだ回答履歴がありません</div>';return;}
   list.innerHTML=S.qHist.slice(0,3).map(h=>{
     const ci=CAT[h.cat]||CAT.love;
-    return `<div class="hcard">
-      <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">
-        <span style="font-size:9px;padding:2px 6px;border-radius:8px;background:${ci.bg};color:${ci.tc};font-weight:600">${ci.label}</span>
-        <span style="font-size:10px;color:var(--wg);margin-left:auto">${h.ts||''}</span>
-      </div>
-      <div style="font-size:13px;font-weight:500;line-height:1.5;margin-bottom:6px;color:var(--text)">${h.text}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-        <div style="background:var(--ig-bg);border-radius:7px;padding:6px 7px;font-size:11px"><div style="font-size:9px;color:var(--ig-d);font-weight:500;margin-bottom:1px">💙 出口さん</div>${h.igA||''}</div>
-        <div style="background:var(--tk-bg);border-radius:7px;padding:6px 7px;font-size:11px"><div style="font-size:9px;color:var(--tk-d);font-weight:500;margin-bottom:1px">🌸 テケテケさん</div>${h.tkA||''}</div>
-      </div>
-    </div>`;
+    const guessHtml=(h.igGuess||h.tkGuess)?('<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">'
+      +'<div style="background:var(--lav-bg);border-radius:7px;padding:5px 7px;font-size:11px"><div style="font-size:9px;color:var(--lav);font-weight:600;margin-bottom:1px">🔮 出口さんの予想</div><div style="font-style:italic">'+(h.igGuess||'—')+'</div></div>'
+      +'<div style="background:var(--lav-bg);border-radius:7px;padding:5px 7px;font-size:11px"><div style="font-size:9px;color:var(--lav);font-weight:600;margin-bottom:1px">🔮 テケテケさんの予想</div><div style="font-style:italic">'+(h.tkGuess||'—')+'</div></div>'
+      +'</div>'):'';
+    return '<div class="hcard">'
+      +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
+      +'<span style="font-size:9px;padding:2px 6px;border-radius:8px;background:'+ci.bg+';color:'+ci.tc+';font-weight:600">'+ci.label+'</span>'
+      +'<span style="font-size:10px;color:var(--wg);margin-left:auto">'+(h.ts||'')+'</span>'
+      +'</div>'
+      +'<div style="font-size:13px;font-weight:500;line-height:1.5;margin-bottom:6px;color:var(--text)">'+h.text+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">'
+      +'<div style="background:var(--ig-bg);border-radius:7px;padding:6px 7px;font-size:11px"><div style="font-size:9px;color:var(--ig-d);font-weight:500;margin-bottom:1px">💙 出口さん</div>'+(h.igA||'')+'</div>'
+      +'<div style="background:var(--tk-bg);border-radius:7px;padding:6px 7px;font-size:11px"><div style="font-size:9px;color:var(--tk-d);font-weight:500;margin-bottom:1px">🌸 テケテケさん</div>'+(h.tkA||'')+'</div>'
+      +'</div>'
+      +guessHtml
+      +'</div>';
   }).join('');
 }
 
