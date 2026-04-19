@@ -5394,16 +5394,28 @@ function renderCalDaylog(date,vis){
   let html='';
   // 日記投稿を最初に表示
   if(diaryPosts.length){
-    diaryPosts.forEach(p=>{
+    diaryPosts.forEach((p,pi)=>{
       const nameCol=p.who==='ig'?'var(--ig-d)':'var(--tk-d)';
       const nameTxt=p.who==='ig'?'💙 出口さん':'🌸 テケテケさん';
       const timeStr=p.ts?.split(' ')[1]||'';
+      const isMine=p.who===me;
+      const pIdx=S.posts.indexOf(p);
+      const editId='diary-edit-'+date+'-'+pi;
       html+=`<div style="padding:8px 0;border-bottom:1px solid rgba(0,0,0,.07)">
         <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
           <span style="font-size:10px;font-weight:700;color:${nameCol}">${nameTxt}</span>
           <span style="font-size:9px;color:#bbb">${timeStr}</span>
+          ${isMine?`<button onclick="calDiaryEdit(${pIdx},'${editId}')" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:10px;color:#ccc;padding:0">✏</button>`:''}
         </div>
-        <div style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap">${p.text}</div>
+        <div id="${editId}-view" style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap">${p.text}</div>
+        <div id="${editId}-edit" style="display:none;margin-top:4px">
+          <textarea id="${editId}-ta" style="width:100%;border:1.5px solid var(--lav);border-radius:10px;padding:7px 10px;font-size:12px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.5;height:60px;background:#fafafa;box-sizing:border-box">${p.text}</textarea>
+          <div style="display:flex;gap:6px;margin-top:5px">
+            <button onclick="calDiaryCancelEdit('${editId}')" style="flex:1;padding:6px;border:1.5px solid var(--bd);border-radius:9px;background:white;font-size:11px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
+            <button onclick="calDiarySaveEdit(${pIdx},'${editId}')" style="flex:2;padding:6px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:11px;cursor:pointer;font-family:'Zen Maru Gothic',serif;font-weight:700">更新 ✓</button>
+            <button onclick="calDiaryDelete(${pIdx})" style="padding:6px 10px;border:none;border-radius:9px;background:#fff0f0;font-size:11px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:#cc3333">削除</button>
+          </div>
+        </div>
       </div>`;
     });
   }
@@ -5420,12 +5432,13 @@ function renderCalDaylog(date,vis){
   });
   recs.forEach(r=>{
     const tot=(r.igAmt||0)+(r.tkAmt||0);
-    html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.07)">
+    html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.07);cursor:pointer" onclick="gEdit(${r.id})">
       <div style="font-size:15px;flex-shrink:0">🍽</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;color:#333;font-weight:500">${r.shop}</div>
         <div style="font-size:10px;color:#999">${[r.area,r.cat,tot?'¥'+tot.toLocaleString():''].filter(Boolean).join(' · ')}</div>
       </div>
+      <span style="font-size:10px;color:#ccc">✏</span>
     </div>`;
   });
   const renderUp=(ups,who)=>{
@@ -5492,6 +5505,36 @@ function calDiaryUseQ(){
   ta.style.height=Math.min(ta.scrollHeight,100)+'px';
   ta.focus();
   ta.setSelectionRange(ta.value.length,ta.value.length);
+}
+function calDiaryEdit(pIdx, editId){
+  const view=document.getElementById(editId+'-view');
+  const edit=document.getElementById(editId+'-edit');
+  const ta=document.getElementById(editId+'-ta');
+  if(view)view.style.display='none';
+  if(edit)edit.style.display='block';
+  if(ta){ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,120)+'px';ta.focus();}
+}
+function calDiaryCancelEdit(editId){
+  const view=document.getElementById(editId+'-view');
+  const edit=document.getElementById(editId+'-edit');
+  if(view)view.style.display='block';
+  if(edit)edit.style.display='none';
+}
+function calDiarySaveEdit(pIdx, editId){
+  const ta=document.getElementById(editId+'-ta');
+  const text=ta?.value.trim();
+  if(!text)return;
+  if(S.posts[pIdx])S.posts[pIdx].text=text;
+  const view=document.getElementById(editId+'-view');
+  const edit=document.getElementById(editId+'-edit');
+  if(view){view.textContent=text;view.style.display='block';}
+  if(edit)edit.style.display='none';
+  lsSave();
+}
+function calDiaryDelete(pIdx){
+  S.posts.splice(pIdx,1);
+  calRender();
+  lsSave();
 }
 function calDiarySave(){
   const ta=document.getElementById('cal-diary-ta');
@@ -5690,7 +5733,7 @@ function switchDrama(pane){
  insBold,insUnder,insCheck,ins,copyMemo,saveMemo,
  openEpModal,openEpModalNew,saveEp,closeEpModal,setEpStar,deleteEpReview,
  rFmt,rIco,rCat,addItem,delItem,togItem,openItemMemo,saveItemMemo,clearDone,showDoneItems,
- switchNote,calMove,calRender,calSelectDate,calDiarySave,calDiaryLoadQ,calDiaryUseQ,calRenderEvs,renderCalDaylog,
+ switchNote,calMove,calRender,calSelectDate,calDiarySave,calDiaryLoadQ,calDiaryUseQ,calDiaryEdit,calDiaryCancelEdit,calDiarySaveEdit,calDiaryDelete,calRenderEvs,renderCalDaylog,
  openAddEv,closeAddEv,openEditEv,saveEv,deleteEv,evType,evRep,openAddEvWithDate,expandEvs,
  switchFilm,
  openAddDrama,closeDramaAdd,saveDramaAdd,dramaTitleInput,fetchDramaSuggest,hideDramaSuggest,selectDramaSuggest,dramaAutoFill,dramaSub,dChip,
