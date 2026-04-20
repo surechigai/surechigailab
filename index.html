@@ -2112,7 +2112,7 @@ function fbApplyData(raw){
             S.curQ=d.S.curQ;
             if(!S.curQ.guess)S.curQ.guess={};
             Object.assign(S.curQ.guess,myGuess);
-          } else {
+          } else if(!['gYear','gMonth','calY','calM'].includes(k)) {
             S[k]=d.S[k];
           }
         }
@@ -2189,7 +2189,11 @@ function lsLoad(){
     const raw = localStorage.getItem(LS_KEY);
     if(raw){
       const d = JSON.parse(raw);
-      if(d.S){Object.assign(S, d.S);}
+      if(d.S){
+        // gYear/gMonthは常に現在月を使う（保存値で上書きしない）
+        const {gYear:_gy, gMonth:_gm, calY:_cy, calM:_cm, ...rest} = d.S;
+        Object.assign(S, rest);
+      }
       if(d.R && d.R.length){R.length=0;d.R.forEach(r=>R.push(r));_fixRoomIds();}
       // gYear/gMonthはlocalStorageから復元しない（常に現在月を使う）
     }
