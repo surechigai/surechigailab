@@ -5393,98 +5393,93 @@ function calRenderEvs(visOverride){
 function renderCalDaylog(date,vis){
   const viewEl=document.getElementById('cal-daylog-diary-view');
   if(!viewEl)return;
+
+  // 各種データ収集
   const evs=(vis||[]).filter(e=>e.date===date).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
   const recs=(S.recs||[]).filter(r=>r.date===date);
-  const allPosts=(S.posts||[]).filter(p=>p.date===date&&(p.text||p.img)&&!p.text?.startsWith('🍽')).slice().reverse();
-  // 日記投稿（diary:true）と通常投稿を分離
-  const diaryPosts=allPosts.filter(p=>p.diary);
-  const posts=allPosts.filter(p=>!p.diary);
-  const igPosts=posts.filter(p=>p.who==='ig');
-  const tkPosts=posts.filter(p=>p.who==='tk');
+  const allPosts=(S.posts||[]).filter(p=>p.date===date&&(p.text||p.img)).slice().reverse();
+
   if(!evs.length&&!recs.length&&!allPosts.length){
     viewEl.innerHTML='<div style="font-size:12px;color:#999;text-align:center;padding:10px 0">この日の記録はありません</div>';
     return;
   }
+
+  // すべてのアイテムを時系列順に統合
+  const items=[];
+
+  evs.forEach(e=>items.push({type:'ev',time:e.time||'00:00',data:e}));
+  recs.forEach(r=>items.push({type:'rec',time:(r.ts||'').split(' ')[1]||'00:00',data:r}));
+  allPosts.forEach((p,pi)=>items.push({
+    type:p.diary?'diary':'post',
+    time:(p.ts||'').split(' ')[1]||'00:00',
+    data:p,
+    idx:S.posts.indexOf(p),
+    pi
+  }));
+
+  // 時刻順にソート（予定は時刻順、記録・投稿は時刻順）
+  items.sort((a,b)=>a.time.localeCompare(b.time));
+
   let html='';
-  // 日記投稿を最初に表示
-  if(diaryPosts.length){
-    diaryPosts.forEach((p,pi)=>{
+  items.forEach(item=>{
+    if(item.type==='ev'){
+      const e=item.data;
+      const rb=e.repeat&&e.repeat!=='none'?'<span style="font-size:9px;color:var(--lav);margin-left:4px">'+(e.repeat==='yearly'?'🔁毎年':'🔄毎月')+'</span>':'';
+      html+='<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);cursor:pointer" onclick="openEditEv('+e.id+')">'
+        +'<div style="width:22px;text-align:center;flex-shrink:0;padding-top:1px"><div style="width:8px;height:8px;border-radius:50%;background:'+(e.color||'#9b7ec8')+';margin:0 auto;margin-top:3px"></div>'+(e.time?'<div style="font-size:8px;color:#bbb;margin-top:2px">'+e.time+'</div>':'')+'</div>'
+        +'<div style="flex:1"><div style="font-size:13px;color:#333;font-weight:500">'+e.name+rb+'</div></div>'
+        +'<span style="font-size:10px;color:#ccc">✏</span></div>';
+    } else if(item.type==='rec'){
+      const r=item.data;
+      const tot=(r.igAmt||0)+(r.tkAmt||0);
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);cursor:pointer" onclick="gEdit('+r.id+')">'
+        +'<div style="width:22px;text-align:center;flex-shrink:0"><span style="font-size:16px">🍽</span></div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:13px;color:#333;font-weight:500">'+r.shop+'</div>'
+        +'<div style="font-size:10px;color:#999">'+[r.area,r.cat,tot?'¥'+tot.toLocaleString():''].filter(Boolean).join(' · ')+'</div></div>'
+        +'<span style="font-size:10px;color:#ccc">✏</span></div>';
+    } else if(item.type==='diary'){
+      const p=item.data;
+      const pIdx=item.idx;
+      const pi=item.pi;
       const nameCol=p.who==='ig'?'var(--ig-d)':'var(--tk-d)';
       const nameTxt=p.who==='ig'?'💙 出口さん':'🌸 テケテケさん';
-      const timeStr=p.ts?.split(' ')[1]||'';
       const isMine=p.who===me;
-      const pIdx=S.posts.indexOf(p);
       const editId='diary-edit-'+date+'-'+pi;
-      html+=`<div style="padding:8px 0;border-bottom:1px solid rgba(0,0,0,.07)">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
-          <span style="font-size:10px;font-weight:700;color:${nameCol}">${nameTxt}</span>
-          <span style="font-size:9px;color:#bbb">${timeStr}</span>
-          ${isMine?`<button onclick="calDiaryEdit(${pIdx},'${editId}')" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:10px;color:#ccc;padding:0">✏</button>`:''}
-        </div>
-        <div id="${editId}-view" style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap">${p.text}</div>
-        <div id="${editId}-edit" style="display:none;margin-top:4px">
-          <textarea id="${editId}-ta" style="width:100%;border:1.5px solid var(--lav);border-radius:10px;padding:7px 10px;font-size:12px;font-family:'Noto Sans JP',sans-serif;resize:none;outline:none;line-height:1.5;height:60px;background:#fafafa;box-sizing:border-box">${p.text}</textarea>
-          <div style="display:flex;gap:6px;margin-top:5px">
-            <button onclick="calDiaryCancelEdit('${editId}')" style="flex:1;padding:6px;border:1.5px solid var(--bd);border-radius:9px;background:white;font-size:11px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--wg)">キャンセル</button>
-            <button onclick="calDiarySaveEdit(${pIdx},'${editId}')" style="flex:2;padding:6px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:11px;cursor:pointer;font-family:'Zen Maru Gothic',serif;font-weight:700">更新 ✓</button>
-            <button onclick="calDiaryDelete(${pIdx})" style="padding:6px 10px;border:none;border-radius:9px;background:#fff0f0;font-size:11px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:#cc3333">削除</button>
-          </div>
-        </div>
-      </div>`;
-    });
-  }
-  evs.forEach(e=>{
-    const rb=e.repeat&&e.repeat!=='none'?`<span style="font-size:9px;color:var(--lav);margin-left:4px">${e.repeat==='yearly'?'🔁毎年':'🔄毎月'}</span>`:'';
-    html+=`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.07);cursor:pointer" onclick="openEditEv(${e.id})">
-      <div style="width:7px;height:7px;border-radius:50%;background:${e.color||'#9b7ec8'};flex-shrink:0;margin-top:4px"></div>
-      <div style="flex:1">
-        <div style="font-size:13px;color:#333;font-weight:500">${e.name}${rb}</div>
-        ${e.time?`<div style="font-size:10px;color:#999;margin-top:1px">🕐 ${e.time}</div>`:''}
-      </div>
-      <span style="font-size:10px;color:#ccc">✏</span>
-    </div>`;
+      html+='<div style="padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06)">'
+        +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">'
+        +'<div style="width:22px;text-align:center;flex-shrink:0;font-size:14px">📖</div>'
+        +'<span style="font-size:10px;font-weight:700;color:'+nameCol+'">'+nameTxt+'</span>'
+        +'<span style="font-size:9px;color:#bbb">'+item.time+'</span>'
+        +(isMine?'<button onclick="calDiaryEdit('+pIdx+',\''+editId+'\')" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:10px;color:#ccc;padding:0">✏</button>':'')
+        +'</div>'
+        +'<div id="'+editId+'-view" style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;padding-left:28px">'+p.text+'</div>'
+        +'<div id="'+editId+'-edit" style="display:none;margin-top:4px;padding-left:28px">'
+        +'<textarea id="'+editId+'-ta" style="width:100%;border:1.5px solid var(--lav);border-radius:10px;padding:7px 10px;font-size:12px;font-family:\'Noto Sans JP\',sans-serif;resize:none;outline:none;line-height:1.5;height:60px;background:#fafafa;box-sizing:border-box">'+p.text+'</textarea>'
+        +'<div style="display:flex;gap:6px;margin-top:5px">'
+        +'<button onclick="calDiaryCancelEdit(\''+editId+'\')" style="flex:1;padding:6px;border:1.5px solid var(--bd);border-radius:9px;background:white;font-size:11px;cursor:pointer;color:var(--wg)">キャンセル</button>'
+        +'<button onclick="calDiarySaveEdit('+pIdx+',\''+editId+'\')" style="flex:2;padding:6px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--lav),var(--ig));color:white;font-size:11px;cursor:pointer;font-weight:700">更新 ✓</button>'
+        +'<button onclick="calDiaryDelete('+pIdx+')" style="padding:6px 10px;border:none;border-radius:9px;background:#fff0f0;font-size:11px;cursor:pointer;color:#cc3333">削除</button>'
+        +'</div></div></div>';
+    } else {
+      // type==='post'（ホームのチェックイン）
+      const p=item.data;
+      const nameCol=p.who==='ig'?'var(--ig-d)':'var(--tk-d)';
+      const nameTxt=p.who==='ig'?'💙 出口さん':'🌸 テケテケさん';
+      html+='<div style="padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06)">'
+        +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">'
+        +'<div style="width:22px;text-align:center;flex-shrink:0;font-size:14px">'+(p.emoji||'💬')+'</div>'
+        +'<span style="font-size:10px;font-weight:700;color:'+nameCol+'">'+nameTxt+'</span>'
+        +'<span style="font-size:9px;color:#bbb">'+item.time+'</span>'
+        +'</div>'
+        +(p.question?'<div style="font-size:10px;color:var(--lav);margin-bottom:3px;padding-left:28px">💡 '+p.question+'</div>':'')
+        +(p.text?'<div style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;padding-left:28px">'+p.text+'</div>':'')
+        +(p.img?'<img src="'+p.img+'" style="max-width:100%;max-height:120px;border-radius:8px;margin-top:5px;margin-left:28px;object-fit:cover;display:block"/>':'')
+        +'</div>';
+    }
   });
-  recs.forEach(r=>{
-    const tot=(r.igAmt||0)+(r.tkAmt||0);
-    html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.07);cursor:pointer" onclick="gEdit(${r.id})">
-      <div style="font-size:15px;flex-shrink:0">🍽</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;color:#333;font-weight:500">${r.shop}</div>
-        <div style="font-size:10px;color:#999">${[r.area,r.cat,tot?'¥'+tot.toLocaleString():''].filter(Boolean).join(' · ')}</div>
-      </div>
-      <span style="font-size:10px;color:#ccc">✏</span>
-    </div>`;
-  });
-  const renderUp=(ups,who)=>{
-    if(!ups.length)return '';
-    const name=who==='ig'?'💙 出口さん':'🌸 テケテケさん';
-    const col=who==='ig'?'var(--ig-d)':'var(--tk-d)';
-    const bg=who==='ig'?'var(--ig-bg)':'var(--tk-bg)';
-    const uid=`dp-${who}-${date.replace(/-/g,'')}`;
-    const preview=ups[0].text?.slice(0,20)||(ups[0].img?'📷':'');
-    const cnt=ups.length;
-    const detail=ups.map(p=>`<div style="padding:5px 0;border-bottom:1px solid rgba(0,0,0,.05)">
-      ${p.question?`<div style="font-size:10px;color:var(--lav);margin-bottom:2px">💡 ${p.question}</div>`:''}
-      ${p.text?`<div style="font-size:12px;color:#333;line-height:1.6;white-space:pre-wrap">${p.text}</div>`:''}
-      ${p.img?`<img src="${p.img}" style="max-width:100%;max-height:100px;border-radius:7px;margin-top:3px;object-fit:cover;display:block"/>`:''}
-      <div style="font-size:9px;color:#bbb;margin-top:2px">${p.ts?.split(' ')[1]||''}</div>
-    </div>`).join('');
-    return `<div style="padding:7px 0;border-bottom:1px solid rgba(0,0,0,.07)">
-      <div onclick="(el=>{el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('${uid}'))"
-           style="display:flex;align-items:center;gap:6px;cursor:pointer">
-        <div style="font-size:12px;font-weight:600;color:${col}">${name}</div>
-        ${cnt>1?`<span style="font-size:9px;background:${bg};color:${col};border-radius:10px;padding:1px 6px">${cnt}件</span>`:''}
-        <div style="font-size:11px;color:#bbb;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">${preview}</div>
-        <div style="font-size:11px;color:#ccc">›</div>
-      </div>
-      <div id="${uid}" style="display:none;margin-top:5px;padding-left:2px">${detail}</div>
-    </div>`;
-  };
-  html+=renderUp(igPosts,'ig');
-  html+=renderUp(tkPosts,'tk');
+
   viewEl.innerHTML=html;
 }
-
 
 // ═══ ふたりのリスト（Wish List） ═══
 const WISH_PRESET_CATS = ['やりたいこと', 'ほしいもの', '行きたい場所'];
