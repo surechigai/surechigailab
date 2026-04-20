@@ -3553,6 +3553,10 @@ function homeSendMoodText(){
   inp.value='';homeMoodSelE='';homeMoodSelL='';
   document.querySelectorAll('#home-mood-emojis .home-mood-e').forEach(b=>b.classList.remove('on'));
   lsSave();
+  // 相手に通知
+  const _partner=me==='ig'?'tk':'ig';
+  const _myName=me==='ig'?'💙 出口さん':'🌸 テケテケさん';
+  window._sendNotification(_partner, `${_myName}の気持ち`, `${e} ${displayLabel}`);
 }
 function homeResetMood(){
   document.getElementById('home-my-sent').style.display='none';
@@ -4570,7 +4574,7 @@ function qSubmit(){
   // 相手への通知（ごはん投稿と同様にシンプルに通知のみ）
   const myName=me==='ig'?'出口さん':'テケテケさん';
   const partner2=me==='ig'?'tk':'ig';
-  _sendNotification(partner2, `📝 ${myName}が質問に回答`, `「${S.curQ?.text||'質問'}」`);
+  window._sendNotification(partner2, `📝 ${myName}が質問に回答`, `「${S.curQ?.text||'質問'}」`);
   lsSave();qRender();
 }
 function qShuffle(){
@@ -5791,6 +5795,10 @@ function doSendMood(){
   document.getElementById('ms-time').textContent=ts+' に送信';
   updateHomeMood();calRender();
   lsSave();
+  // 相手に通知
+  const _partner=me==='ig'?'tk':'ig';
+  const _myName=me==='ig'?'💙 出口さん':'🌸 テケテケさん';
+  window._sendNotification(_partner, `${_myName}の気持ち`, `${selMoodE} ${selMoodL}`);
 }
 function resetMood(){
   selMoodE='';selMoodL='';selMoodD='';
